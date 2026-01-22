@@ -848,6 +848,12 @@
             border-radius: 4px;
             font-size: 0.85rem;
         }
+        
+        /* Estilos para departamentos largos */
+        .department-select {
+            max-height: 200px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
@@ -1097,8 +1103,18 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="departamentoAsignar">Departamento *</label>
-                                <select id="departamentoAsignar" required>
+                                <select id="departamentoAsignar" class="department-select" required>
                                     <option value="">Seleccione...</option>
+                                    <option value="Administración">Administración</option>
+                                    <option value="Tesoreria">Tesoreria</option>
+                                    <option value="RRHH">RRHH</option>
+                                    <option value="Flota">Flota</option>
+                                    <option value="Almacén">Almacén</option>
+                                    <option value="Head End">Head End</option>
+                                    <option value="Seguridad Laboral">Seguridad Laboral</option>
+                                    <option value="Gerencia senior">Gerencia senior</option>
+                                    <option value="Sistemas">Sistemas</option>
+                                    <option value="Colaboradores">Colaboradores</option>
                                     <option value="Los Ruices">Los Ruices</option>
                                     <option value="El Rosal">El Rosal</option>
                                     <option value="La Naya">La Naya</option>
@@ -1170,7 +1186,7 @@
                             <option value="salida">Salidas/Asignaciones</option>
                             <option value="ajuste">Ajustes</option>
                         </select>
-                        <select id="filterMovDept">
+                        <select id="filterMovDept" class="department-select">
                             <option value="">Todos los Departamentos</option>
                             <!-- Los departamentos se cargarán dinámicamente -->
                         </select>
@@ -1387,8 +1403,18 @@
         // Movimientos iniciales vacíos (se irán agregando)
         const movimientosIniciales = [];
 
-        // Departamentos disponibles
+        // Departamentos disponibles - ACTUALIZADO CON LOS NUEVOS DEPARTAMENTOS
         const departamentos = [
+            "Administración",
+            "Tesoreria", 
+            "RRHH",
+            "Flota",
+            "Almacén",
+            "Head End",
+            "Seguridad Laboral",
+            "Gerencia senior",
+            "Sistemas",
+            "Colaboradores",
             "Los Ruices",
             "El Rosal",
             "La Naya",
