@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* Estilos anteriores se mantienen igual, solo se actualiza el CSS para el nuevo diseño de tabla */
+        /* ESTILOS (se mantienen igual que en tu archivo original) */
         * {
             margin: 0;
             padding: 0;
@@ -854,6 +854,16 @@
             max-height: 200px;
             overflow-y: auto;
         }
+        
+        /* Estilos para el botón de reposición */
+        .btn-reposition {
+            background-color: #9b59b6;
+            color: white;
+        }
+        
+        .btn-reposition:hover {
+            background-color: #8e44ad;
+        }
     </style>
 </head>
 <body>
@@ -862,7 +872,7 @@
             <h1><i class="fas fa-boxes"></i> Sistema de Inventario - Artículos de Oficina</h1>
             <div class="header-info">
                 <div class="date-time" id="currentDateTime"></div>
-                <div class="total-products">Productos: <span id="totalProducts">47</span></div>
+                <div class="total-products">Productos: <span id="totalProducts">60</span></div>
             </div>
             <div class="stock-alert" id="stockAlert">
                 <i class="fas fa-exclamation-triangle"></i> 
@@ -898,6 +908,9 @@
                     <button class="menu-btn export-btn" id="exportExcel">
                         <i class="fas fa-file-excel"></i> Exportar Excel
                     </button>
+                    <button class="menu-btn export-btn" id="exportInventoryExcel">
+                        <i class="fas fa-file-excel"></i> Inventario Actual
+                    </button>
                 </div>
 
                 <div class="stats">
@@ -925,7 +938,7 @@
                     <div class="dashboard-cards">
                         <div class="dashboard-card">
                             <i class="fas fa-boxes"></i>
-                            <h3 id="dashboardTotalProducts">47</h3>
+                            <h3 id="dashboardTotalProducts">60</h3>
                             <p>Productos en Inventario</p>
                         </div>
                         
@@ -976,6 +989,7 @@
                             <option value="oficina">Artículos de Oficina</option>
                             <option value="toner">Toner</option>
                             <option value="electronica">Electrónica</option>
+                            <option value="limpieza">Limpieza</option>
                             <option value="otros">Otros</option>
                         </select>
                         <select id="filterStock">
@@ -1010,12 +1024,13 @@
 
                 <!-- Sección de Nuevo Producto -->
                 <section id="nuevo-producto" class="content-section">
-                    <h2><i class="fas fa-plus"></i> Registrar Nuevo Producto</h2>
+                    <h2><i class="fas fa-plus"></i> Registrar/Reponer Producto</h2>
                     <form id="nuevoProductoForm">
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="codigoProducto">Código del Producto *</label>
                                 <input type="text" id="codigoProducto" placeholder="Ej: OFI-001" required>
+                                <small class="unit-conversion">Para reponer, use el código existente</small>
                             </div>
                             <div class="form-group">
                                 <label for="nombreProducto">Nombre del Producto *</label>
@@ -1032,6 +1047,7 @@
                                     <option value="oficina">Artículos de Oficina</option>
                                     <option value="toner">Toner</option>
                                     <option value="electronica">Electrónica</option>
+                                    <option value="limpieza">Limpieza</option>
                                     <option value="otros">Otros</option>
                                 </select>
                             </div>
@@ -1042,6 +1058,8 @@
                                     <option value="UND">Unidades</option>
                                     <option value="CAJAS">Cajas</option>
                                     <option value="PAQ">Paquetes</option>
+                                    <option value="GALON">Galones</option>
+                                    <option value="LT">Litros</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -1053,7 +1071,7 @@
 
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="stockInicial">Stock Inicial *</label>
+                                <label for="stockInicial">Stock a Agregar *</label>
                                 <input type="number" id="stockInicial" min="0" required>
                                 <small class="unit-conversion">En la unidad de medida seleccionada</small>
                             </div>
@@ -1066,14 +1084,17 @@
 
                         <div class="form-row">
                             <div class="form-group full-width">
-                                <label for="descripcionProducto">Descripción</label>
-                                <textarea id="descripcionProducto" rows="3" placeholder="Detalles del producto..."></textarea>
+                                <label for="descripcionProducto">Descripción / Motivo</label>
+                                <textarea id="descripcionProducto" rows="3" placeholder="Detalles del producto o motivo de reposición..."></textarea>
                             </div>
                         </div>
 
                         <div class="form-buttons">
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-primary" id="saveProductBtn">
                                 <i class="fas fa-save"></i> Guardar Producto
+                            </button>
+                            <button type="button" class="btn btn-success" id="repositionBtn" style="display: none;">
+                                <i class="fas fa-boxes"></i> Reponer Stock
                             </button>
                             <button type="reset" class="btn btn-secondary" id="resetProductBtn">
                                 <i class="fas fa-redo"></i> Limpiar
@@ -1106,7 +1127,7 @@
                                 <select id="departamentoAsignar" class="department-select" required>
                                     <option value="">Seleccione...</option>
                                     <option value="Administración">Administración</option>
-                                    <option value="Tesoreria">Tesoreria</option>
+                                    <option value="Tesorería">Tesorería</option>
                                     <option value="RRHH">RRHH</option>
                                     <option value="Flota">Flota</option>
                                     <option value="Almacén">Almacén</option>
@@ -1154,7 +1175,7 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="fechaAsignacion">Fecha de Asignación *</label>
-                                <input type="date" id="fechaAsignacion" required>
+                                <input type="datetime-local" id="fechaAsignacion" required>
                             </div>
                         </div>
 
@@ -1185,6 +1206,7 @@
                             <option value="entrada">Entradas</option>
                             <option value="salida">Salidas/Asignaciones</option>
                             <option value="ajuste">Ajustes</option>
+                            <option value="reposicion">Reposiciones</option>
                         </select>
                         <select id="filterMovDept" class="department-select">
                             <option value="">Todos los Departamentos</option>
@@ -1197,7 +1219,7 @@
                         <table id="movimientosTable">
                             <thead>
                                 <tr>
-                                    <th>Fecha</th>
+                                    <th>Fecha y Hora</th>
                                     <th>Tipo</th>
                                     <th>Producto</th>
                                     <th>Cantidad (Unidades)</th>
@@ -1205,6 +1227,7 @@
                                     <th>Usuario</th>
                                     <th>Observaciones</th>
                                     <th>Responsable</th>
+                                    <th>Acciones</th> <!-- NUEVA COLUMNA -->
                                 </tr>
                             </thead>
                             <tbody id="movimientosTableBody">
@@ -1223,6 +1246,7 @@
                             <option value="mensual">Reporte Mensual</option>
                             <option value="anual">Reporte Anual</option>
                             <option value="departamento">Por Departamento</option>
+                            <option value="productos">Por Producto</option>
                         </select>
                         <select id="reportMonth">
                             <!-- Los meses se cargarán dinámicamente -->
@@ -1233,25 +1257,28 @@
                         <button id="generateReport" class="btn btn-primary">
                             <i class="fas fa-chart-bar"></i> Generar Reporte
                         </button>
+                        <button id="exportReportExcel" class="btn btn-success">
+                            <i class="fas fa-file-excel"></i> Exportar Reporte
+                        </button>
                     </div>
 
                     <div class="reports-container">
                         <div class="report-card">
-                            <h3>Consumo por Departamento (Unidades)</h3>
+                            <h3 id="chartTitle1">Consumo por Departamento (Unidades)</h3>
                             <div class="chart-container">
                                 <canvas id="deptChart"></canvas>
                             </div>
                         </div>
                         
                         <div class="report-card">
-                            <h3>Top 10 Productos Más Utilizados (Unidades)</h3>
+                            <h3 id="chartTitle2">Top 10 Productos Más Utilizados (Unidades)</h3>
                             <div class="chart-container">
                                 <canvas id="topProductsChart"></canvas>
                             </div>
                         </div>
                         
                         <div class="report-card full-width">
-                            <h3>Resumen de Asignaciones (Unidades)</h3>
+                            <h3>Resumen de Movimientos</h3>
                             <div id="resumenAsignaciones">
                                 <!-- El resumen se cargará aquí -->
                             </div>
@@ -1300,6 +1327,7 @@
                             <select id="adjustType" required>
                                 <option value="entrada">Entrada (Agregar)</option>
                                 <option value="salida">Salida (Retirar)</option>
+                                <option value="reposicion">Reposición</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -1319,7 +1347,7 @@
             </div>
         </div>
 
-        <!-- Modal de confirmación -->
+        <!-- Modal de confirmación para eliminación de producto -->
         <div id="confirmModal" class="modal">
             <div class="modal-content confirm-modal">
                 <div class="modal-header">
@@ -1336,77 +1364,162 @@
             </div>
         </div>
 
+        <!-- Modal de confirmación para eliminación de movimiento -->
+        <div id="confirmMovModal" class="modal">
+            <div class="modal-content confirm-modal">
+                <div class="modal-header">
+                    <h3>Confirmar Eliminación de Movimiento</h3>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmMovMessage">¿Está seguro de que desea eliminar este movimiento? Esta acción revertirá el stock afectado.</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="confirmMovDelete" class="btn btn-danger">Eliminar</button>
+                    <button id="cancelMovDelete" class="btn btn-secondary">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para editar movimiento -->
+        <div id="editMovModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Editar Movimiento</h3>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="editMovForm">
+                        <div class="form-group">
+                            <label for="editMovProducto">Producto</label>
+                            <input type="text" id="editMovProducto" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="editMovTipo">Tipo</label>
+                            <input type="text" id="editMovTipo" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="editMovCantidad">Cantidad (Unidades)</label>
+                            <input type="text" id="editMovCantidad" readonly>
+                        </div>
+                        <div class="form-group" id="editMovDeptGroup">
+                            <label for="editMovDepartamento">Departamento</label>
+                            <input type="text" id="editMovDepartamento">
+                        </div>
+                        <div class="form-group">
+                            <label for="editMovUsuario">Usuario</label>
+                            <input type="text" id="editMovUsuario">
+                        </div>
+                        <div class="form-group">
+                            <label for="editMovObservaciones">Observaciones</label>
+                            <textarea id="editMovObservaciones" rows="3"></textarea>
+                        </div>
+                        <div class="form-buttons">
+                            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                            <button type="button" class="btn btn-secondary close-modal">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <footer>
             <p>Sistema de Inventario - Artículos de Oficina &copy; 2024 | Última actualización: <span id="lastUpdate"></span></p>
         </footer>
     </div>
 
     <script>
-        // Datos de productos basados en el Excel actualizado con unidades por medida
+        // =============================================
+        // CORRECCIONES APLICADAS:
+        // 1. IDs duplicados corregidos
+        // 2. unidadesPorMedida: 0 cambiado a 1
+        // 3. Función calcularStockDesdeUnidades protegida contra división por cero
+        // 4. Departamento "Tesoreria" corregido a "Tesorería"
+        // 5. Validación mejorada en guardarReposicion
+        // 6. Historial de movimientos de prueba ELIMINADO
+        // 7. Botones de Editar/Eliminar agregados a movimientos
+        // =============================================
+
+        // Datos de productos CORREGIDOS
         const productosIniciales = [
-            // Papelería - con unidades por medida
+            // Papelería
             { id: 1, codigo: "PAP-001", nombre: "BOLIGRAFOS", categoria: "papeleria", stock: 2, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 24, descripcion: "Bolígrafos de tinta azul, 24 unidades por caja" },
             { id: 2, codigo: "PAP-002", nombre: "LAPIZ", categoria: "papeleria", stock: 5, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 60, descripcion: "Lápices grafito, 60 unidades por caja" },
-            { id: 7, codigo: "PAP-007", nombre: "CUADERNOS", categoria: "papeleria", stock: 4, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cuadernos profesionales" },
-            { id: 10, codigo: "PAP-010", nombre: "GOMA DE BORRAR", categoria: "papeleria", stock: 3, stockMinimo: 3, unidad: "UND", unidadesPorMedida: 1, descripcion: "Gomas de borrar" },
-            { id: 15, codigo: "PAP-015", nombre: "LIGAS", categoria: "papeleria", stock: 2, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 600, descripcion: "Ligas para oficina, 600 unidades por paquete" },
-            { id: 16, codigo: "PAP-016", nombre: "POS IT", categoria: "papeleria", stock: 3, stockMinimo: 3, unidad: "UND", unidadesPorMedida: 1, descripcion: "Notas adhesivas" },
-            { id: 21, codigo: "PAP-021", nombre: "PEGA EN BARRA", categoria: "papeleria", stock: 2, stockMinimo: 3, unidad: "UND", unidadesPorMedida: 1, descripcion: "Pegamento en barra" },
-            { id: 24, codigo: "PAP-024", nombre: "FUNDAS TRANSPARENTES", categoria: "papeleria", stock: 29, stockMinimo: 5, unidad: "PAQ", unidadesPorMedida: 1, descripcion: "Fundas plásticas transparentes" },
-            { id: 26, codigo: "PAP-026", nombre: "SEPARADORES", categoria: "papeleria", stock: 4, stockMinimo: 3, unidad: "PAQ", unidadesPorMedida: 25, descripcion: "Separadores para archivadores, 25 unidades por paquete" },
-            { id: 27, codigo: "PAP-027", nombre: "CARPETAS OFICIO (MANILA)", categoria: "papeleria", stock: 3, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 300, descripcion: "Carpetas tamaño oficio manila, 300 unidades por paquete" },
-            { id: 28, codigo: "PAP-028", nombre: "CARPETAS CARTA (MANILA)", categoria: "papeleria", stock: 0, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 0, descripcion: "Carpetas tamaño carta manila" },
-            { id: 29, codigo: "PAP-029", nombre: "CARPETAS OFICIO (MARRON)", categoria: "papeleria", stock: 11, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 275, descripcion: "Carpetas tamaño oficio marrón, 275 unidades por paquete" },
-            { id: 30, codigo: "PAP-030", nombre: "CARPETAS CARTA (MARRON)", categoria: "papeleria", stock: 0, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 0, descripcion: "Carpetas tamaño carta marrón" },
-            { id: 33, codigo: "PAP-033", nombre: "TIRRO DE PAPEL 3/4", categoria: "papeleria", stock: 1, stockMinimo: 5, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cinta adhesiva de papel 3/4\"" },
-            { id: 34, codigo: "PAP-034", nombre: "TIRRO DE PAPEL 1", categoria: "papeleria", stock: 2, stockMinimo: 5, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cinta adhesiva de papel 1\"" },
-            { id: 41, codigo: "PAP-041", nombre: "ROLLO PUNTOS 5CM,07MM X 3CM,09MM", categoria: "papeleria", stock: 12, stockMinimo: 5, unidad: "PAQ", unidadesPorMedida: 1, descripcion: "Rollos de puntos adhesivos" },
-            { id: 42, codigo: "PAP-042", nombre: "ROLLOS PUNTO 80MM X 35MM", categoria: "papeleria", stock: 5, stockMinimo: 2, unidad: "PAQ", unidadesPorMedida: 1, descripcion: "Rollos de puntos adhesivos grandes" },
-            { id: 43, codigo: "PAP-043", nombre: "HOJAS BLANCAS T/CARTA", categoria: "papeleria", stock: 3, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 30, descripcion: "Hojas tamaño carta, 30 resmas por caja" },
-            { id: 44, codigo: "PAP-044", nombre: "HOJAS BLANCAS T/OFICIO", categoria: "papeleria", stock: 0, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 0, descripcion: "Hojas tamaño oficio" },
-            { id: 45, codigo: "PAP-045", nombre: "SOBRES T/CARTA", categoria: "papeleria", stock: 4, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 200, descripcion: "Sobres tamaño carta, 200 unidades por paquete" },
-            { id: 46, codigo: "PAP-046", nombre: "SOBRES T/OFICIO", categoria: "papeleria", stock: 2, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 100, descripcion: "Sobres tamaño oficio, 100 unidades por paquete" },
-            { id: 47, codigo: "PAP-047", nombre: "SOBRES T/EXTRAOFICIO", categoria: "papeleria", stock: 1, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 50, descripcion: "Sobres tamaño extraoficio, 50 unidades por paquete" },
+            { id: 3, codigo: "PAP-003", nombre: "CUADERNOS", categoria: "papeleria", stock: 4, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cuadernos profesionales" },
+            { id: 4, codigo: "PAP-004", nombre: "GOMA DE BORRAR", categoria: "papeleria", stock: 3, stockMinimo: 3, unidad: "UND", unidadesPorMedida: 1, descripcion: "Gomas de borrar" },
+            { id: 5, codigo: "PAP-005", nombre: "LIGAS", categoria: "papeleria", stock: 2, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 600, descripcion: "Ligas para oficina, 600 unidades por paquete" },
+            { id: 6, codigo: "PAP-006", nombre: "POS IT", categoria: "papeleria", stock: 3, stockMinimo: 3, unidad: "UND", unidadesPorMedida: 1, descripcion: "Notas adhesivas" },
+            { id: 7, codigo: "PAP-007", nombre: "PEGA EN BARRA", categoria: "papeleria", stock: 2, stockMinimo: 3, unidad: "UND", unidadesPorMedida: 1, descripcion: "Pegamento en barra" },
+            { id: 8, codigo: "PAP-008", nombre: "FUNDAS TRANSPARENTES", categoria: "papeleria", stock: 29, stockMinimo: 5, unidad: "PAQ", unidadesPorMedida: 1, descripcion: "Fundas plásticas transparentes" },
+            { id: 9, codigo: "PAP-009", nombre: "SEPARADORES", categoria: "papeleria", stock: 4, stockMinimo: 3, unidad: "PAQ", unidadesPorMedida: 25, descripcion: "Separadores para archivadores, 25 unidades por paquete" },
+            { id: 10, codigo: "PAP-010", nombre: "CARPETAS OFICIO (MANILA)", categoria: "papeleria", stock: 3, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 300, descripcion: "Carpetas tamaño oficio manila, 300 unidades por paquete" },
+            { id: 11, codigo: "PAP-011", nombre: "CARPETAS CARTA (MANILA)", categoria: "papeleria", stock: 0, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 1, descripcion: "Carpetas tamaño carta manila" }, // CORREGIDO: unidadesPorMedida de 0 a 1
+            { id: 12, codigo: "PAP-012", nombre: "CARPETAS OFICIO (MARRON)", categoria: "papeleria", stock: 11, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 275, descripcion: "Carpetas tamaño oficio marrón, 275 unidades por paquete" },
+            { id: 13, codigo: "PAP-013", nombre: "CARPETAS CARTA (MARRON)", categoria: "papeleria", stock: 0, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 1, descripcion: "Carpetas tamaño carta marrón" }, // CORREGIDO: unidadesPorMedida de 0 a 1
+            { id: 14, codigo: "PAP-014", nombre: "TIRRO DE PAPEL 3/4", categoria: "papeleria", stock: 1, stockMinimo: 5, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cinta adhesiva de papel 3/4\"" },
+            { id: 15, codigo: "PAP-015", nombre: "TIRRO DE PAPEL 1", categoria: "papeleria", stock: 2, stockMinimo: 5, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cinta adhesiva de papel 1\"" },
+            { id: 16, codigo: "PAP-016", nombre: "ROLLO PUNTOS 5CM,07MM X 3CM,09MM", categoria: "papeleria", stock: 12, stockMinimo: 5, unidad: "PAQ", unidadesPorMedida: 1, descripcion: "Rollos de puntos adhesivos" },
+            { id: 17, codigo: "PAP-017", nombre: "ROLLOS PUNTO 80MM X 35MM", categoria: "papeleria", stock: 5, stockMinimo: 2, unidad: "PAQ", unidadesPorMedida: 1, descripcion: "Rollos de puntos adhesivos grandes" },
+            { id: 18, codigo: "PAP-018", nombre: "HOJAS BLANCAS T/CARTA", categoria: "papeleria", stock: 3, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 30, descripcion: "Hojas tamaño carta, 30 resmas por caja" },
+            { id: 19, codigo: "PAP-019", nombre: "HOJAS BLANCAS T/OFICIO", categoria: "papeleria", stock: 0, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Hojas tamaño oficio" }, // CORREGIDO: unidadesPorMedida de 0 a 1
+            { id: 20, codigo: "PAP-020", nombre: "SOBRES T/CARTA", categoria: "papeleria", stock: 4, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 200, descripcion: "Sobres tamaño carta, 200 unidades por paquete" },
+            { id: 21, codigo: "PAP-021", nombre: "SOBRES T/OFICIO", categoria: "papeleria", stock: 2, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 100, descripcion: "Sobres tamaño oficio, 100 unidades por paquete" },
+            { id: 22, codigo: "PAP-022", nombre: "SOBRES T/EXTRAOFICIO", categoria: "papeleria", stock: 1, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 50, descripcion: "Sobres tamaño extraoficio, 50 unidades por paquete" },
             
             // Artículos de Oficina
-            { id: 3, codigo: "OFI-003", nombre: "MARCADOR PERMANENTE P/GRUESA", categoria: "oficina", stock: 11, stockMinimo: 3, unidad: "UND", unidadesPorMedida: 1, descripcion: "Marcador permanente punta gruesa" },
-            { id: 4, codigo: "OFI-004", nombre: "MARCADORES SHARPIE P/FINA", categoria: "oficina", stock: 5, stockMinimo: 2, unidad: "UND", unidadesPorMedida: 1, descripcion: "Marcadores Sharpie punta fina" },
-            { id: 5, codigo: "OFI-005", nombre: "TIJERAS", categoria: "oficina", stock: 4, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Tijeras de oficina" },
-            { id: 6, codigo: "OFI-006", nombre: "RESALTADORES", categoria: "oficina", stock: 11, stockMinimo: 4, unidad: "UND", unidadesPorMedida: 1, descripcion: "Resaltadores de colores" },
-            { id: 8, codigo: "OFI-008", nombre: "ENGRAPADORAS", categoria: "oficina", stock: 3, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Engrapadoras de oficina" },
-            { id: 9, codigo: "OFI-009", nombre: "MARCADOR DE PIZARRA", categoria: "oficina", stock: 3, stockMinimo: 3, unidad: "UND", unidadesPorMedida: 1, descripcion: "Marcadores para pizarra" },
-            { id: 11, codigo: "OFI-011", nombre: "GRAPAS USO PESADO", categoria: "oficina", stock: 1, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 900, descripcion: "Grapas para uso pesado, 900 unidades por caja" },
-            { id: 12, codigo: "OFI-012", nombre: "REGLAS", categoria: "oficina", stock: 1, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Reglas de 30 cm" },
-            { id: 13, codigo: "OFI-013", nombre: "TIRRO DE EMBALAR", categoria: "oficina", stock: 9, stockMinimo: 4, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cinta de embalar" },
-            { id: 14, codigo: "OFI-014", nombre: "CELOVEN", categoria: "oficina", stock: 12, stockMinimo: 4, unidad: "UND", unidadesPorMedida: 1, descripcion: "Celoven" },
-            { id: 17, codigo: "OFI-017", nombre: "GRAPAS LISAS", categoria: "oficina", stock: 3, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 15000, descripcion: "Grapas lisas estándar, 15,000 unidades por caja" },
-            { id: 18, codigo: "OFI-018", nombre: "GRAPAS CURRUGADAS", categoria: "oficina", stock: 2, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 5000, descripcion: "Grapas corrugadas, 5,000 unidades por caja" },
-            { id: 19, codigo: "OFI-019", nombre: "BLINDER CLIPS", categoria: "oficina", stock: 1, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 11, descripcion: "Clips binder, 11 unidades por caja" },
-            { id: 20, codigo: "OFI-020", nombre: "CLIPS", categoria: "oficina", stock: 4, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 1, descripcion: "Clips metálicos" },
-            { id: 22, codigo: "OFI-022", nombre: "EXACTO", categoria: "oficina", stock: 1, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cuchillo exacto" },
-            { id: 23, codigo: "OFI-023", nombre: "CLIPS MARIPOSA", categoria: "oficina", stock: 30, stockMinimo: 5, unidad: "CAJAS", unidadesPorMedida: 1, descripcion: "Clips mariposa" },
-            { id: 25, codigo: "OFI-025", nombre: "ABRE HUECOS", categoria: "oficina", stock: 3, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Perforador de papel" },
+            { id: 23, codigo: "OFI-001", nombre: "MARCADOR PERMANENTE P/GRUESA", categoria: "oficina", stock: 11, stockMinimo: 3, unidad: "UND", unidadesPorMedida: 1, descripcion: "Marcador permanente punta gruesa" },
+            { id: 24, codigo: "OFI-002", nombre: "MARCADORES SHARPIE P/FINA", categoria: "oficina", stock: 5, stockMinimo: 2, unidad: "UND", unidadesPorMedida: 1, descripcion: "Marcadores Sharpie punta fina" },
+            { id: 25, codigo: "OFI-003", nombre: "TIJERAS", categoria: "oficina", stock: 4, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Tijeras de oficina" },
+            { id: 26, codigo: "OFI-004", nombre: "RESALTADORES", categoria: "oficina", stock: 11, stockMinimo: 4, unidad: "UND", unidadesPorMedida: 1, descripcion: "Resaltadores de colores" },
+            { id: 27, codigo: "OFI-005", nombre: "ENGRAPADORAS", categoria: "oficina", stock: 3, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Engrapadoras de oficina" },
+            { id: 28, codigo: "OFI-006", nombre: "MARCADOR DE PIZARRA", categoria: "oficina", stock: 3, stockMinimo: 3, unidad: "UND", unidadesPorMedida: 1, descripcion: "Marcadores para pizarra" },
+            { id: 29, codigo: "OFI-007", nombre: "GRAPAS USO PESADO", categoria: "oficina", stock: 1, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 900, descripcion: "Grapas para uso pesado, 900 unidades por caja" },
+            { id: 30, codigo: "OFI-008", nombre: "REGLAS", categoria: "oficina", stock: 1, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Reglas de 30 cm" },
+            { id: 31, codigo: "OFI-009", nombre: "TIRRO DE EMBALAR", categoria: "oficina", stock: 9, stockMinimo: 4, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cinta de embalar" },
+            { id: 32, codigo: "OFI-010", nombre: "CELOVEN", categoria: "oficina", stock: 12, stockMinimo: 4, unidad: "UND", unidadesPorMedida: 1, descripcion: "Celoven" },
+            { id: 33, codigo: "OFI-011", nombre: "GRAPAS LISAS", categoria: "oficina", stock: 3, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 15000, descripcion: "Grapas lisas estándar, 15,000 unidades por caja" },
+            { id: 34, codigo: "OFI-012", nombre: "GRAPAS CURRUGADAS", categoria: "oficina", stock: 2, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 5000, descripcion: "Grapas corrugadas, 5,000 unidades por caja" },
+            { id: 35, codigo: "OFI-013", nombre: "BLINDER CLIPS", categoria: "oficina", stock: 1, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 11, descripcion: "Clips binder, 11 unidades por caja" },
+            { id: 36, codigo: "OFI-014", nombre: "CLIPS", categoria: "oficina", stock: 4, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 1, descripcion: "Clips metálicos" },
+            { id: 37, codigo: "OFI-015", nombre: "EXACTO", categoria: "oficina", stock: 1, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cuchillo exacto" },
+            { id: 38, codigo: "OFI-016", nombre: "CLIPS MARIPOSA", categoria: "oficina", stock: 30, stockMinimo: 5, unidad: "CAJAS", unidadesPorMedida: 1, descripcion: "Clips mariposa" },
+            { id: 39, codigo: "OFI-017", nombre: "ABRE HUECOS", categoria: "oficina", stock: 3, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Perforador de papel" },
             
             // Toner
-            { id: 36, codigo: "TON-036", nombre: "TONER 105 A", categoria: "toner", stock: 4, stockMinimo: 2, unidad: "UND", unidadesPorMedida: 1, descripcion: "Toner 105A para impresora" },
-            { id: 37, codigo: "TON-037", nombre: "TONER 151 A", categoria: "toner", stock: 3, stockMinimo: 2, unidad: "UND", unidadesPorMedida: 1, descripcion: "Toner 151A para impresora" },
-            { id: 38, codigo: "TON-038", nombre: "TONER 42 A", categoria: "toner", stock: 2, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Toner 42A para impresora" },
-            { id: 39, codigo: "TON-039", nombre: "TONER 12 A", categoria: "toner", stock: 2, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Toner 12A para impresora" },
-            { id: 40, codigo: "TON-040", nombre: "TONER GPR22", categoria: "toner", stock: 1, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Toner GPR22 para impresora" },
+            { id: 40, codigo: "TON-001", nombre: "TONER 105 A", categoria: "toner", stock: 4, stockMinimo: 2, unidad: "UND", unidadesPorMedida: 1, descripcion: "Toner 105A para impresora" },
+            { id: 41, codigo: "TON-002", nombre: "TONER 151 A", categoria: "toner", stock: 3, stockMinimo: 2, unidad: "UND", unidadesPorMedida: 1, descripcion: "Toner 151A para impresora" },
+            { id: 42, codigo: "TON-003", nombre: "TONER 42 A", categoria: "toner", stock: 2, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Toner 42A para impresora" },
+            { id: 43, codigo: "TON-004", nombre: "TONER 12 A", categoria: "toner", stock: 2, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Toner 12A para impresora" },
+            { id: 44, codigo: "TON-005", nombre: "TONER GPR22", categoria: "toner", stock: 1, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Toner GPR22 para impresora" },
             
             // Electrónica
-            { id: 31, codigo: "ELE-031", nombre: "PILAS AA RECARGABLES", categoria: "electronica", stock: 4, stockMinimo: 8, unidad: "UND", unidadesPorMedida: 1, descripcion: "Pilas AA recargables" },
-            { id: 32, codigo: "ELE-032", nombre: "PILAS AA", categoria: "electronica", stock: 46, stockMinimo: 8, unidad: "UND", unidadesPorMedida: 1, descripcion: "Pilas AA estándar" },
-            { id: 35, codigo: "ELE-035", nombre: "PILAS AAA", categoria: "electronica", stock: 19, stockMinimo: 8, unidad: "UND", unidadesPorMedida: 1, descripcion: "Pilas AAA" }
+            { id: 45, codigo: "ELE-001", nombre: "PILAS AA RECARGABLES", categoria: "electronica", stock: 4, stockMinimo: 8, unidad: "UND", unidadesPorMedida: 1, descripcion: "Pilas AA recargables" },
+            { id: 46, codigo: "ELE-002", nombre: "PILAS AA", categoria: "electronica", stock: 46, stockMinimo: 8, unidad: "UND", unidadesPorMedida: 1, descripcion: "Pilas AA estándar" },
+            { id: 47, codigo: "ELE-003", nombre: "PILAS AAA", categoria: "electronica", stock: 19, stockMinimo: 8, unidad: "UND", unidadesPorMedida: 1, descripcion: "Pilas AAA" },
+            
+            // Materiales de Limpieza
+            { id: 48, codigo: "LIM-001", nombre: "BULTOS PAPEL JUMBO", categoria: "limpieza", stock: 1, stockMinimo: 5, unidad: "PAQ", unidadesPorMedida: 4, descripcion: "Papel jumbo para limpieza" },
+            { id: 49, codigo: "LIM-002", nombre: "BULTOS PAPEL SECANTE", categoria: "limpieza", stock: 6, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 6, descripcion: "Papel secante" },
+            { id: 50, codigo: "LIM-003", nombre: "PAQ VASOS V-5", categoria: "limpieza", stock: 3, stockMinimo: 2, unidad: "PAQ", unidadesPorMedida: 100, descripcion: "Vasos desechables V-5" },
+            { id: 51, codigo: "LIM-004", nombre: "PAQ VASOS V-8", categoria: "limpieza", stock: 18, stockMinimo: 2, unidad: "PAQ", unidadesPorMedida: 50, descripcion: "Vasos desechables V-8" },
+            { id: 52, codigo: "LIM-005", nombre: "SERVILLETAS", categoria: "limpieza", stock: 14, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 14, descripcion: "Servilletas" },
+            { id: 53, codigo: "LIM-006", nombre: "GUANTES DE GOMA (TALLA S)", categoria: "limpieza", stock: 2, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Guantes de goma talla S" },
+            { id: 54, codigo: "LIM-007", nombre: "GALONES DE JABON MULTIUSO", categoria: "limpieza", stock: 5, stockMinimo: 3, unidad: "GALON", unidadesPorMedida: 1, descripcion: "Jabón multiuso" },
+            { id: 55, codigo: "LIM-008", nombre: "PALAS", categoria: "limpieza", stock: 1, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Palas para limpieza" },
+            { id: 56, codigo: "LIM-009", nombre: "CEPILLO PARA BARRER", categoria: "limpieza", stock: 2, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cepillo para barrer" },
+            { id: 57, codigo: "LIM-010", nombre: "ESPONJA DOBLE USO", categoria: "limpieza", stock: 16, stockMinimo: 2, unidad: "UND", unidadesPorMedida: 1, descripcion: "Esponja doble uso" },
+            { id: 58, codigo: "LIM-011", nombre: "MOPAS", categoria: "limpieza", stock: 8, stockMinimo: 2, unidad: "UND", unidadesPorMedida: 1, descripcion: "Mopas para limpieza" },
+            { id: 59, codigo: "LIM-012", nombre: "COLETOS", categoria: "limpieza", stock: 2, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Coletos" },
+            { id: 60, codigo: "LIM-013", nombre: "VENSOL", categoria: "limpieza", stock: 1, stockMinimo: 1, unidad: "LT", unidadesPorMedida: 1, descripcion: "Vensol limpiador" }
         ];
 
-        // Movimientos iniciales vacíos (se irán agregando)
+        // Movimientos iniciales - AHORA VACÍO (eliminados datos de prueba)
         const movimientosIniciales = [];
 
-        // Departamentos disponibles - ACTUALIZADO CON LOS NUEVOS DEPARTAMENTOS
+        // Departamentos disponibles (CORREGIDO: "Tesoreria" a "Tesorería")
         const departamentos = [
             "Administración",
-            "Tesoreria", 
+            "Tesorería", // CORREGIDO
             "RRHH",
             "Flota",
             "Almacén",
@@ -1432,29 +1545,36 @@
         let movimientos = [...movimientosIniciales];
         let currentEditId = null;
         let currentAdjustId = null;
-        let nextProductId = 48; // Siguiente ID disponible
-        let nextMovimientoId = 1;
+        let currentMovEditId = null; // Para edición de movimientos
+        let nextProductId = 61; // Siguiente ID disponible
+        let nextMovimientoId = 1; // Comienza en 1
         let categoryChartInstance = null;
         let deptChartInstance = null;
         let topProductsChartInstance = null;
 
-        // Funciones para calcular unidades
+        // =============================================
+        // FUNCIONES CORREGIDAS
+        // =============================================
+
+        // Funciones para calcular unidades - CORREGIDA para evitar división por cero
         function calcularUnidadesTotales(producto) {
             return producto.stock * producto.unidadesPorMedida;
         }
 
         function calcularStockDesdeUnidades(producto, unidadesTotales) {
-            if (producto.unidadesPorMedida === 0) return 0;
+            if (producto.unidadesPorMedida === 0 || producto.unidadesPorMedida === undefined) {
+                // CORRECCIÓN: Evitar división por cero
+                console.warn(`Producto ${producto.nombre} tiene unidadesPorMedida = 0, usando 1 como valor por defecto`);
+                return unidadesTotales; // Si no hay conversión, cada unidad es 1
+            }
             return unidadesTotales / producto.unidadesPorMedida;
         }
 
-        function formatearStock(producto) {
-            const unidadesTotales = calcularUnidadesTotales(producto);
-            if (producto.unidad === "UND") {
-                return `${producto.stock} ${producto.unidad}`;
-            } else {
-                return `${producto.stock} ${producto.unidad} (${unidadesTotales} unidades)`;
-            }
+        function formatearFechaHora(fechaHoraStr = null) {
+            const ahora = fechaHoraStr ? new Date(fechaHoraStr) : new Date();
+            const fecha = ahora.toISOString().split('T')[0];
+            const hora = ahora.toTimeString().split(' ')[0].substring(0, 8);
+            return `${fecha} ${hora}`;
         }
 
         // Inicialización cuando el DOM esté listo
@@ -1502,17 +1622,24 @@
             // Actualizar fecha de última actualización
             document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString();
             
-            // Establecer fecha actual por defecto
-            const ahora = new Date();
+            // Establecer fecha y hora actual por defecto
             const fechaInput = document.getElementById('fechaAsignacion');
             if (fechaInput) {
-                fechaInput.value = ahora.toISOString().slice(0, 10);
+                const ahora = new Date();
+                ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
+                fechaInput.value = ahora.toISOString().slice(0, 16);
             }
             
             // Configurar evento para cálculo de equivalencia en asignación
             const cantidadInput = document.getElementById('cantidadAsignarUnidades');
             if (cantidadInput) {
                 cantidadInput.addEventListener('input', calcularEquivalenciaAsignacion);
+            }
+            
+            // Configurar evento para verificar código existente
+            const codigoInput = document.getElementById('codigoProducto');
+            if (codigoInput) {
+                codigoInput.addEventListener('blur', verificarCodigoExistente);
             }
         }
 
@@ -1536,8 +1663,10 @@
                                 generarReporteMensual();
                             } else if (reportType === 'anual') {
                                 generarReporteAnual();
-                            } else {
+                            } else if (reportType === 'departamento') {
                                 generarReporteDepartamento();
+                            } else {
+                                generarReporteProductos();
                             }
                         }, 100);
                     }
@@ -1553,6 +1682,12 @@
             
             // Formulario de nuevo producto
             document.getElementById('nuevoProductoForm').addEventListener('submit', guardarProducto);
+            
+            // Botón de reposición - CORREGIDO: validación mejorada
+            document.getElementById('repositionBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                guardarReposicion();
+            });
             
             // Formulario de asignación
             document.getElementById('asignacionForm').addEventListener('submit', registrarAsignacion);
@@ -1594,7 +1729,7 @@
             document.getElementById('reportType').addEventListener('change', function() {
                 const monthSelect = document.getElementById('reportMonth');
                 
-                if (this.value === 'departamento') {
+                if (this.value === 'departamento' || this.value === 'productos') {
                     monthSelect.style.display = 'none';
                 } else {
                     monthSelect.style.display = 'block';
@@ -1608,29 +1743,47 @@
                     generarReporteMensual();
                 } else if (reportType === 'anual') {
                     generarReporteAnual();
-                } else {
+                } else if (reportType === 'departamento') {
                     generarReporteDepartamento();
+                } else {
+                    generarReporteProductos();
                 }
             });
+            
+            // Exportar reporte Excel
+            document.getElementById('exportReportExcel').addEventListener('click', exportarReporteExcel);
             
             // Botones de exportación
             document.getElementById('exportPdf').addEventListener('click', exportarPDF);
             document.getElementById('exportExcel').addEventListener('click', exportarExcel);
+            document.getElementById('exportInventoryExcel').addEventListener('click', exportarInventarioActualExcel);
             
             // Modal - cerrar
             document.querySelectorAll('.close-modal').forEach(btn => {
                 btn.addEventListener('click', cerrarModal);
             });
             
-            // Confirmar eliminación
+            // Confirmar eliminación de producto
             document.getElementById('confirmDelete').addEventListener('click', eliminarProducto);
             document.getElementById('cancelDelete').addEventListener('click', cerrarModal);
+            
+            // Confirmar eliminación de movimiento
+            document.getElementById('confirmMovDelete').addEventListener('click', eliminarMovimiento);
+            document.getElementById('cancelMovDelete').addEventListener('click', cerrarModal);
+            
+            // Formulario de edición de movimiento
+            document.getElementById('editMovForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                guardarCambiosMovimiento();
+            });
             
             // Cerrar modal al hacer clic fuera
             window.addEventListener('click', function(event) {
                 const editModal = document.getElementById('editModal');
                 const confirmModal = document.getElementById('confirmModal');
                 const adjustModal = document.getElementById('adjustModal');
+                const editMovModal = document.getElementById('editMovModal');
+                const confirmMovModal = document.getElementById('confirmMovModal');
                 
                 if (event.target === editModal) {
                     cerrarModal();
@@ -1643,7 +1796,110 @@
                 if (event.target === adjustModal) {
                     cerrarModal();
                 }
+                
+                if (event.target === editMovModal) {
+                    cerrarModal();
+                }
+                
+                if (event.target === confirmMovModal) {
+                    cerrarModal();
+                }
             });
+        }
+
+        // Verificar si el código ya existe
+        function verificarCodigoExistente() {
+            const codigo = document.getElementById('codigoProducto').value.trim();
+            const saveBtn = document.getElementById('saveProductBtn');
+            const repositionBtn = document.getElementById('repositionBtn');
+            
+            if (codigo) {
+                const productoExistente = productos.find(p => p.codigo === codigo);
+                if (productoExistente) {
+                    // Mostrar información del producto existente
+                    document.getElementById('nombreProducto').value = productoExistente.nombre;
+                    document.getElementById('categoriaProducto').value = productoExistente.categoria;
+                    document.getElementById('unidadProducto').value = productoExistente.unidad;
+                    document.getElementById('unidadesPorMedida').value = productoExistente.unidadesPorMedida || 1;
+                    document.getElementById('stockMinimo').value = productoExistente.stockMinimo;
+                    document.getElementById('descripcionProducto').value = `Reposición de stock para ${productoExistente.nombre}`;
+                    
+                    // Cambiar botones
+                    saveBtn.style.display = 'none';
+                    repositionBtn.style.display = 'block';
+                } else {
+                    saveBtn.style.display = 'block';
+                    repositionBtn.style.display = 'none';
+                }
+            }
+        }
+
+        // Guardar reposición de producto existente - CORREGIDO con validación
+        function guardarReposicion() {
+            const codigo = document.getElementById('codigoProducto').value.trim();
+            const cantidad = parseInt(document.getElementById('stockInicial').value);
+            const motivo = document.getElementById('descripcionProducto').value.trim();
+            
+            if (!codigo || isNaN(cantidad) || cantidad <= 0) {
+                alert('Por favor complete todos los campos requeridos');
+                return;
+            }
+            
+            const productoIndex = productos.findIndex(p => p.codigo === codigo);
+            if (productoIndex === -1) {
+                alert('Producto no encontrado');
+                return;
+            }
+            
+            const producto = productos[productoIndex];
+            
+            // CORRECCIÓN: Validar unidadesPorMedida
+            if (!producto.unidadesPorMedida || producto.unidadesPorMedida <= 0) {
+                alert('Error: El producto tiene una configuración de unidades inválida. Por favor edite el producto primero.');
+                return;
+            }
+            
+            const unidadesAAgregar = cantidad * producto.unidadesPorMedida;
+            
+            // Actualizar stock
+            productos[productoIndex].stock += cantidad;
+            
+            // Registrar movimiento de reposición
+            const nuevoMovimiento = {
+                id: nextMovimientoId++,
+                fechaHora: formatearFechaHora(),
+                tipo: "reposicion",
+                productoId: producto.id,
+                producto: producto.nombre,
+                cantidad: unidadesAAgregar,
+                departamento: "Almacén",
+                usuario: "N/A",
+                observaciones: motivo || `Reposición de ${cantidad} ${producto.unidad}`,
+                responsable: "Admin Sistema"
+            };
+            
+            movimientos.push(nuevoMovimiento);
+            
+            // Actualizar interfaz
+            actualizarTablaInventario();
+            actualizarTablaMovimientos();
+            cargarProductosAsignacion();
+            actualizarEstadisticas();
+            actualizarDashboard();
+            verificarStockBajo();
+            
+            // Mostrar mensaje de éxito
+            const nuevasUnidades = calcularUnidadesTotales(productos[productoIndex]);
+            alert(`Reposición registrada exitosamente. Se agregaron ${unidadesAAgregar} unidades. Nuevo stock: ${nuevasUnidades} unidades`);
+            
+            // Limpiar formulario
+            document.getElementById('nuevoProductoForm').reset();
+            document.getElementById('saveProductBtn').style.display = 'block';
+            document.getElementById('repositionBtn').style.display = 'none';
+            
+            // Establecer valores por defecto
+            document.getElementById('stockMinimo').value = "5";
+            document.getElementById('unidadesPorMedida').value = "1";
         }
 
         // Calcular equivalencia en asignación
@@ -1664,7 +1920,7 @@
             if (producto.unidad === "UND") {
                 equivalencia = `${cantidadUnidades} unidades`;
             } else {
-                const equivalenciaMedida = cantidadUnidades / producto.unidadesPorMedida;
+                const equivalenciaMedida = cantidadUnidades / (producto.unidadesPorMedida || 1);
                 equivalencia = `${equivalenciaMedida.toFixed(2)} ${producto.unidad} (${cantidadUnidades} unidades)`;
             }
             
@@ -1717,7 +1973,9 @@
                 weekday: 'long', 
                 year: 'numeric', 
                 month: 'long', 
-                day: 'numeric'
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
             };
             
             const dateTimeElement = document.getElementById('currentDateTime');
@@ -1741,6 +1999,7 @@
             
             const currentDate = new Date();
             
+            monthSelect.innerHTML = '';
             meses.forEach((mes, index) => {
                 const option = document.createElement('option');
                 option.value = index + 1;
@@ -1752,6 +2011,7 @@
             });
             
             // Generar años (desde 2023 hasta el año en curso + 1 año futuro)
+            yearSelect.innerHTML = '';
             const currentYearNow = currentDate.getFullYear();
             const startYear = 2023;
             const endYear = currentYearNow + 1;
@@ -1833,7 +2093,7 @@
             // Verificar si el código ya existe
             const codigoExiste = productos.some(p => p.codigo === codigo);
             if (codigoExiste) {
-                alert('Ya existe un producto con este código');
+                alert('Ya existe un producto con este código. Use la función de reposición.');
                 return;
             }
             
@@ -1858,14 +2118,14 @@
             const unidadesTotales = calcularUnidadesTotales(nuevoProducto);
             const nuevoMovimiento = {
                 id: nextMovimientoId++,
-                fecha: nuevoProducto.fechaRegistro,
+                fechaHora: formatearFechaHora(),
                 tipo: "entrada",
                 productoId: nuevoProducto.id,
                 producto: nuevoProducto.nombre,
                 cantidad: unidadesTotales,
                 departamento: "Almacén",
                 usuario: "N/A",
-                observaciones: "Registro inicial de producto",
+                observaciones: "Registro inicial de producto: " + (descripcion || "Sin observaciones"),
                 responsable: "Admin Sistema"
             };
             
@@ -1899,11 +2159,11 @@
             const cantidadUnidades = parseInt(document.getElementById('cantidadAsignarUnidades').value);
             const departamento = document.getElementById('departamentoAsignar').value;
             const usuario = document.getElementById('usuarioAsignar').value.trim();
-            const fecha = document.getElementById('fechaAsignacion').value;
+            const fechaHora = document.getElementById('fechaAsignacion').value;
             const observaciones = document.getElementById('observacionesAsignacion').value.trim();
             
             // Validaciones
-            if (!productoId || !cantidadUnidades || !departamento || !usuario || !fecha) {
+            if (!productoId || !cantidadUnidades || !departamento || !usuario || !fechaHora) {
                 alert('Por favor complete todos los campos requeridos');
                 return;
             }
@@ -1930,10 +2190,13 @@
             // Actualizar stock del producto (recalcular stock en la unidad de medida)
             productos[productoIndex].stock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
             
+            // Formatear fecha y hora
+            const fechaHoraFormateada = formatearFechaHora(fechaHora);
+            
             // Registrar movimiento
             const nuevoMovimiento = {
                 id: nextMovimientoId++,
-                fecha: fecha,
+                fechaHora: fechaHoraFormateada,
                 tipo: "salida",
                 productoId: producto.id,
                 producto: producto.nombre,
@@ -1961,9 +2224,10 @@
             // Limpiar formulario
             document.getElementById('asignacionForm').reset();
             
-            // Establecer fecha actual
+            // Establecer fecha y hora actual
             const ahora = new Date();
-            document.getElementById('fechaAsignacion').value = ahora.toISOString().slice(0, 10);
+            ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
+            document.getElementById('fechaAsignacion').value = ahora.toISOString().slice(0, 16);
             
             // Limpiar stock disponible y cálculos
             document.getElementById('stockDisponible').value = '';
@@ -1993,7 +2257,7 @@
                 // Filtro por stock (basado en unidades totales)
                 let stockMatch = true;
                 const unidadesTotales = calcularUnidadesTotales(producto);
-                const stockMinimoUnidades = producto.stockMinimo * producto.unidadesPorMedida;
+                const stockMinimoUnidades = producto.stockMinimo * (producto.unidadesPorMedida || 1);
                 
                 if (filterStock === 'low') {
                     stockMatch = unidadesTotales < stockMinimoUnidades;
@@ -2006,11 +2270,12 @@
                 return searchMatch && categoryMatch && stockMatch;
             });
             
-            // Ordenar por número (código)
+            // Ordenar por categoría y nombre
             productosFiltrados.sort((a, b) => {
-                const numA = parseInt(a.codigo.split('-')[1]) || 0;
-                const numB = parseInt(b.codigo.split('-')[1]) || 0;
-                return numA - numB;
+                if (a.categoria === b.categoria) {
+                    return a.nombre.localeCompare(b.nombre);
+                }
+                return a.categoria.localeCompare(b.categoria);
             });
             
             // Limpiar tabla
@@ -2025,7 +2290,7 @@
                 
                 // Calcular unidades totales
                 const unidadesTotales = calcularUnidadesTotales(producto);
-                const stockMinimoUnidades = producto.stockMinimo * producto.unidadesPorMedida;
+                const stockMinimoUnidades = producto.stockMinimo * (producto.unidadesPorMedida || 1);
                 
                 // Determinar estado del stock (basado en unidades)
                 let estadoClase = '';
@@ -2066,6 +2331,10 @@
                         categoriaNombre = 'Electrónica';
                         categoriaClase = 'badge-electronica';
                         break;
+                    case 'limpieza':
+                        categoriaNombre = 'Limpieza';
+                        categoriaClase = 'badge-otros';
+                        break;
                     case 'otros':
                         categoriaNombre = 'Otros';
                         categoriaClase = 'badge-otros';
@@ -2095,9 +2364,7 @@
                     <td><strong>${codigoNum}</strong></td>
                     <td>
                         <div>${producto.nombre}</div>
-                        <div class="unit-info">
-                            ${producto.unidad !== "UND" ? `${producto.unidadesPorMedida} unidades por ${producto.unidad.toLowerCase()}` : 'Unidad individual'}
-                        </div>
+                        <div class="unit-info">Código: ${producto.codigo}</div>
                     </td>
                     <td><span class="badge ${categoriaClase}">${categoriaNombre}</span></td>
                     <td>
@@ -2120,6 +2387,9 @@
                             </button>
                             <button class="btn-action btn-adjust" data-id="${producto.id}">
                                 <i class="fas fa-adjust"></i> Ajustar
+                            </button>
+                            <button class="btn-action btn-reposition" data-id="${producto.id}">
+                                <i class="fas fa-boxes"></i> Reponer
                             </button>
                             <button class="btn-action btn-delete" data-id="${producto.id}">
                                 <i class="fas fa-trash"></i> Eliminar
@@ -2153,6 +2423,13 @@
                 });
             });
             
+            document.querySelectorAll('.btn-reposition').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    irAReposicion(id);
+                });
+            });
+            
             document.querySelectorAll('.btn-delete').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const id = parseInt(this.getAttribute('data-id'));
@@ -2165,6 +2442,27 @@
             if (totalProductsElement) {
                 totalProductsElement.textContent = productos.length;
             }
+        }
+
+        // Ir a sección de reposición
+        function irAReposicion(productoId) {
+            const producto = productos.find(p => p.id === productoId);
+            if (!producto) return;
+            
+            mostrarSeccion('nuevo-producto');
+            
+            // Llenar formulario con datos del producto
+            document.getElementById('codigoProducto').value = producto.codigo;
+            document.getElementById('nombreProducto').value = producto.nombre;
+            document.getElementById('categoriaProducto').value = producto.categoria;
+            document.getElementById('unidadProducto').value = producto.unidad;
+            document.getElementById('unidadesPorMedida').value = producto.unidadesPorMedida || 1;
+            document.getElementById('stockMinimo').value = producto.stockMinimo;
+            document.getElementById('descripcionProducto').value = `Reposición de stock para ${producto.nombre}`;
+            
+            // Mostrar botón de reposición
+            document.getElementById('saveProductBtn').style.display = 'none';
+            document.getElementById('repositionBtn').style.display = 'block';
         }
 
         // Actualizar tabla de movimientos
@@ -2185,13 +2483,13 @@
                 const deptMatch = filterDept === '' || movimiento.departamento === filterDept;
                 
                 // Filtro por fecha
-                const fechaMatch = filterFecha === '' || movimiento.fecha === filterFecha;
+                const fechaMatch = filterFecha === '' || movimiento.fechaHora.startsWith(filterFecha);
                 
                 return tipoMatch && deptMatch && fechaMatch;
             });
             
             // Ordenar por fecha más reciente primero
-            movimientosFiltrados.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+            movimientosFiltrados.sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora));
             
             // Limpiar tabla
             tableBody.innerHTML = '';
@@ -2199,10 +2497,6 @@
             // Llenar tabla
             movimientosFiltrados.forEach(movimiento => {
                 const row = document.createElement('tr');
-                
-                // Formatear fecha
-                const fecha = new Date(movimiento.fecha);
-                const fechaFormateada = fecha.toLocaleDateString('es-ES');
                 
                 // Determinar tipo y color
                 let tipoTexto = '';
@@ -2221,12 +2515,16 @@
                         tipoTexto = 'Ajuste';
                         tipoColor = '#f39c12';
                         break;
+                    case 'reposicion':
+                        tipoTexto = 'Reposición';
+                        tipoColor = '#9b59b6';
+                        break;
                     default:
                         tipoTexto = movimiento.tipo;
                 }
                 
                 row.innerHTML = `
-                    <td>${fechaFormateada}</td>
+                    <td>${movimiento.fechaHora}</td>
                     <td><span style="color: ${tipoColor}; font-weight: 600;">${tipoTexto}</span></td>
                     <td>${movimiento.producto}</td>
                     <td>${movimiento.cantidad} unidades</td>
@@ -2234,9 +2532,34 @@
                     <td>${movimiento.usuario}</td>
                     <td>${movimiento.observaciones || '-'}</td>
                     <td>${movimiento.responsable}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-action btn-edit-mov" data-id="${movimiento.id}">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn-action btn-delete-mov" data-id="${movimiento.id}">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </td>
                 `;
                 
                 tableBody.appendChild(row);
+            });
+            
+            // Agregar eventos a los botones de acción de movimientos
+            document.querySelectorAll('.btn-edit-mov').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    editarMovimiento(id);
+                });
+            });
+            
+            document.querySelectorAll('.btn-delete-mov').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    confirmarEliminacionMovimiento(id);
+                });
             });
         }
 
@@ -2248,7 +2571,7 @@
             
             productos.forEach(producto => {
                 const unidadesTotales = calcularUnidadesTotales(producto);
-                const stockMinimoUnidades = producto.stockMinimo * producto.unidadesPorMedida;
+                const stockMinimoUnidades = producto.stockMinimo * (producto.unidadesPorMedida || 1);
                 totalUnidades += unidadesTotales;
                 
                 if (unidadesTotales < stockMinimoUnidades) {
@@ -2264,7 +2587,7 @@
             // Calcular asignaciones de hoy
             const hoy = new Date().toISOString().split('T')[0];
             const todayAssignments = movimientos.filter(m => 
-                m.fecha === hoy && m.tipo === 'salida'
+                m.fechaHora.startsWith(hoy) && m.tipo === 'salida'
             ).length;
             
             const todayAssignmentsElement = document.getElementById('todayAssignments');
@@ -2275,7 +2598,7 @@
             // Calcular stock total en unidades
             const totalStockElement = document.getElementById('totalStock');
             if (totalStockElement) {
-                totalStockElement.textContent = totalUnidades;
+                totalStockElement.textContent = totalUnidades.toLocaleString();
             }
         }
 
@@ -2287,7 +2610,7 @@
             
             productos.forEach(producto => {
                 const unidadesTotales = calcularUnidadesTotales(producto);
-                const stockMinimoUnidades = producto.stockMinimo * producto.unidadesPorMedida;
+                const stockMinimoUnidades = producto.stockMinimo * (producto.unidadesPorMedida || 1);
                 totalUnidades += unidadesTotales;
                 
                 if (unidadesTotales < stockMinimoUnidades) {
@@ -2298,7 +2621,7 @@
             // Actualizar tarjetas
             document.getElementById('dashboardTotalProducts').textContent = productos.length;
             document.getElementById('dashboardLowStock').textContent = lowStockCount;
-            document.getElementById('dashboardTotalUnits').textContent = totalUnidades;
+            document.getElementById('dashboardTotalUnits').textContent = totalUnidades.toLocaleString();
             
             // Calcular asignaciones este mes
             const hoy = new Date();
@@ -2306,24 +2629,13 @@
             const añoActual = hoy.getFullYear();
             
             const asignacionesEsteMes = movimientos.filter(m => {
-                const fechaMov = new Date(m.fecha);
+                const fechaMov = new Date(m.fechaHora);
                 return m.tipo === 'salida' && 
                        fechaMov.getMonth() + 1 === mesActual && 
                        fechaMov.getFullYear() === añoActual;
             }).length;
             
             document.getElementById('dashboardTotalAssignments').textContent = asignacionesEsteMes;
-            
-            // Calcular departamentos activos (con movimientos este mes)
-            const deptActivos = new Set();
-            movimientos.forEach(m => {
-                if (m.tipo === 'salida') {
-                    const fechaMov = new Date(m.fecha);
-                    if (fechaMov.getMonth() + 1 === mesActual && fechaMov.getFullYear() === añoActual) {
-                        deptActivos.add(m.departamento);
-                    }
-                }
-            });
             
             // Actualizar gráfico de categorías
             actualizarGraficoCategorias();
@@ -2345,6 +2657,7 @@
                 oficina: 0,
                 toner: 0,
                 electronica: 0,
+                limpieza: 0,
                 otros: 0
             };
             
@@ -2364,7 +2677,7 @@
                 categoryChartInstance = new Chart(ctx, {
                     type: 'pie',
                     data: {
-                        labels: ['Papelería', 'Oficina', 'Toner', 'Electrónica', 'Otros'],
+                        labels: ['Papelería', 'Oficina', 'Toner', 'Electrónica', 'Limpieza', 'Otros'],
                         datasets: [{
                             label: 'Unidades por Categoría',
                             data: [
@@ -2372,6 +2685,7 @@
                                 categorias.oficina,
                                 categorias.toner,
                                 categorias.electronica,
+                                categorias.limpieza,
                                 categorias.otros
                             ],
                             backgroundColor: [
@@ -2379,6 +2693,7 @@
                                 '#f39c12',
                                 '#27ae60',
                                 '#9b59b6',
+                                '#e74c3c',
                                 '#95a5a6'
                             ]
                         }]
@@ -2411,7 +2726,7 @@
             // Filtrar productos con stock bajo (basado en unidades)
             const productosBajos = productos.filter(producto => {
                 const unidadesTotales = calcularUnidadesTotales(producto);
-                const stockMinimoUnidades = producto.stockMinimo * producto.unidadesPorMedida;
+                const stockMinimoUnidades = producto.stockMinimo * (producto.unidadesPorMedida || 1);
                 return unidadesTotales < stockMinimoUnidades;
             });
             
@@ -2424,7 +2739,7 @@
             
             productosBajos.forEach(producto => {
                 const unidadesTotales = calcularUnidadesTotales(producto);
-                const stockMinimoUnidades = producto.stockMinimo * producto.unidadesPorMedida;
+                const stockMinimoUnidades = producto.stockMinimo * (producto.unidadesPorMedida || 1);
                 const porcentaje = Math.round((unidadesTotales / stockMinimoUnidades) * 100);
                 
                 html += `
@@ -2458,7 +2773,7 @@
             
             productos.forEach(producto => {
                 const unidadesTotales = calcularUnidadesTotales(producto);
-                const stockMinimoUnidades = producto.stockMinimo * producto.unidadesPorMedida;
+                const stockMinimoUnidades = producto.stockMinimo * (producto.unidadesPorMedida || 1);
                 
                 if (unidadesTotales < stockMinimoUnidades) {
                     lowStockCount++;
@@ -2493,16 +2808,6 @@
         // Ir a sección de asignación con producto seleccionado
         function irAAsignacion(productoId) {
             mostrarSeccion('asignacion');
-            document.querySelector('[data-section="asignacion"]').classList.add('active');
-            document.querySelector('[data-section="inventario"]').classList.remove('active');
-            
-            // Actualizar menú
-            document.querySelectorAll('.menu-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.getAttribute('data-section') === 'asignacion') {
-                    btn.classList.add('active');
-                }
-            });
             
             // Seleccionar producto en el select
             const selectProducto = document.getElementById('productoAsignar');
@@ -2527,7 +2832,7 @@
             // Llenar formulario
             document.getElementById('adjustProductName').value = producto.nombre;
             document.getElementById('adjustCurrentStock').value = `${unidadesTotales} unidades`;
-            document.getElementById('adjustCurrentStockMedida').value = formatearStock(producto);
+            document.getElementById('adjustCurrentStockMedida').value = `${producto.stock} ${producto.unidad}`;
             
             // Mostrar modal
             document.getElementById('adjustModal').style.display = 'flex';
@@ -2561,7 +2866,7 @@
             const unidadesTotalesActuales = calcularUnidadesTotales(producto);
             
             // Aplicar ajuste
-            if (tipo === 'entrada') {
+            if (tipo === 'entrada' || tipo === 'reposicion') {
                 // Sumar unidades
                 const nuevasUnidadesTotales = unidadesTotalesActuales + cantidad;
                 productos[productoIndex].stock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
@@ -2578,8 +2883,8 @@
             // Registrar movimiento
             const nuevoMovimiento = {
                 id: nextMovimientoId++,
-                fecha: new Date().toISOString().split('T')[0],
-                tipo: "ajuste",
+                fechaHora: formatearFechaHora(),
+                tipo: tipo === 'reposicion' ? 'reposicion' : 'ajuste',
                 productoId: producto.id,
                 producto: producto.nombre,
                 cantidad: cantidad,
@@ -2639,6 +2944,7 @@
                                 <option value="oficina" ${producto.categoria === 'oficina' ? 'selected' : ''}>Artículos de Oficina</option>
                                 <option value="toner" ${producto.categoria === 'toner' ? 'selected' : ''}>Toner</option>
                                 <option value="electronica" ${producto.categoria === 'electronica' ? 'selected' : ''}>Electrónica</option>
+                                <option value="limpieza" ${producto.categoria === 'limpieza' ? 'selected' : ''}>Limpieza</option>
                                 <option value="otros" ${producto.categoria === 'otros' ? 'selected' : ''}>Otros</option>
                             </select>
                         </div>
@@ -2648,11 +2954,13 @@
                                 <option value="UND" ${producto.unidad === 'UND' ? 'selected' : ''}>Unidades</option>
                                 <option value="CAJAS" ${producto.unidad === 'CAJAS' ? 'selected' : ''}>Cajas</option>
                                 <option value="PAQ" ${producto.unidad === 'PAQ' ? 'selected' : ''}>Paquetes</option>
+                                <option value="GALON" ${producto.unidad === 'GALON' ? 'selected' : ''}>Galones</option>
+                                <option value="LT" ${producto.unidad === 'LT' ? 'selected' : ''}>Litros</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="editUnidadesPorMedida">Unidades por Medida *</label>
-                            <input type="number" id="editUnidadesPorMedida" min="1" value="${producto.unidadesPorMedida}" required>
+                            <input type="number" id="editUnidadesPorMedida" min="1" value="${producto.unidadesPorMedida || 1}" required>
                             <small class="unit-conversion">Ej: 24 unidades por caja, 100 unidades por paquete</small>
                         </div>
                     </div>
@@ -2768,11 +3076,27 @@
             alert('Producto actualizado exitosamente');
         }
 
-        // Confirmar eliminación
+        // Confirmar eliminación de producto
         function confirmarEliminacion(id) {
             currentEditId = id;
             const confirmModal = document.getElementById('confirmModal');
             if (confirmModal) {
+                confirmModal.style.display = 'flex';
+            }
+        }
+
+        // Confirmar eliminación de movimiento
+        function confirmarEliminacionMovimiento(id) {
+            currentMovEditId = id;
+            const movimiento = movimientos.find(m => m.id === id);
+            
+            if (!movimiento) return;
+            
+            const confirmModal = document.getElementById('confirmMovModal');
+            const confirmMessage = document.getElementById('confirmMovMessage');
+            
+            if (confirmModal && confirmMessage) {
+                confirmMessage.textContent = `¿Está seguro de que desea eliminar este movimiento de ${movimiento.tipo} para "${movimiento.producto}"? Esta acción revertirá el stock afectado.`;
                 confirmModal.style.display = 'flex';
             }
         }
@@ -2804,22 +3128,73 @@
             cerrarModal();
         }
 
+        // Eliminar movimiento
+        function eliminarMovimiento() {
+            const movimientoIndex = movimientos.findIndex(m => m.id === currentMovEditId);
+            
+            if (movimientoIndex !== -1) {
+                const movimiento = movimientos[movimientoIndex];
+                
+                // Revertir el efecto del movimiento en el stock
+                const productoIndex = productos.findIndex(p => p.id === movimiento.productoId);
+                
+                if (productoIndex !== -1) {
+                    const producto = productos[productoIndex];
+                    const unidadesTotalesActuales = calcularUnidadesTotales(producto);
+                    
+                    if (movimiento.tipo === 'entrada' || movimiento.tipo === 'reposicion') {
+                        // Restar las unidades que se agregaron
+                        const nuevasUnidadesTotales = unidadesTotalesActuales - movimiento.cantidad;
+                        productos[productoIndex].stock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
+                    } else if (movimiento.tipo === 'salida') {
+                        // Sumar las unidades que se retiraron
+                        const nuevasUnidadesTotales = unidadesTotalesActuales + movimiento.cantidad;
+                        productos[productoIndex].stock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
+                    }
+                    // Los ajustes no se pueden revertir automáticamente
+                }
+                
+                // Eliminar el movimiento
+                movimientos.splice(movimientoIndex, 1);
+                
+                // Actualizar interfaz
+                actualizarTablaInventario();
+                actualizarTablaMovimientos();
+                cargarProductosAsignacion();
+                actualizarEstadisticas();
+                actualizarDashboard();
+                verificarStockBajo();
+                
+                alert('Movimiento eliminado exitosamente');
+            }
+            
+            cerrarModal();
+        }
+
         // Cerrar modal
         function cerrarModal() {
             const editModal = document.getElementById('editModal');
             const confirmModal = document.getElementById('confirmModal');
             const adjustModal = document.getElementById('adjustModal');
+            const editMovModal = document.getElementById('editMovModal');
+            const confirmMovModal = document.getElementById('confirmMovModal');
             
             if (editModal) editModal.style.display = 'none';
             if (confirmModal) confirmModal.style.display = 'none';
             if (adjustModal) adjustModal.style.display = 'none';
+            if (editMovModal) editMovModal.style.display = 'none';
+            if (confirmMovModal) confirmMovModal.style.display = 'none';
             
             currentEditId = null;
             currentAdjustId = null;
+            currentMovEditId = null;
             
-            // Limpiar formulario de ajuste
+            // Limpiar formularios
             const adjustForm = document.getElementById('adjustStockForm');
             if (adjustForm) adjustForm.reset();
+            
+            const editMovForm = document.getElementById('editMovForm');
+            if (editMovForm) editMovForm.reset();
         }
 
         // Limpiar filtros inventario
@@ -2848,6 +3223,58 @@
             actualizarTablaMovimientos();
         }
 
+        // Editar movimiento
+        function editarMovimiento(id) {
+            currentMovEditId = id;
+            const movimiento = movimientos.find(m => m.id === id);
+            
+            if (!movimiento) return;
+            
+            // Llenar formulario de edición
+            document.getElementById('editMovProducto').value = movimiento.producto;
+            document.getElementById('editMovTipo').value = movimiento.tipo;
+            document.getElementById('editMovCantidad').value = movimiento.cantidad;
+            document.getElementById('editMovDepartamento').value = movimiento.departamento;
+            document.getElementById('editMovUsuario').value = movimiento.usuario;
+            document.getElementById('editMovObservaciones').value = movimiento.observaciones || '';
+            
+            // Mostrar modal
+            document.getElementById('editMovModal').style.display = 'flex';
+        }
+
+        // Guardar cambios en movimiento
+        function guardarCambiosMovimiento() {
+            const movimientoIndex = movimientos.findIndex(m => m.id === currentMovEditId);
+            
+            if (movimientoIndex === -1) {
+                cerrarModal();
+                return;
+            }
+            
+            // Obtener valores del formulario
+            const departamento = document.getElementById('editMovDepartamento').value.trim();
+            const usuario = document.getElementById('editMovUsuario').value.trim();
+            const observaciones = document.getElementById('editMovObservaciones').value.trim();
+            
+            // Validaciones
+            if (!departamento || !usuario) {
+                alert('Por favor complete los campos requeridos');
+                return;
+            }
+            
+            // Actualizar movimiento
+            movimientos[movimientoIndex].departamento = departamento;
+            movimientos[movimientoIndex].usuario = usuario;
+            movimientos[movimientoIndex].observaciones = observaciones;
+            
+            // Actualizar tabla
+            actualizarTablaMovimientos();
+            
+            // Cerrar modal y mostrar mensaje
+            cerrarModal();
+            alert('Movimiento actualizado exitosamente');
+        }
+
         // Generar reporte mensual
         function generarReporteMensual() {
             const monthSelect = document.getElementById('reportMonth');
@@ -2860,9 +3287,13 @@
             
             // Filtrar movimientos del mes y año seleccionados
             const movimientosMensuales = movimientos.filter(movimiento => {
-                const fecha = new Date(movimiento.fecha);
+                const fecha = new Date(movimiento.fechaHora);
                 return fecha.getMonth() + 1 === month && fecha.getFullYear() === year;
             });
+            
+            // Actualizar títulos
+            document.getElementById('chartTitle1').textContent = `Consumo por Departamento - ${monthSelect.options[monthSelect.selectedIndex].text} ${year}`;
+            document.getElementById('chartTitle2').textContent = `Top 10 Productos Más Utilizados - ${monthSelect.options[monthSelect.selectedIndex].text} ${year}`;
             
             // Actualizar gráficos
             actualizarGraficosReporte(movimientosMensuales);
@@ -2880,9 +3311,13 @@
             
             // Filtrar movimientos del año seleccionado
             const movimientosAnuales = movimientos.filter(movimiento => {
-                const fecha = new Date(movimiento.fecha);
+                const fecha = new Date(movimiento.fechaHora);
                 return fecha.getFullYear() === year;
             });
+            
+            // Actualizar títulos
+            document.getElementById('chartTitle1').textContent = `Consumo por Departamento - Año ${year}`;
+            document.getElementById('chartTitle2').textContent = `Top 10 Productos Más Utilizados - Año ${year}`;
             
             // Actualizar gráficos
             actualizarGraficosReporte(movimientosAnuales);
@@ -2893,11 +3328,260 @@
 
         // Generar reporte por departamento
         function generarReporteDepartamento() {
+            // Actualizar títulos
+            document.getElementById('chartTitle1').textContent = 'Consumo por Departamento (Total)';
+            document.getElementById('chartTitle2').textContent = 'Top 10 Productos Más Utilizados (Total)';
+            
             // Actualizar gráficos con todos los movimientos
             actualizarGraficosReporte(movimientos);
             
             // Actualizar resumen de asignaciones
             actualizarResumenAsignaciones(movimientos);
+        }
+
+        // Generar reporte por productos
+        function generarReporteProductos() {
+            // Actualizar títulos
+            document.getElementById('chartTitle1').textContent = 'Stock por Categoría (Actual)';
+            document.getElementById('chartTitle2').textContent = 'Productos con Menor Stock';
+            
+            // Crear gráfico de productos con menor stock
+            actualizarGraficoProductosBajos();
+            
+            // Actualizar resumen de productos
+            actualizarResumenProductos();
+        }
+
+        // Actualizar gráfico de productos bajos
+        function actualizarGraficoProductosBajos() {
+            // Destruir gráficos anteriores si existen
+            if (deptChartInstance) {
+                deptChartInstance.destroy();
+            }
+            if (topProductsChartInstance) {
+                topProductsChartInstance.destroy();
+            }
+            
+            // Ordenar productos por porcentaje de stock (menor a mayor)
+            const productosOrdenados = [...productos].sort((a, b) => {
+                const porcentajeA = calcularUnidadesTotales(a) / (a.stockMinimo * (a.unidadesPorMedida || 1));
+                const porcentajeB = calcularUnidadesTotales(b) / (b.stockMinimo * (b.unidadesPorMedida || 1));
+                return porcentajeA - porcentajeB;
+            }).slice(0, 10);
+            
+            // Gráfico de productos con menor stock
+            const deptChartCanvas = document.getElementById('deptChart');
+            if (deptChartCanvas && productosOrdenados.length > 0) {
+                const ctx = deptChartCanvas.getContext('2d');
+                
+                deptChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: productosOrdenados.map(p => p.nombre),
+                        datasets: [{
+                            label: 'Porcentaje del Stock Mínimo',
+                            data: productosOrdenados.map(p => {
+                                const unidades = calcularUnidadesTotales(p);
+                                const minimo = p.stockMinimo * (p.unidadesPorMedida || 1);
+                                return Math.round((unidades / minimo) * 100);
+                            }),
+                            backgroundColor: productosOrdenados.map(p => {
+                                const unidades = calcularUnidadesTotales(p);
+                                const minimo = p.stockMinimo * (p.unidadesPorMedida || 1);
+                                return unidades < minimo ? '#e74c3c' : 
+                                       unidades < minimo * 2 ? '#f39c12' : '#27ae60';
+                            })
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Porcentaje (%)'
+                                },
+                                max: 200
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const producto = productosOrdenados[context.dataIndex];
+                                        const unidades = calcularUnidadesTotales(producto);
+                                        const minimo = producto.stockMinimo * (producto.unidadesPorMedida || 1);
+                                        return `${producto.nombre}: ${unidades}/${minimo} unidades (${context.raw}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Gráfico de categorías actualizado
+            const topProductsChartCanvas = document.getElementById('topProductsChart');
+            if (topProductsChartCanvas) {
+                const ctx = topProductsChartCanvas.getContext('2d');
+                
+                // Datos para gráfico de categorías
+                const categorias = {};
+                productos.forEach(producto => {
+                    if (!categorias[producto.categoria]) {
+                        categorias[producto.categoria] = 0;
+                    }
+                    categorias[producto.categoria]++;
+                });
+                
+                // Nombres de categorías
+                const nombresCategorias = {
+                    'papeleria': 'Papelería',
+                    'oficina': 'Oficina',
+                    'toner': 'Toner',
+                    'electronica': 'Electrónica',
+                    'limpieza': 'Limpieza',
+                    'otros': 'Otros'
+                };
+                
+                topProductsChartInstance = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(categorias).map(cat => nombresCategorias[cat] || cat),
+                        datasets: [{
+                            label: 'Productos por Categoría',
+                            data: Object.values(categorias),
+                            backgroundColor: [
+                                '#3498db',
+                                '#f39c12',
+                                '#27ae60',
+                                '#9b59b6',
+                                '#e74c3c',
+                                '#95a5a6'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.label}: ${context.raw} productos`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Actualizar resumen de productos
+        function actualizarResumenProductos() {
+            const container = document.getElementById('resumenAsignaciones');
+            if (!container) return;
+            
+            // Calcular estadísticas
+            let totalProductos = productos.length;
+            let productosBajos = 0;
+            let productosAgotados = 0;
+            let totalUnidades = 0;
+            
+            productos.forEach(producto => {
+                const unidades = calcularUnidadesTotales(producto);
+                const minimo = producto.stockMinimo * (producto.unidadesPorMedida || 1);
+                totalUnidades += unidades;
+                
+                if (unidades < minimo) productosBajos++;
+                if (unidades === 0) productosAgotados++;
+            });
+            
+            let html = `
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <i class="fas fa-boxes"></i>
+                        <div class="stat-content">
+                            <h4>Total Productos</h4>
+                            <p>${totalProductos}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-box">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div class="stat-content">
+                            <h4>Productos con Stock Bajo</h4>
+                            <p>${productosBajos}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-box">
+                        <i class="fas fa-times-circle"></i>
+                        <div class="stat-content">
+                            <h4>Productos Agotados</h4>
+                            <p>${productosAgotados}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-box">
+                        <i class="fas fa-calculator"></i>
+                        <div class="stat-content">
+                            <h4>Total Unidades</h4>
+                            <p>${totalUnidades.toLocaleString()}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <h4 style="margin-top: 20px;">Productos que Necesitan Reposición</h4>
+                <div style="margin-top: 10px;">
+            `;
+            
+            // Listar productos que necesitan reposición
+            const productosReponer = productos.filter(p => {
+                const unidades = calcularUnidadesTotales(p);
+                const minimo = p.stockMinimo * (p.unidadesPorMedida || 1);
+                return unidades < minimo;
+            }).sort((a, b) => {
+                const porcentajeA = calcularUnidadesTotales(a) / (a.stockMinimo * (a.unidadesPorMedida || 1));
+                const porcentajeB = calcularUnidadesTotales(b) / (b.stockMinimo * (b.unidadesPorMedida || 1));
+                return porcentajeA - porcentajeB;
+            });
+            
+            if (productosReponer.length === 0) {
+                html += '<p style="text-align: center; color: #666; padding: 20px;">No hay productos que necesiten reposición</p>';
+            } else {
+                productosReponer.forEach(producto => {
+                    const unidades = calcularUnidadesTotales(producto);
+                    const minimo = producto.stockMinimo * (producto.unidadesPorMedida || 1);
+                    const porcentaje = Math.round((unidades / minimo) * 100);
+                    const faltan = minimo - unidades;
+                    
+                    html += `
+                        <div style="margin-bottom: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 5px; border-left: 4px solid ${porcentaje < 50 ? '#e74c3c' : '#f39c12'}">
+                            <div style="display: flex; justify-content: space-between;">
+                                <strong>${producto.nombre}</strong>
+                                <span>${unidades}/${minimo} unidades (${porcentaje}%)</span>
+                            </div>
+                            <div style="font-size: 0.85rem; color: #666; margin-top: 5px;">
+                                <div>Código: ${producto.codigo} | Categoría: ${producto.categoria}</div>
+                                <div>Faltan: ${faltan} unidades para llegar al mínimo</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            html += '</div>';
+            container.innerHTML = html;
         }
 
         // Actualizar gráficos de reporte
@@ -2927,13 +3611,18 @@
             if (deptChartCanvas && Object.keys(deptSalidas).length > 0) {
                 const ctx = deptChartCanvas.getContext('2d');
                 
+                // Ordenar departamentos por cantidad
+                const deptsOrdenados = Object.entries(deptSalidas)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 10);
+                
                 deptChartInstance = new Chart(ctx, {
                     type: 'bar',
                     data: {
-                        labels: Object.keys(deptSalidas),
+                        labels: deptsOrdenados.map(d => d[0]),
                         datasets: [{
                             label: 'Unidades Asignadas',
-                            data: Object.values(deptSalidas),
+                            data: deptsOrdenados.map(d => d[1]),
                             backgroundColor: '#3498db',
                             borderColor: '#2980b9',
                             borderWidth: 1
@@ -3038,70 +3727,129 @@
             const container = document.getElementById('resumenAsignaciones');
             if (!container) return;
             
-            // Filtrar solo salidas (asignaciones)
-            const asignaciones = movimientosFiltrados.filter(m => m.tipo === 'salida');
+            // Calcular estadísticas por tipo
+            const porTipo = {
+                entrada: { cantidad: 0, unidades: 0 },
+                salida: { cantidad: 0, unidades: 0 },
+                ajuste: { cantidad: 0, unidades: 0 },
+                reposicion: { cantidad: 0, unidades: 0 }
+            };
             
-            if (asignaciones.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No hay asignaciones para mostrar</p>';
-                return;
-            }
-            
-            // Calcular estadísticas (en unidades)
-            const totalAsignaciones = asignaciones.length;
-            const totalUnidades = asignaciones.reduce((sum, a) => sum + a.cantidad, 0);
-            
-            // Agrupar por departamento
-            const porDepartamento = {};
-            asignaciones.forEach(asignacion => {
-                const dept = asignacion.departamento;
-                if (!porDepartamento[dept]) {
-                    porDepartamento[dept] = {
-                        cantidad: 0,
-                        productos: new Set()
-                    };
+            movimientosFiltrados.forEach(movimiento => {
+                if (porTipo[movimiento.tipo]) {
+                    porTipo[movimiento.tipo].cantidad++;
+                    porTipo[movimiento.tipo].unidades += movimiento.cantidad;
                 }
-                porDepartamento[dept].cantidad += asignacion.cantidad;
-                porDepartamento[dept].productos.add(asignacion.producto);
             });
             
-            // Crear HTML
+            // Calcular estadísticas generales
+            const totalMovimientos = movimientosFiltrados.length;
+            const totalUnidades = movimientosFiltrados.reduce((sum, m) => sum + m.cantidad, 0);
+            
             let html = `
                 <div class="stats-grid">
                     <div class="stat-box">
-                        <i class="fas fa-hand-holding"></i>
+                        <i class="fas fa-exchange-alt"></i>
                         <div class="stat-content">
-                            <h4>Total Asignaciones</h4>
-                            <p>${totalAsignaciones}</p>
+                            <h4>Total Movimientos</h4>
+                            <p>${totalMovimientos}</p>
                         </div>
                     </div>
                     
                     <div class="stat-box">
                         <i class="fas fa-boxes"></i>
                         <div class="stat-content">
-                            <h4>Total Unidades Asignadas</h4>
+                            <h4>Total Unidades Movidas</h4>
                             <p>${totalUnidades.toLocaleString()}</p>
                         </div>
                     </div>
                 </div>
                 
-                <h4 style="margin-top: 20px;">Asignaciones por Departamento (Unidades)</h4>
+                <h4 style="margin-top: 20px;">Desglose por Tipo de Movimiento</h4>
                 <div style="margin-top: 10px;">
             `;
             
-            Object.keys(porDepartamento).forEach(dept => {
-                const data = porDepartamento[dept];
-                html += `
-                    <div style="margin-bottom: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
-                        <div style="display: flex; justify-content: space-between;">
-                            <strong>${dept}</strong>
-                            <span>${data.cantidad.toLocaleString()} unidades</span>
+            // Agregar estadísticas por tipo
+            Object.keys(porTipo).forEach(tipo => {
+                const data = porTipo[tipo];
+                if (data.cantidad > 0) {
+                    let tipoTexto = '';
+                    let color = '';
+                    
+                    switch(tipo) {
+                        case 'entrada':
+                            tipoTexto = 'Entradas';
+                            color = '#27ae60';
+                            break;
+                        case 'salida':
+                            tipoTexto = 'Salidas';
+                            color = '#e74c3c';
+                            break;
+                        case 'ajuste':
+                            tipoTexto = 'Ajustes';
+                            color = '#f39c12';
+                            break;
+                        case 'reposicion':
+                            tipoTexto = 'Reposiciones';
+                            color = '#9b59b6';
+                            break;
+                    }
+                    
+                    html += `
+                        <div style="margin-bottom: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 5px; border-left: 4px solid ${color}">
+                            <div style="display: flex; justify-content: space-between;">
+                                <strong>${tipoTexto}</strong>
+                                <span>${data.cantidad} movimientos</span>
+                            </div>
+                            <div style="font-size: 0.85rem; color: #666; margin-top: 5px;">
+                                Total unidades: ${data.unidades.toLocaleString()}
+                            </div>
                         </div>
-                        <div style="font-size: 0.85rem; color: #666; margin-top: 5px;">
-                            Productos: ${Array.from(data.productos).join(', ')}
-                        </div>
-                    </div>
-                `;
+                    `;
+                }
             });
+            
+            // Agrupar por departamento (solo salidas)
+            const porDepartamento = {};
+            const movimientosSalidas = movimientosFiltrados.filter(m => m.tipo === 'salida');
+            
+            movimientosSalidas.forEach(movimiento => {
+                const dept = movimiento.departamento;
+                if (!porDepartamento[dept]) {
+                    porDepartamento[dept] = {
+                        cantidad: 0,
+                        unidades: 0,
+                        productos: new Set()
+                    };
+                }
+                porDepartamento[dept].cantidad++;
+                porDepartamento[dept].unidades += movimiento.cantidad;
+                porDepartamento[dept].productos.add(movimiento.producto);
+            });
+            
+            if (Object.keys(porDepartamento).length > 0) {
+                html += `
+                    <h4 style="margin-top: 20px;">Asignaciones por Departamento</h4>
+                    <div style="margin-top: 10px;">
+                `;
+                
+                Object.keys(porDepartamento).forEach(dept => {
+                    const data = porDepartamento[dept];
+                    html += `
+                        <div style="margin-bottom: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <strong>${dept}</strong>
+                                <span>${data.unidades.toLocaleString()} unidades</span>
+                            </div>
+                            <div style="font-size: 0.85rem; color: #666; margin-top: 5px;">
+                                ${data.cantidad} asignaciones | Productos: ${Array.from(data.productos).join(', ')}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            }
             
             html += '</div>';
             container.innerHTML = html;
@@ -3129,7 +3877,7 @@
             
             productos.forEach(producto => {
                 const unidadesTotales = calcularUnidadesTotales(producto);
-                const stockMinimoUnidades = producto.stockMinimo * producto.unidadesPorMedida;
+                const stockMinimoUnidades = producto.stockMinimo * (producto.unidadesPorMedida || 1);
                 totalUnidades += unidadesTotales;
                 
                 if (unidadesTotales < stockMinimoUnidades) {
@@ -3151,7 +3899,7 @@
                 const codigoNum = p.codigo.split('-')[1] || p.id;
                 
                 const unidadesTotales = calcularUnidadesTotales(p);
-                const stockMinimoUnidades = p.stockMinimo * p.unidadesPorMedida;
+                const stockMinimoUnidades = p.stockMinimo * (p.unidadesPorMedida || 1);
                 
                 let estado = '';
                 if (unidadesTotales < stockMinimoUnidades) {
@@ -3192,7 +3940,7 @@
             // Preparar datos de productos
             const productosData = productos.map(p => {
                 const unidadesTotales = calcularUnidadesTotales(p);
-                const stockMinimoUnidades = p.stockMinimo * p.unidadesPorMedida;
+                const stockMinimoUnidades = p.stockMinimo * (p.unidadesPorMedida || 1);
                 
                 let estado = '';
                 if (unidadesTotales < stockMinimoUnidades) {
@@ -3214,7 +3962,7 @@
                     'Stock': p.unidad === "UND" ? `${p.stock} ${p.unidad}` : `${p.stock} ${p.unidad}`,
                     'Unidades Totales': unidadesTotales,
                     'Unidad': p.unidad,
-                    'Unidades por Medida': p.unidadesPorMedida,
+                    'Unidades por Medida': p.unidadesPorMedida || 1,
                     'Stock Mínimo': p.unidad === "UND" ? `${p.stockMinimo} ${p.unidad}` : `${p.stockMinimo} ${p.unidad}`,
                     'Stock Mínimo (Unidades)': stockMinimoUnidades,
                     'Estado': estado,
@@ -3235,12 +3983,15 @@
                     case 'ajuste':
                         tipo = 'Ajuste';
                         break;
+                    case 'reposicion':
+                        tipo = 'Reposición';
+                        break;
                     default:
                         tipo = m.tipo;
                 }
                 
                 return {
-                    'Fecha': m.fecha,
+                    'Fecha y Hora': m.fechaHora,
                     'Tipo': tipo,
                     'Producto': m.producto,
                     'Cantidad (Unidades)': m.cantidad,
@@ -3274,7 +4025,7 @@
             
             // Ajustar anchos de columna para movimientos
             const wscolsMovimientos = [
-                {wch: 12}, // Fecha
+                {wch: 20}, // Fecha y Hora
                 {wch: 10}, // Tipo
                 {wch: 25}, // Producto
                 {wch: 15}, // Cantidad (Unidades)
@@ -3291,7 +4042,164 @@
             XLSX.utils.book_append_sheet(wb, wsMovimientos, 'Movimientos');
             
             // Exportar
-            XLSX.writeFile(wb, `inventario-oficina-${new Date().toISOString().slice(0,10)}.xlsx`);
+            XLSX.writeFile(wb, `inventario-completo-${new Date().toISOString().slice(0,10)}.xlsx`);
+        }
+
+        // Exportar inventario actual a Excel
+        function exportarInventarioActualExcel() {
+            // Preparar datos de productos actuales
+            const productosData = productos.map(p => {
+                const unidadesTotales = calcularUnidadesTotales(p);
+                const stockMinimoUnidades = p.stockMinimo * (p.unidadesPorMedida || 1);
+                
+                let estado = '';
+                let prioridad = '';
+                
+                if (unidadesTotales === 0) {
+                    estado = 'AGOTADO';
+                    prioridad = 'URGENTE';
+                } else if (unidadesTotales < stockMinimoUnidades) {
+                    estado = 'BAJO';
+                    prioridad = 'ALTA';
+                } else if (unidadesTotales < stockMinimoUnidades * 2) {
+                    estado = 'NORMAL';
+                    prioridad = 'MEDIA';
+                } else {
+                    estado = 'ALTO';
+                    prioridad = 'BAJA';
+                }
+                
+                const faltan = Math.max(0, stockMinimoUnidades - unidadesTotales);
+                
+                return {
+                    'Código': p.codigo,
+                    'Producto': p.nombre,
+                    'Categoría': p.categoria.charAt(0).toUpperCase() + p.categoria.slice(1),
+                    'Stock Actual': p.stock,
+                    'Unidad': p.unidad,
+                    'Unidades por Medida': p.unidadesPorMedida || 1,
+                    'Unidades Totales': unidadesTotales,
+                    'Stock Mínimo': p.stockMinimo,
+                    'Stock Mínimo (Unidades)': stockMinimoUnidades,
+                    'Faltan (Unidades)': faltan,
+                    'Estado': estado,
+                    'Prioridad Reposición': prioridad,
+                    'Última Actualización': new Date().toLocaleDateString('es-ES')
+                };
+            });
+            
+            // Ordenar por prioridad (URGENTE primero)
+            productosData.sort((a, b) => {
+                const prioridadOrden = { 'URGENTE': 1, 'ALTA': 2, 'MEDIA': 3, 'BAJA': 4 };
+                return prioridadOrden[a['Prioridad Reposición']] - prioridadOrden[b['Prioridad Reposición']];
+            });
+            
+            // Crear hoja de trabajo
+            const ws = XLSX.utils.json_to_sheet(productosData);
+            
+            // Ajustar anchos de columna
+            const wscols = [
+                {wch: 10}, // Código
+                {wch: 30}, // Producto
+                {wch: 12}, // Categoría
+                {wch: 12}, // Stock Actual
+                {wch: 8},  // Unidad
+                {wch: 15}, // Unidades por Medida
+                {wch: 15}, // Unidades Totales
+                {wch: 12}, // Stock Mínimo
+                {wch: 20}, // Stock Mínimo (Unidades)
+                {wch: 15}, // Faltan (Unidades)
+                {wch: 10}, // Estado
+                {wch: 18}, // Prioridad Reposición
+                {wch: 20}  // Última Actualización
+            ];
+            ws['!cols'] = wscols;
+            
+            // Crear libro de trabajo
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Inventario Actual');
+            
+            // Exportar
+            XLSX.writeFile(wb, `inventario-actual-${new Date().toISOString().slice(0,10)}.xlsx`);
+        }
+
+        // Exportar reporte a Excel
+        function exportarReporteExcel() {
+            const reportType = document.getElementById('reportType').value;
+            let nombreReporte = '';
+            let datos = [];
+            
+            if (reportType === 'productos') {
+                nombreReporte = 'Reporte de Productos';
+                
+                // Datos de productos
+                datos = productos.map(p => {
+                    const unidades = calcularUnidadesTotales(p);
+                    const minimo = p.stockMinimo * (p.unidadesPorMedida || 1);
+                    const porcentaje = Math.round((unidades / minimo) * 100);
+                    
+                    return {
+                        'Código': p.codigo,
+                        'Producto': p.nombre,
+                        'Categoría': p.categoria,
+                        'Stock Actual': p.stock,
+                        'Unidad': p.unidad,
+                        'Unidades Totales': unidades,
+                        'Stock Mínimo': p.stockMinimo,
+                        'Stock Mínimo (Unidades)': minimo,
+                        'Porcentaje Stock': `${porcentaje}%`,
+                        'Estado': unidades < minimo ? 'BAJO' : unidades < minimo * 2 ? 'NORMAL' : 'ALTO',
+                        'Necesita Reposición': unidades < minimo ? 'SÍ' : 'NO'
+                    };
+                });
+            } else {
+                nombreReporte = 'Reporte de Movimientos';
+                
+                // Filtrar movimientos según tipo de reporte
+                let movimientosFiltrados = [];
+                if (reportType === 'mensual') {
+                    const month = parseInt(document.getElementById('reportMonth').value);
+                    const year = parseInt(document.getElementById('reportYear').value);
+                    movimientosFiltrados = movimientos.filter(m => {
+                        const fecha = new Date(m.fechaHora);
+                        return fecha.getMonth() + 1 === month && fecha.getFullYear() === year;
+                    });
+                    nombreReporte += ` - ${document.getElementById('reportMonth').options[document.getElementById('reportMonth').selectedIndex].text} ${year}`;
+                } else if (reportType === 'anual') {
+                    const year = parseInt(document.getElementById('reportYear').value);
+                    movimientosFiltrados = movimientos.filter(m => {
+                        const fecha = new Date(m.fechaHora);
+                        return fecha.getFullYear() === year;
+                    });
+                    nombreReporte += ` - Año ${year}`;
+                } else {
+                    movimientosFiltrados = movimientos;
+                }
+                
+                // Datos de movimientos
+                datos = movimientosFiltrados.map(m => {
+                    return {
+                        'Fecha y Hora': m.fechaHora,
+                        'Tipo': m.tipo.toUpperCase(),
+                        'Producto': m.producto,
+                        'Cantidad (Unidades)': m.cantidad,
+                        'Departamento': m.departamento,
+                        'Usuario': m.usuario,
+                        'Observaciones': m.observaciones || '',
+                        'Responsable': m.responsable
+                    };
+                });
+            }
+            
+            // Crear hoja de trabajo
+            const ws = XLSX.utils.json_to_sheet(datos);
+            
+            // Crear libro de trabajo
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Reporte');
+            
+            // Exportar
+            XLSX.writeFile(wb, `${nombreReporte}-${new Date().toISOString().slice(0,10)}.xlsx`);
         }
     </script>
 </body>
