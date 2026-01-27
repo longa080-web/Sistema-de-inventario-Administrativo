@@ -908,13 +908,6 @@
     </style>
 </head>
 <body>
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="loading-content">
-            <div class="loading"></div>
-            <p>Cargando datos del inventario...</p>
-        </div>
-    </div>
 
     <div class="container">
         <header>
@@ -1558,13 +1551,7 @@
         // =============================================
 
         // Mostrar/ocultar loading
-        function showLoading() {
-            document.getElementById('loadingOverlay').style.display = 'flex';
-        }
 
-        function hideLoading() {
-            document.getElementById('loadingOverlay').style.display = 'none';
-        }
 
         // Actualizar estado de conexión
         function updateConnectionStatus(connected) {
@@ -4573,4 +4560,5 @@
     </script>
 </body>
 </html>
+
 
