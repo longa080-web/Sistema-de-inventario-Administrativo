@@ -1585,7 +1585,7 @@
 
     <script>
         // =============================================
-        // CONFIGURACIÓN DE FIREBASE (CORREGIDA)
+        // CONFIGURACIÓN DE FIREBASE
         // =============================================
         const firebaseConfig = {
             apiKey: "AIzaSyDDh9GMKi2eOVI1OeuwaBiqlEhjGpphvvk",
@@ -1635,7 +1635,7 @@
         ];
 
         // =============================================
-        // FUNCIONES DE UTILIDAD (DEFINIDAS PRIMERO)
+        // FUNCIONES BÁSICAS DEL SISTEMA
         // =============================================
 
         // Funciones para mostrar/ocultar loading
@@ -1693,6 +1693,64 @@
                     if (firebaseStatusElement) firebaseStatusElement.textContent = message || 'Desconectado';
                 }
             }
+        }
+
+        // Cerrar todos los modales
+        function cerrarModal() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.style.display = 'none';
+            });
+        }
+
+        // Mostrar sección específica
+        function mostrarSeccion(sectionId) {
+            // Ocultar todas las secciones
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Mostrar la sección seleccionada
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+        }
+
+        // Actualizar fecha y hora
+        function actualizarFechaHora() {
+            const now = new Date();
+            const dateTimeStr = now.toLocaleDateString('es-ES', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            const dateTimeElement = document.getElementById('currentDateTime');
+            if (dateTimeElement) {
+                dateTimeElement.textContent = dateTimeStr;
+            }
+        }
+
+        // Funciones para calcular unidades
+        function calcularUnidadesTotales(producto) {
+            return producto.stock * (producto.unidadesPorMedida || 1);
+        }
+
+        function calcularStockDesdeUnidades(producto, unidadesTotales) {
+            if (!producto.unidadesPorMedida || producto.unidadesPorMedida === 0) {
+                return unidadesTotales;
+            }
+            return unidadesTotales / producto.unidadesPorMedida;
+        }
+
+        function formatearFechaHora(fechaHoraStr = null) {
+            const ahora = fechaHoraStr ? new Date(fechaHoraStr) : new Date();
+            const fecha = ahora.toISOString().split('T')[0];
+            const hora = ahora.toTimeString().split(' ')[0].substring(0, 8);
+            return `${fecha} ${hora}`;
         }
 
         // =============================================
@@ -1920,63 +1978,79 @@
         }
 
         // =============================================
-        // INICIALIZACIÓN CORREGIDA
+        // FUNCIONES DEL SISTEMA DE INVENTARIO
         // =============================================
 
-        // Inicialización cuando el DOM esté listo
-        document.addEventListener('DOMContentLoaded', async function() {
-            try {
-                console.log('Inicializando sistema de inventario...');
-                showLoading('Inicializando sistema...');
+        // Actualizar toda la interfaz basado en datos
+        function actualizarInterfaz() {
+            console.log('Actualizando interfaz con', productos.length, 'productos y', movimientos.length, 'movimientos');
+            
+            // Mostrar/ocultar contenido vacío
+            const hasData = productos.length > 0;
+            
+            const dashboardEmpty = document.getElementById('dashboardEmpty');
+            const dashboardContent = document.getElementById('dashboardContent');
+            const inventoryEmpty = document.getElementById('inventoryEmpty');
+            const inventoryContent = document.getElementById('inventoryContent');
+            const assignEmpty = document.getElementById('assignEmpty');
+            const assignContent = document.getElementById('assignContent');
+            const movementsEmpty = document.getElementById('movementsEmpty');
+            const movementsContent = document.getElementById('movementsContent');
+            const reportsEmpty = document.getElementById('reportsEmpty');
+            const reportsContent = document.getElementById('reportsContent');
+            
+            if (dashboardEmpty) dashboardEmpty.style.display = hasData ? 'none' : 'block';
+            if (dashboardContent) dashboardContent.style.display = hasData ? 'block' : 'none';
+            if (inventoryEmpty) inventoryEmpty.style.display = hasData ? 'none' : 'block';
+            if (inventoryContent) inventoryContent.style.display = hasData ? 'block' : 'none';
+            if (assignEmpty) assignEmpty.style.display = hasData ? 'none' : 'block';
+            if (assignContent) assignContent.style.display = hasData ? 'block' : 'none';
+            if (movementsEmpty) movementsEmpty.style.display = movimientos.length > 0 ? 'none' : 'block';
+            if (movementsContent) movementsContent.style.display = movimientos.length > 0 ? 'block' : 'none';
+            if (reportsEmpty) reportsEmpty.style.display = hasData ? 'none' : 'block';
+            if (reportsContent) reportsContent.style.display = hasData ? 'block' : 'none';
+            
+            // Actualizar componentes específicos
+            if (hasData) {
+                actualizarTablaInventario();
+                cargarProductosAsignacion();
+                actualizarEstadisticas();
+                actualizarDashboard();
+                verificarStockBajo();
                 
-                // 1. Configurar eventos básicos primero
-                configurarEventosBasicos();
+                // Generar reporte inicial si hay datos
+                generarReporteMensual();
+            } else {
+                // Limpiar tablas
+                const inventarioTableBody = document.getElementById('inventarioTableBody');
+                const movimientosTableBody = document.getElementById('movimientosTableBody');
                 
-                // 2. Inicializar fecha/hora
-                actualizarFechaHora();
-                setInterval(actualizarFechaHora, 1000);
+                if (inventarioTableBody) inventarioTableBody.innerHTML = '';
+                if (movimientosTableBody) movimientosTableBody.innerHTML = '';
                 
-                // 3. Configurar fecha y hora actual por defecto
-                const fechaInput = document.getElementById('fechaAsignacion');
-                if (fechaInput) {
-                    const ahora = new Date();
-                    ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
-                    fechaInput.value = ahora.toISOString().slice(0, 16);
-                }
+                // Actualizar contadores
+                const totalProducts = document.getElementById('totalProducts');
+                const lowStockCount = document.getElementById('lowStockCount');
+                const todayAssignments = document.getElementById('todayAssignments');
+                const totalStock = document.getElementById('totalStock');
                 
-                // 4. Generar meses y años para reportes
-                generarOpcionesFechaReporte();
+                if (totalProducts) totalProducts.textContent = '0';
+                if (lowStockCount) lowStockCount.textContent = '0';
+                if (todayAssignments) todayAssignments.textContent = '0';
+                if (totalStock) totalStock.textContent = '0';
                 
-                // 5. Intentar inicializar Firebase
-                console.log('Inicializando Firebase...');
-                const firebaseSuccess = await initializeFirebase();
+                // Actualizar dashboard
+                const dashboardTotalProducts = document.getElementById('dashboardTotalProducts');
+                const dashboardLowStock = document.getElementById('dashboardLowStock');
+                const dashboardTotalAssignments = document.getElementById('dashboardTotalAssignments');
+                const dashboardTotalUnits = document.getElementById('dashboardTotalUnits');
                 
-                if (firebaseSuccess) {
-                    console.log('Firebase inicializado, cargando datos...');
-                    // 6. Cargar datos desde Firebase
-                    await loadData();
-                } else {
-                    console.log('Firebase falló, usando datos locales...');
-                    // Intentar cargar datos locales
-                    await loadData();
-                }
-                
-                // 7. Configurar todos los eventos
-                configurarEventos();
-                
-                // 8. Actualizar interfaz final
-                actualizarInterfaz();
-                
-                hideLoading();
-                console.log('Sistema inicializado correctamente');
-                
-            } catch (error) {
-                console.error('Error crítico al inicializar el sistema:', error);
-                hideLoading();
-                showAlert('Error crítico al inicializar el sistema: ' + error.message, 'error');
-                updateConnectionStatus(false, 'Error de inicialización');
+                if (dashboardTotalProducts) dashboardTotalProducts.textContent = '0';
+                if (dashboardLowStock) dashboardLowStock.textContent = '0';
+                if (dashboardTotalAssignments) dashboardTotalAssignments.textContent = '0';
+                if (dashboardTotalUnits) dashboardTotalUnits.textContent = '0';
             }
-        });
+        }
 
         // Configurar eventos básicos (sin depender de Firebase)
         function configurarEventosBasicos() {
@@ -2013,217 +2087,236 @@
             });
         }
 
-        // =============================================
-        // FUNCIONES DEL SISTEMA (actualizadas)
-        // =============================================
-
-        // Funciones para calcular unidades
-        function calcularUnidadesTotales(producto) {
-            return producto.stock * (producto.unidadesPorMedida || 1);
-        }
-
-        function calcularStockDesdeUnidades(producto, unidadesTotales) {
-            if (!producto.unidadesPorMedida || producto.unidadesPorMedida === 0) {
-                return unidadesTotales;
-            }
-            return unidadesTotales / producto.unidadesPorMedida;
-        }
-
-        function formatearFechaHora(fechaHoraStr = null) {
-            const ahora = fechaHoraStr ? new Date(fechaHoraStr) : new Date();
-            const fecha = ahora.toISOString().split('T')[0];
-            const hora = ahora.toTimeString().split(' ')[0].substring(0, 8);
-            return `${fecha} ${hora}`;
-        }
-
-        function actualizarFechaHora() {
-            const now = new Date();
-            const dateTimeStr = now.toLocaleDateString('es-ES', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            document.getElementById('currentDateTime').textContent = dateTimeStr;
-        }
-
-        // Actualizar toda la interfaz basado en datos
-        function actualizarInterfaz() {
-            console.log('Actualizando interfaz con', productos.length, 'productos y', movimientos.length, 'movimientos');
-            
-            // Mostrar/ocultar contenido vacío
-            const hasData = productos.length > 0;
-            
-            document.getElementById('dashboardEmpty').style.display = hasData ? 'none' : 'block';
-            document.getElementById('dashboardContent').style.display = hasData ? 'block' : 'none';
-            
-            document.getElementById('inventoryEmpty').style.display = hasData ? 'none' : 'block';
-            document.getElementById('inventoryContent').style.display = hasData ? 'block' : 'none';
-            
-            document.getElementById('assignEmpty').style.display = hasData ? 'none' : 'block';
-            document.getElementById('assignContent').style.display = hasData ? 'block' : 'none';
-            
-            document.getElementById('movementsEmpty').style.display = movimientos.length > 0 ? 'none' : 'block';
-            document.getElementById('movementsContent').style.display = movimientos.length > 0 ? 'block' : 'none';
-            
-            document.getElementById('reportsEmpty').style.display = hasData ? 'none' : 'block';
-            document.getElementById('reportsContent').style.display = hasData ? 'block' : 'none';
-            
-            // Actualizar componentes específicos
-            if (hasData) {
-                actualizarTablaInventario();
-                cargarProductosAsignacion();
-                actualizarEstadisticas();
-                actualizarDashboard();
-                verificarStockBajo();
-                
-                // Generar reporte inicial si hay datos
-                generarReporteMensual();
-            } else {
-                // Limpiar tablas
-                document.getElementById('inventarioTableBody').innerHTML = '';
-                document.getElementById('movimientosTableBody').innerHTML = '';
-                
-                // Actualizar contadores
-                document.getElementById('totalProducts').textContent = '0';
-                document.getElementById('lowStockCount').textContent = '0';
-                document.getElementById('todayAssignments').textContent = '0';
-                document.getElementById('totalStock').textContent = '0';
-                
-                // Actualizar dashboard
-                document.getElementById('dashboardTotalProducts').textContent = '0';
-                document.getElementById('dashboardLowStock').textContent = '0';
-                document.getElementById('dashboardTotalAssignments').textContent = '0';
-                document.getElementById('dashboardTotalUnits').textContent = '0';
-            }
-        }
-
         // Configurar eventos completos
         function configurarEventos() {
             // Formulario de nuevo producto
-            document.getElementById('nuevoProductoForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                guardarProducto();
-            });
+            const nuevoProductoForm = document.getElementById('nuevoProductoForm');
+            if (nuevoProductoForm) {
+                nuevoProductoForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    guardarProducto();
+                });
+            }
             
             // Botón de reposición
-            document.getElementById('repositionBtn').addEventListener('click', function(e) {
-                e.preventDefault();
-                guardarReposicion();
-            });
+            const repositionBtn = document.getElementById('repositionBtn');
+            if (repositionBtn) {
+                repositionBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    guardarReposicion();
+                });
+            }
             
             // Select de producto en asignación
-            document.getElementById('productoAsignar').addEventListener('change', function() {
-                const productoId = this.value;
-                if (productoId) {
-                    const producto = productos.find(p => p.firebaseKey === productoId);
-                    if (producto) {
-                        const unidadesTotales = calcularUnidadesTotales(producto);
-                        document.getElementById('stockDisponible').value = `${unidadesTotales} unidades`;
-                        calcularEquivalenciaAsignacion();
+            const productoAsignar = document.getElementById('productoAsignar');
+            if (productoAsignar) {
+                productoAsignar.addEventListener('change', function() {
+                    const productoId = this.value;
+                    if (productoId) {
+                        const producto = productos.find(p => p.firebaseKey === productoId);
+                        if (producto) {
+                            const unidadesTotales = calcularUnidadesTotales(producto);
+                            const stockDisponible = document.getElementById('stockDisponible');
+                            if (stockDisponible) stockDisponible.value = `${unidadesTotales} unidades`;
+                            calcularEquivalenciaAsignacion();
+                        }
+                    } else {
+                        const stockDisponible = document.getElementById('stockDisponible');
+                        const equivalenciaUnidades = document.getElementById('equivalenciaUnidades');
+                        const nuevoStockUnidades = document.getElementById('nuevoStockUnidades');
+                        
+                        if (stockDisponible) stockDisponible.value = '';
+                        if (equivalenciaUnidades) equivalenciaUnidades.textContent = '0 unidades';
+                        if (nuevoStockUnidades) nuevoStockUnidades.textContent = '0 unidades';
                     }
-                } else {
-                    document.getElementById('stockDisponible').value = '';
-                    document.getElementById('equivalenciaUnidades').textContent = '0 unidades';
-                    document.getElementById('nuevoStockUnidades').textContent = '0 unidades';
-                }
-            });
+                });
+            }
             
             // Botón limpiar filtros inventario
-            document.getElementById('clearFilters').addEventListener('click', limpiarFiltrosInventario);
+            const clearFilters = document.getElementById('clearFilters');
+            if (clearFilters) {
+                clearFilters.addEventListener('click', limpiarFiltrosInventario);
+            }
             
             // Botón limpiar filtros movimientos
-            document.getElementById('clearMovFilters').addEventListener('click', limpiarFiltrosMovimientos);
+            const clearMovFilters = document.getElementById('clearMovFilters');
+            if (clearMovFilters) {
+                clearMovFilters.addEventListener('click', limpiarFiltrosMovimientos);
+            }
             
             // Filtros de búsqueda inventario
-            document.getElementById('searchProduct').addEventListener('input', actualizarTablaInventario);
-            document.getElementById('filterCategory').addEventListener('change', actualizarTablaInventario);
-            document.getElementById('filterStock').addEventListener('change', actualizarTablaInventario);
+            const searchProduct = document.getElementById('searchProduct');
+            if (searchProduct) {
+                searchProduct.addEventListener('input', actualizarTablaInventario);
+            }
+            
+            const filterCategory = document.getElementById('filterCategory');
+            if (filterCategory) {
+                filterCategory.addEventListener('change', actualizarTablaInventario);
+            }
+            
+            const filterStock = document.getElementById('filterStock');
+            if (filterStock) {
+                filterStock.addEventListener('change', actualizarTablaInventario);
+            }
             
             // Filtros de movimientos
-            document.getElementById('filterMovimiento').addEventListener('change', actualizarTablaMovimientos);
-            document.getElementById('filterMovDept').addEventListener('change', actualizarTablaMovimientos);
-            document.getElementById('filterMovFecha').addEventListener('change', actualizarTablaMovimientos);
+            const filterMovimiento = document.getElementById('filterMovimiento');
+            if (filterMovimiento) {
+                filterMovimiento.addEventListener('change', actualizarTablaMovimientos);
+            }
+            
+            const filterMovDept = document.getElementById('filterMovDept');
+            if (filterMovDept) {
+                filterMovDept.addEventListener('change', actualizarTablaMovimientos);
+            }
+            
+            const filterMovFecha = document.getElementById('filterMovFecha');
+            if (filterMovFecha) {
+                filterMovFecha.addEventListener('change', actualizarTablaMovimientos);
+            }
             
             // Tipo de reporte
-            document.getElementById('reportType').addEventListener('change', function() {
-                const monthSelect = document.getElementById('reportMonth');
-                
-                if (this.value === 'departamento' || this.value === 'productos') {
-                    monthSelect.style.display = 'none';
-                } else {
-                    monthSelect.style.display = 'block';
-                }
-            });
+            const reportType = document.getElementById('reportType');
+            if (reportType) {
+                reportType.addEventListener('change', function() {
+                    const monthSelect = document.getElementById('reportMonth');
+                    if (monthSelect) {
+                        if (this.value === 'departamento' || this.value === 'productos') {
+                            monthSelect.style.display = 'none';
+                        } else {
+                            monthSelect.style.display = 'block';
+                        }
+                    }
+                });
+            }
             
             // Generar reporte
-            document.getElementById('generateReport').addEventListener('click', function() {
-                const reportType = document.getElementById('reportType').value;
-                if (reportType === 'mensual') {
-                    generarReporteMensual();
-                } else if (reportType === 'anual') {
-                    generarReporteAnual();
-                } else if (reportType === 'departamento') {
-                    generarReporteDepartamento();
-                } else {
-                    generarReporteProductos();
-                }
-            });
+            const generateReport = document.getElementById('generateReport');
+            if (generateReport) {
+                generateReport.addEventListener('click', function() {
+                    const reportType = document.getElementById('reportType');
+                    if (!reportType) return;
+                    
+                    const reportTypeValue = reportType.value;
+                    if (reportTypeValue === 'mensual') {
+                        generarReporteMensual();
+                    } else if (reportTypeValue === 'anual') {
+                        generarReporteAnual();
+                    } else if (reportTypeValue === 'departamento') {
+                        generarReporteDepartamento();
+                    } else {
+                        generarReporteProductos();
+                    }
+                });
+            }
             
             // Exportar reporte Excel
-            document.getElementById('exportReportExcel').addEventListener('click', exportarReporteExcel);
+            const exportReportExcel = document.getElementById('exportReportExcel');
+            if (exportReportExcel) {
+                exportReportExcel.addEventListener('click', exportarReporteExcel);
+            }
             
             // Botones de exportación
-            document.getElementById('exportPdf').addEventListener('click', exportarPDF);
-            document.getElementById('exportExcel').addEventListener('click', exportarExcel);
-            document.getElementById('exportInventoryExcel').addEventListener('click', exportarInventarioActualExcel);
+            const exportPdf = document.getElementById('exportPdf');
+            if (exportPdf) {
+                exportPdf.addEventListener('click', exportarPDF);
+            }
+            
+            const exportExcel = document.getElementById('exportExcel');
+            if (exportExcel) {
+                exportExcel.addEventListener('click', exportarExcel);
+            }
+            
+            const exportInventoryExcel = document.getElementById('exportInventoryExcel');
+            if (exportInventoryExcel) {
+                exportInventoryExcel.addEventListener('click', exportarInventarioActualExcel);
+            }
             
             // Botón cargar datos iniciales
-            document.getElementById('loadInitialData').addEventListener('click', function() {
-                document.getElementById('confirmLoadDataModal').style.display = 'flex';
-            });
+            const loadInitialData = document.getElementById('loadInitialData');
+            if (loadInitialData) {
+                loadInitialData.addEventListener('click', function() {
+                    const modal = document.getElementById('confirmLoadDataModal');
+                    if (modal) modal.style.display = 'flex';
+                });
+            }
             
             // Botón limpiar base de datos
-            document.getElementById('clearAllData').addEventListener('click', function() {
-                document.getElementById('confirmClearDataModal').style.display = 'flex';
-            });
+            const clearAllData = document.getElementById('clearAllData');
+            if (clearAllData) {
+                clearAllData.addEventListener('click', function() {
+                    const modal = document.getElementById('confirmClearDataModal');
+                    if (modal) modal.style.display = 'flex';
+                });
+            }
             
             // Confirmar carga de datos
-            document.getElementById('confirmLoadData').addEventListener('click', async function() {
-                document.getElementById('confirmLoadDataModal').style.display = 'none';
-                await loadInitialData();
-            });
+            const confirmLoadData = document.getElementById('confirmLoadData');
+            if (confirmLoadData) {
+                confirmLoadData.addEventListener('click', async function() {
+                    const modal = document.getElementById('confirmLoadDataModal');
+                    if (modal) modal.style.display = 'none';
+                    await loadInitialData();
+                });
+            }
             
-            document.getElementById('cancelLoadData').addEventListener('click', function() {
-                document.getElementById('confirmLoadDataModal').style.display = 'none';
-            });
+            const cancelLoadData = document.getElementById('cancelLoadData');
+            if (cancelLoadData) {
+                cancelLoadData.addEventListener('click', function() {
+                    const modal = document.getElementById('confirmLoadDataModal');
+                    if (modal) modal.style.display = 'none';
+                });
+            }
             
             // Confirmar limpieza de datos
-            document.getElementById('confirmClearData').addEventListener('click', async function() {
-                document.getElementById('confirmClearDataModal').style.display = 'none';
-                await clearAllData();
-            });
+            const confirmClearData = document.getElementById('confirmClearData');
+            if (confirmClearData) {
+                confirmClearData.addEventListener('click', async function() {
+                    const modal = document.getElementById('confirmClearDataModal');
+                    if (modal) modal.style.display = 'none';
+                    await clearAllData();
+                });
+            }
             
-            document.getElementById('cancelClearData').addEventListener('click', function() {
-                document.getElementById('confirmClearDataModal').style.display = 'none';
-            });
+            const cancelClearData = document.getElementById('cancelClearData');
+            if (cancelClearData) {
+                cancelClearData.addEventListener('click', function() {
+                    const modal = document.getElementById('confirmClearDataModal');
+                    if (modal) modal.style.display = 'none';
+                });
+            }
             
             // Confirmar eliminación de producto
-            document.getElementById('confirmDelete').addEventListener('click', eliminarProducto);
-            document.getElementById('cancelDelete').addEventListener('click', cerrarModal);
+            const confirmDelete = document.getElementById('confirmDelete');
+            if (confirmDelete) {
+                confirmDelete.addEventListener('click', eliminarProducto);
+            }
+            
+            const cancelDelete = document.getElementById('cancelDelete');
+            if (cancelDelete) {
+                cancelDelete.addEventListener('click', cerrarModal);
+            }
             
             // Confirmar eliminación de movimiento
-            document.getElementById('confirmMovDelete').addEventListener('click', eliminarMovimiento);
-            document.getElementById('cancelMovDelete').addEventListener('click', cerrarModal);
+            const confirmMovDelete = document.getElementById('confirmMovDelete');
+            if (confirmMovDelete) {
+                confirmMovDelete.addEventListener('click', eliminarMovimiento);
+            }
+            
+            const cancelMovDelete = document.getElementById('cancelMovDelete');
+            if (cancelMovDelete) {
+                cancelMovDelete.addEventListener('click', cerrarModal);
+            }
             
             // Formulario de edición de movimiento
-            document.getElementById('editMovForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                guardarCambiosMovimiento();
-            });
+            const editMovForm = document.getElementById('editMovForm');
+            if (editMovForm) {
+                editMovForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    guardarCambiosMovimiento();
+                });
+            }
             
             // Configurar evento para cálculo de equivalencia en asignación
             const cantidadInput = document.getElementById('cantidadAsignarUnidades');
@@ -2239,16 +2332,664 @@
         }
 
         // =============================================
-        // FUNCIONES PRINCIPALES (resto del código)
+        // FUNCIONES DEL INVENTARIO (SIMPLIFICADAS)
         // =============================================
-        
-        // Nota: Las funciones como guardarProducto(), actualizarTablaInventario(), 
-        // cargarProductosAsignacion(), etc., permanecen igual que en tu versión original.
-        // Solo se han corregido los problemas de inicialización de Firebase.
 
-        // Aquí irían el resto de las funciones de tu sistema...
-        // Para mantener la respuesta dentro de límites razonables, no las copio todas,
-        // pero asegúrate de que las tengas en tu código original.
+        // Función simplificada para actualizar tabla de inventario
+        function actualizarTablaInventario() {
+            const inventarioTableBody = document.getElementById('inventarioTableBody');
+            if (!inventarioTableBody) return;
+            
+            inventarioTableBody.innerHTML = '';
+            
+            // Aplicar filtros
+            let productosFiltrados = [...productos];
+            
+            // Filtrar por búsqueda
+            const searchTerm = document.getElementById('searchProduct')?.value.toLowerCase() || '';
+            if (searchTerm) {
+                productosFiltrados = productosFiltrados.filter(p => 
+                    p.nombre.toLowerCase().includes(searchTerm) || 
+                    p.codigo.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // Filtrar por categoría
+            const filterCategory = document.getElementById('filterCategory')?.value || '';
+            if (filterCategory) {
+                productosFiltrados = productosFiltrados.filter(p => p.categoria === filterCategory);
+            }
+            
+            // Filtrar por stock
+            const filterStock = document.getElementById('filterStock')?.value || '';
+            if (filterStock === 'low') {
+                productosFiltrados = productosFiltrados.filter(p => p.stock <= p.stockMinimo);
+            }
+            
+            // Mostrar productos
+            productosFiltrados.forEach((producto, index) => {
+                const unidadesTotales = calcularUnidadesTotales(producto);
+                const stockEstado = producto.stock <= producto.stockMinimo ? 'Bajo' : 
+                                  producto.stock > producto.stockMinimo * 2 ? 'Alto' : 'Normal';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>
+                        <strong>${producto.nombre}</strong><br>
+                        <small>Código: ${producto.codigo}</small>
+                    </td>
+                    <td>
+                        <span class="badge badge-${producto.categoria}">
+                            ${producto.categoria}
+                        </span>
+                    </td>
+                    <td class="stock-details">
+                        <span class="stock-total">${producto.stock} ${producto.unidad}</span>
+                        <span class="unit-info">${unidadesTotales} unidades totales</span>
+                    </td>
+                    <td>${unidadesTotales}</td>
+                    <td>
+                        ${producto.unidad}
+                        ${producto.unidadesPorMedida > 1 ? 
+                            `<span class="unit-badge">x${producto.unidadesPorMedida}</span>` : ''}
+                    </td>
+                    <td>${producto.stockMinimo} ${producto.unidad}</td>
+                    <td>
+                        <span class="stock-indicator stock-${stockEstado.toLowerCase()}"></span>
+                        ${stockEstado}
+                    </td>
+                    <td class="action-buttons">
+                        <button class="btn-action btn-edit" onclick="editarProducto('${producto.firebaseKey}')">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button class="btn-action btn-delete" onclick="confirmarEliminarProducto('${producto.firebaseKey}')">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                        <button class="btn-action btn-assign" onclick="ajustarStock('${producto.firebaseKey}')">
+                            <i class="fas fa-exchange-alt"></i> Ajustar
+                        </button>
+                    </td>
+                `;
+                inventarioTableBody.appendChild(row);
+            });
+            
+            // Actualizar contador
+            const totalProducts = document.getElementById('totalProducts');
+            if (totalProducts) {
+                totalProducts.textContent = productosFiltrados.length;
+            }
+        }
+
+        // Función simplificada para cargar productos en asignación
+        function cargarProductosAsignacion() {
+            const productoAsignar = document.getElementById('productoAsignar');
+            if (!productoAsignar) return;
+            
+            productoAsignar.innerHTML = '<option value="">Seleccione...</option>';
+            
+            productos.forEach(producto => {
+                const unidadesTotales = calcularUnidadesTotales(producto);
+                if (unidadesTotales > 0) {
+                    const option = document.createElement('option');
+                    option.value = producto.firebaseKey;
+                    option.textContent = `${producto.nombre} (${unidadesTotales} unidades disponibles)`;
+                    productoAsignar.appendChild(option);
+                }
+            });
+        }
+
+        // Función simplificada para actualizar estadísticas
+        function actualizarEstadisticas() {
+            // Contar productos con stock bajo
+            const productosBajos = productos.filter(p => p.stock <= p.stockMinimo);
+            const lowStockCount = document.getElementById('lowStockCount');
+            if (lowStockCount) lowStockCount.textContent = productosBajos.length;
+            
+            // Calcular asignaciones de hoy
+            const hoy = new Date().toISOString().split('T')[0];
+            const asignacionesHoy = movimientos.filter(m => 
+                m.tipo === 'salida' && m.fecha && m.fecha.includes(hoy)
+            );
+            const todayAssignments = document.getElementById('todayAssignments');
+            if (todayAssignments) todayAssignments.textContent = asignacionesHoy.length;
+            
+            // Calcular stock total en unidades
+            let totalUnidades = 0;
+            productos.forEach(p => {
+                totalUnidades += calcularUnidadesTotales(p);
+            });
+            const totalStock = document.getElementById('totalStock');
+            if (totalStock) totalStock.textContent = totalUnidades;
+            
+            // Actualizar alerta de stock bajo
+            const stockAlert = document.getElementById('stockAlert');
+            if (stockAlert) {
+                if (productosBajos.length > 0) {
+                    stockAlert.classList.add('show');
+                    const alertMessage = document.getElementById('alertMessage');
+                    if (alertMessage) {
+                        alertMessage.textContent = `Hay ${productosBajos.length} productos con stock bajo. Verifique el inventario.`;
+                    }
+                } else {
+                    stockAlert.classList.remove('show');
+                }
+            }
+        }
+
+        // Función simplificada para actualizar dashboard
+        function actualizarDashboard() {
+            // Productos totales
+            const dashboardTotalProducts = document.getElementById('dashboardTotalProducts');
+            if (dashboardTotalProducts) dashboardTotalProducts.textContent = productos.length;
+            
+            // Productos con stock bajo
+            const productosBajos = productos.filter(p => p.stock <= p.stockMinimo);
+            const dashboardLowStock = document.getElementById('dashboardLowStock');
+            if (dashboardLowStock) dashboardLowStock.textContent = productosBajos.length;
+            
+            // Asignaciones este mes
+            const mesActual = new Date().getMonth();
+            const asignacionesMes = movimientos.filter(m => 
+                m.tipo === 'salida' && new Date(m.fecha).getMonth() === mesActual
+            );
+            const dashboardTotalAssignments = document.getElementById('dashboardTotalAssignments');
+            if (dashboardTotalAssignments) dashboardTotalAssignments.textContent = asignacionesMes.length;
+            
+            // Total unidades disponibles
+            let totalUnidades = 0;
+            productos.forEach(p => {
+                totalUnidades += calcularUnidadesTotales(p);
+            });
+            const dashboardTotalUnits = document.getElementById('dashboardTotalUnits');
+            if (dashboardTotalUnits) dashboardTotalUnits.textContent = totalUnidades;
+            
+            // Actualizar lista de productos con stock bajo
+            const lowStockList = document.getElementById('lowStockList');
+            if (lowStockList) {
+                if (productosBajos.length > 0) {
+                    let html = '';
+                    productosBajos.forEach(producto => {
+                        const unidadesTotales = calcularUnidadesTotales(producto);
+                        html += `
+                            <div class="product-card low-stock">
+                                <div class="product-card-header">
+                                    <div class="product-name">${producto.nombre}</div>
+                                    <div class="product-category">${producto.categoria}</div>
+                                </div>
+                                <div class="product-stock">
+                                    Stock actual: ${producto.stock} ${producto.unidad} (${unidadesTotales} unidades)<br>
+                                    Stock mínimo: ${producto.stockMinimo} ${producto.unidad}
+                                </div>
+                                <div class="stock-progress">
+                                    <div class="stock-progress-bar low" style="width: ${(producto.stock / producto.stockMinimo * 100).toFixed(0)}%"></div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    lowStockList.innerHTML = html;
+                } else {
+                    lowStockList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No hay productos con stock bajo</p>';
+                }
+            }
+            
+            // Actualizar gráfico de categorías
+            actualizarGraficoCategorias();
+        }
+
+        // Función simplificada para verificar stock bajo
+        function verificarStockBajo() {
+            const productosBajos = productos.filter(p => p.stock <= p.stockMinimo);
+            const stockAlert = document.getElementById('stockAlert');
+            if (stockAlert) {
+                if (productosBajos.length > 0) {
+                    stockAlert.classList.add('show');
+                    const alertMessage = document.getElementById('alertMessage');
+                    if (alertMessage) {
+                        alertMessage.textContent = `Hay ${productosBajos.length} productos con stock bajo. Verifique el inventario.`;
+                    }
+                } else {
+                    stockAlert.classList.remove('show');
+                }
+            }
+        }
+
+        // Función simplificada para actualizar gráfico de categorías
+        function actualizarGraficoCategorias() {
+            const ctx = document.getElementById('categoryChart');
+            if (!ctx) return;
+            
+            // Destruir gráfico anterior si existe
+            if (categoryChartInstance) {
+                categoryChartInstance.destroy();
+            }
+            
+            // Agrupar por categoría
+            const categorias = {};
+            productos.forEach(p => {
+                if (!categorias[p.categoria]) {
+                    categorias[p.categoria] = 0;
+                }
+                categorias[p.categoria] += calcularUnidadesTotales(p);
+            });
+            
+            const labels = Object.keys(categorias);
+            const data = Object.values(categorias);
+            
+            // Colores para las categorías
+            const backgroundColors = [
+                '#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c'
+            ];
+            
+            categoryChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColors.slice(0, labels.length),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // =============================================
+        // INICIALIZACIÓN DEL SISTEMA
+        // =============================================
+
+        // Inicialización cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                console.log('Inicializando sistema de inventario...');
+                showLoading('Inicializando sistema...');
+                
+                // 1. Configurar eventos básicos primero
+                configurarEventosBasicos();
+                
+                // 2. Inicializar fecha/hora
+                actualizarFechaHora();
+                setInterval(actualizarFechaHora, 1000);
+                
+                // 3. Configurar fecha y hora actual por defecto
+                const fechaInput = document.getElementById('fechaAsignacion');
+                if (fechaInput) {
+                    const ahora = new Date();
+                    ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
+                    fechaInput.value = ahora.toISOString().slice(0, 16);
+                }
+                
+                // 4. Generar meses y años para reportes
+                // (función simplificada)
+                generarOpcionesFechaReporte();
+                
+                // 5. Intentar inicializar Firebase
+                console.log('Inicializando Firebase...');
+                const firebaseSuccess = await initializeFirebase();
+                
+                if (firebaseSuccess) {
+                    console.log('Firebase inicializado, cargando datos...');
+                    // 6. Cargar datos desde Firebase
+                    await loadData();
+                } else {
+                    console.log('Firebase falló, usando datos locales...');
+                    // Intentar cargar datos locales
+                    await loadData();
+                }
+                
+                // 7. Configurar todos los eventos
+                configurarEventos();
+                
+                // 8. Actualizar interfaz final
+                actualizarInterfaz();
+                
+                hideLoading();
+                console.log('Sistema inicializado correctamente');
+                
+            } catch (error) {
+                console.error('Error crítico al inicializar el sistema:', error);
+                hideLoading();
+                showAlert('Error crítico al inicializar el sistema: ' + error.message, 'error');
+                updateConnectionStatus(false, 'Error de inicialización');
+            }
+        });
+
+        // =============================================
+        // FUNCIONES SIMPLIFICADAS (PARA COMPLETAR)
+        // =============================================
+
+        // Estas funciones necesitan ser implementadas completamente
+
+        function generarOpcionesFechaReporte() {
+            // Implementación simplificada
+            const reportMonth = document.getElementById('reportMonth');
+            const reportYear = document.getElementById('reportYear');
+            
+            if (reportMonth) {
+                reportMonth.innerHTML = '<option value="">Seleccione mes</option>';
+                const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                meses.forEach((mes, index) => {
+                    const option = document.createElement('option');
+                    option.value = index + 1;
+                    option.textContent = mes;
+                    reportMonth.appendChild(option);
+                });
+            }
+            
+            if (reportYear) {
+                reportYear.innerHTML = '<option value="">Seleccione año</option>';
+                const añoActual = new Date().getFullYear();
+                for (let i = añoActual; i >= añoActual - 5; i--) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = i;
+                    reportYear.appendChild(option);
+                }
+            }
+        }
+
+        function generarReporteMensual() {
+            showAlert('Función generarReporteMensual() necesita implementación completa', 'error');
+        }
+
+        function generarReporteAnual() {
+            showAlert('Función generarReporteAnual() necesita implementación completa', 'error');
+        }
+
+        function generarReporteDepartamento() {
+            showAlert('Función generarReporteDepartamento() necesita implementación completa', 'error');
+        }
+
+        function generarReporteProductos() {
+            showAlert('Función generarReporteProductos() necesita implementación completa', 'error');
+        }
+
+        function exportarReporteExcel() {
+            showAlert('Función exportarReporteExcel() necesita implementación completa', 'error');
+        }
+
+        function exportarPDF() {
+            showAlert('Función exportarPDF() necesita implementación completa', 'error');
+        }
+
+        function exportarExcel() {
+            showAlert('Función exportarExcel() necesita implementación completa', 'error');
+        }
+
+        function exportarInventarioActualExcel() {
+            showAlert('Función exportarInventarioActualExcel() necesita implementación completa', 'error');
+        }
+
+        function calcularEquivalenciaAsignacion() {
+            const productoId = document.getElementById('productoAsignar')?.value;
+            const cantidadUnidades = document.getElementById('cantidadAsignarUnidades')?.value || 0;
+            
+            if (!productoId || !cantidadUnidades) return;
+            
+            const producto = productos.find(p => p.firebaseKey === productoId);
+            if (!producto) return;
+            
+            const unidadesPorMedida = producto.unidadesPorMedida || 1;
+            const equivalencia = cantidadUnidades / unidadesPorMedida;
+            
+            const equivalenciaUnidades = document.getElementById('equivalenciaUnidades');
+            if (equivalenciaUnidades) {
+                equivalenciaUnidades.textContent = `${equivalencia.toFixed(2)} ${producto.unidad}`;
+            }
+            
+            const stockActual = calcularUnidadesTotales(producto);
+            const nuevoStock = stockActual - cantidadUnidades;
+            
+            const nuevoStockUnidades = document.getElementById('nuevoStockUnidades');
+            if (nuevoStockUnidades) {
+                nuevoStockUnidades.textContent = `${nuevoStock} unidades`;
+            }
+        }
+
+        function verificarCodigoExistente() {
+            const codigo = document.getElementById('codigoProducto')?.value;
+            if (!codigo) return;
+            
+            const productoExistente = productos.find(p => p.codigo === codigo);
+            const repositionBtn = document.getElementById('repositionBtn');
+            const saveProductBtn = document.getElementById('saveProductBtn');
+            
+            if (productoExistente) {
+                // Mostrar botón de reposición
+                if (repositionBtn) repositionBtn.style.display = 'block';
+                if (saveProductBtn) saveProductBtn.style.display = 'none';
+                showAlert(`Producto encontrado: ${productoExistente.nombre}. Puede reponer stock.`, 'success');
+            } else {
+                // Mostrar botón de guardar nuevo producto
+                if (repositionBtn) repositionBtn.style.display = 'none';
+                if (saveProductBtn) saveProductBtn.style.display = 'block';
+            }
+        }
+
+        async function guardarProducto() {
+            try {
+                const codigo = document.getElementById('codigoProducto')?.value;
+                const nombre = document.getElementById('nombreProducto')?.value;
+                const categoria = document.getElementById('categoriaProducto')?.value;
+                const unidad = document.getElementById('unidadProducto')?.value;
+                const unidadesPorMedida = parseInt(document.getElementById('unidadesPorMedida')?.value) || 1;
+                const stock = parseInt(document.getElementById('stockInicial')?.value) || 0;
+                const stockMinimo = parseInt(document.getElementById('stockMinimo')?.value) || 5;
+                const descripcion = document.getElementById('descripcionProducto')?.value;
+                
+                // Validaciones básicas
+                if (!codigo || !nombre || !categoria || !unidad) {
+                    showAlert('Por favor complete todos los campos obligatorios', 'error');
+                    return;
+                }
+                
+                // Verificar si el código ya existe
+                const productoExistente = productos.find(p => p.codigo === codigo);
+                if (productoExistente) {
+                    showAlert('El código del producto ya existe. Use otro código o reponga stock.', 'error');
+                    return;
+                }
+                
+                const nuevoProducto = {
+                    codigo,
+                    nombre,
+                    categoria,
+                    unidad,
+                    unidadesPorMedida,
+                    stock,
+                    stockMinimo,
+                    descripcion: descripcion || '',
+                    fechaRegistro: new Date().toISOString().split('T')[0]
+                };
+                
+                productos.push(nuevoProducto);
+                await saveData();
+                actualizarInterfaz();
+                showAlert('Producto guardado correctamente', 'success');
+                
+                // Limpiar formulario
+                document.getElementById('nuevoProductoForm')?.reset();
+                
+            } catch (error) {
+                console.error('Error al guardar producto:', error);
+                showAlert('Error al guardar producto', 'error');
+            }
+        }
+
+        async function guardarReposicion() {
+            try {
+                const codigo = document.getElementById('codigoProducto')?.value;
+                const cantidad = parseInt(document.getElementById('stockInicial')?.value) || 0;
+                const descripcion = document.getElementById('descripcionProducto')?.value;
+                
+                if (!codigo || cantidad <= 0) {
+                    showAlert('Por favor ingrese un código válido y cantidad mayor a 0', 'error');
+                    return;
+                }
+                
+                const productoIndex = productos.findIndex(p => p.codigo === codigo);
+                if (productoIndex === -1) {
+                    showAlert('Producto no encontrado', 'error');
+                    return;
+                }
+                
+                // Reponer stock
+                productos[productoIndex].stock += cantidad;
+                
+                // Registrar movimiento
+                const nuevoMovimiento = {
+                    tipo: 'reposicion',
+                    producto: productos[productoIndex].nombre,
+                    productoId: productos[productoIndex].firebaseKey,
+                    cantidad: cantidad * (productos[productoIndex].unidadesPorMedida || 1),
+                    fecha: new Date().toISOString(),
+                    descripcion: descripcion || 'Reposición de stock',
+                    responsable: 'Sistema'
+                };
+                
+                movimientos.push(nuevoMovimiento);
+                
+                await saveData();
+                actualizarInterfaz();
+                showAlert(`Stock repuesto correctamente. Nuevo stock: ${productos[productoIndex].stock} ${productos[productoIndex].unidad}`, 'success');
+                
+                // Limpiar formulario
+                document.getElementById('nuevoProductoForm')?.reset();
+                document.getElementById('repositionBtn').style.display = 'none';
+                document.getElementById('saveProductBtn').style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error al reponer stock:', error);
+                showAlert('Error al reponer stock', 'error');
+            }
+        }
+
+        function editarProducto(productoId) {
+            showAlert('Función editarProducto() necesita implementación completa', 'error');
+        }
+
+        function confirmarEliminarProducto(productoId) {
+            currentEditId = productoId;
+            const modal = document.getElementById('confirmModal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        async function eliminarProducto() {
+            try {
+                if (!currentEditId) return;
+                
+                const productoIndex = productos.findIndex(p => p.firebaseKey === currentEditId);
+                if (productoIndex !== -1) {
+                    productos.splice(productoIndex, 1);
+                    await saveData();
+                    actualizarInterfaz();
+                    showAlert('Producto eliminado correctamente', 'success');
+                }
+                
+                cerrarModal();
+                currentEditId = null;
+                
+            } catch (error) {
+                console.error('Error al eliminar producto:', error);
+                showAlert('Error al eliminar producto', 'error');
+            }
+        }
+
+        function ajustarStock(productoId) {
+            currentAdjustId = productoId;
+            const producto = productos.find(p => p.firebaseKey === productoId);
+            if (!producto) return;
+            
+            const unidadesTotales = calcularUnidadesTotales(producto);
+            
+            document.getElementById('adjustProductName').value = producto.nombre;
+            document.getElementById('adjustCurrentStock').value = `${unidadesTotales} unidades`;
+            document.getElementById('adjustCurrentStockMedida').value = `${producto.stock} ${producto.unidad}`;
+            
+            const modal = document.getElementById('adjustModal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function limpiarFiltrosInventario() {
+            document.getElementById('searchProduct').value = '';
+            document.getElementById('filterCategory').value = '';
+            document.getElementById('filterStock').value = '';
+            actualizarTablaInventario();
+        }
+
+        function limpiarFiltrosMovimientos() {
+            document.getElementById('filterMovimiento').value = '';
+            document.getElementById('filterMovDept').value = '';
+            document.getElementById('filterMovFecha').value = '';
+            actualizarTablaMovimientos();
+        }
+
+        function actualizarTablaMovimientos() {
+            // Implementación simplificada
+            const movimientosTableBody = document.getElementById('movimientosTableBody');
+            if (!movimientosTableBody) return;
+            
+            movimientosTableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px;">Función en desarrollo</td></tr>';
+        }
+
+        async function guardarCambiosMovimiento() {
+            showAlert('Función guardarCambiosMovimiento() necesita implementación completa', 'error');
+        }
+
+        async function eliminarMovimiento() {
+            showAlert('Función eliminarMovimiento() necesita implementación completa', 'error');
+        }
+
+        // Función para cargar datos iniciales
+        async function loadInitialData() {
+            showLoading('Cargando datos iniciales...');
+            
+            try {
+                // Aquí irían los datos iniciales completos
+                // Por ahora solo creamos un array vacío
+                productos = [];
+                movimientos = [];
+                
+                await saveData();
+                actualizarInterfaz();
+                hideLoading();
+                showAlert('Datos iniciales cargados (vacío por ahora)', 'success');
+                
+            } catch (error) {
+                console.error('Error al cargar datos iniciales:', error);
+                hideLoading();
+                showAlert('Error al cargar datos iniciales', 'error');
+            }
+        }
+
+        // Función para limpiar todos los datos
+        async function clearAllData() {
+            showLoading('Limpiando base de datos...');
+            
+            try {
+                productos = [];
+                movimientos = [];
+                
+                await saveData();
+                actualizarInterfaz();
+                hideLoading();
+                showAlert('Base de datos limpiada correctamente', 'success');
+                
+            } catch (error) {
+                console.error('Error al limpiar base de datos:', error);
+                hideLoading();
+                showAlert('Error al limpiar base de datos', 'error');
+            }
+        }
 
     </script>
 </body>
