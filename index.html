@@ -4,16 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Inventario - Artículos de Oficina</title>
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, Timestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+        
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDDh9GMKi2eOVI1OeuwaBiqlEhjGpphvvk",
+            authDomain: "inventario-administracion.firebaseapp.com",
+            projectId: "inventario-administracion",
+            storageBucket: "inventario-administracion.firebasestorage.app",
+            messagingSenderId: "927319095883",
+            appId: "1:927319095883:web:7c49d3294d1149990d2bce"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // Hacer disponibles globalmente las funciones de Firebase
+        window.firebaseApp = app;
+        window.firebaseDB = db;
+        window.firebaseFunctions = {
+            collection,
+            addDoc,
+            getDocs,
+            updateDoc,
+            deleteDoc,
+            doc,
+            onSnapshot,
+            query,
+            orderBy,
+            Timestamp
+        };
+        
+        console.log("Firebase inicializado correctamente");
+    </script>
+    
     <style>
         /* ESTILOS (se mantienen igual que en tu archivo original) */
         * {
@@ -869,87 +904,34 @@
         .btn-reposition:hover {
             background-color: #8e44ad;
         }
-
-        /* Estilos para autenticación */
-        .auth-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 300px;
-            padding: 2rem;
-        }
-
-        .auth-form {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-        }
-
-        .auth-form h2 {
-            text-align: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .auth-form .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .auth-form input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-
-        .auth-form button {
-            width: 100%;
-            margin-top: 1rem;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.9rem;
-        }
-
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background-color: #3498db;
+        
+        /* Firebase status indicator */
+        .firebase-status {
+            position: fixed;
+            bottom: 60px;
+            right: 20px;
+            background: #27ae60;
             color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-weight: bold;
+            gap: 8px;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
-
-        .loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 200px;
+        
+        .firebase-status.offline {
+            background: #e74c3c;
         }
-
-        .loading-spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
+        
+        .firebase-status .status-dot {
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 1rem;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            background: white;
+            animation: pulse 2s infinite;
         }
     </style>
 </head>
@@ -960,12 +942,9 @@
             <div class="header-info">
                 <div class="date-time" id="currentDateTime"></div>
                 <div class="total-products">Productos: <span id="totalProducts">0</span></div>
-                <div class="user-info" id="userInfo" style="display: none;">
-                    <div class="user-avatar" id="userAvatar">U</div>
-                    <span id="userEmail"></span>
-                    <button id="logoutBtn" class="btn-action" style="background-color: #e74c3c;">
-                        <i class="fas fa-sign-out-alt"></i> Salir
-                    </button>
+                <div class="firebase-status" id="firebaseStatus" style="display: none;">
+                    <span class="status-dot"></span>
+                    <span>Conectado a Firebase</span>
                 </div>
             </div>
             <div class="stock-alert" id="stockAlert">
@@ -974,457 +953,414 @@
             </div>
         </header>
 
-        <!-- Contenedor de autenticación -->
-        <div id="authContainer" class="auth-container" style="display: none;">
-            <div class="auth-form">
-                <h2><i class="fas fa-user-lock"></i> Iniciar Sesión</h2>
-                <form id="loginForm">
-                    <div class="form-group">
-                        <label for="email">Correo Electrónico</label>
-                        <input type="email" id="email" placeholder="usuario@empresa.com" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Contraseña</label>
-                        <input type="password" id="password" placeholder="••••••••" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="menu">
+                    <button class="menu-btn active" data-section="dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
                     </button>
-                    <div style="margin-top: 1rem; text-align: center; font-size: 0.9rem; color: #666;">
-                        Usa cualquier correo y contraseña (modo demo)
+                    <button class="menu-btn" data-section="inventario">
+                        <i class="fas fa-clipboard-list"></i> Inventario
+                    </button>
+                    <button class="menu-btn" data-section="nuevo-producto">
+                        <i class="fas fa-plus"></i> Nuevo Producto
+                    </button>
+                    <button class="menu-btn" data-section="asignacion">
+                        <i class="fas fa-hand-holding"></i> Asignar Material
+                    </button>
+                    <button class="menu-btn" data-section="movimientos">
+                        <i class="fas fa-exchange-alt"></i> Movimientos
+                    </button>
+                    <button class="menu-btn" data-section="reportes">
+                        <i class="fas fa-chart-bar"></i> Reportes
+                    </button>
+                    <div class="menu-divider"></div>
+                    <button class="menu-btn export-btn" id="exportPdf">
+                        <i class="fas fa-file-pdf"></i> Exportar PDF
+                    </button>
+                    <button class="menu-btn export-btn" id="exportExcel">
+                        <i class="fas fa-file-excel"></i> Exportar Excel
+                    </button>
+                    <button class="menu-btn export-btn" id="exportInventoryExcel">
+                        <i class="fas fa-file-excel"></i> Inventario Actual
+                    </button>
+                    <button class="menu-btn export-btn" id="syncData" style="background-color: #9b59b6;">
+                        <i class="fas fa-sync-alt"></i> Sincronizar
+                    </button>
+                </div>
+
+                <div class="stats">
+                    <h3>Resumen del Inventario</h3>
+                    <div class="stat-item">
+                        <span>Productos bajos:</span>
+                        <strong id="lowStockCount">0</strong>
                     </div>
-                </form>
+                    <div class="stat-item">
+                        <span>Asignaciones hoy:</span>
+                        <strong id="todayAssignments">0</strong>
+                    </div>
+                    <div class="stat-item">
+                        <span>Stock total (unidades):</span>
+                        <strong id="totalStock">0</strong>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- Contenedor principal de la aplicación -->
-        <div id="appContainer" style="display: none;">
-            <div class="main-content">
-                <div class="sidebar">
-                    <div class="menu">
-                        <button class="menu-btn active" data-section="dashboard">
-                            <i class="fas fa-tachometer-alt"></i> Dashboard
+            <div class="content">
+                <!-- Sección Dashboard -->
+                <section id="dashboard" class="content-section active">
+                    <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+                    
+                    <div class="dashboard-cards">
+                        <div class="dashboard-card">
+                            <i class="fas fa-boxes"></i>
+                            <h3 id="dashboardTotalProducts">0</h3>
+                            <p>Productos en Inventario</p>
+                        </div>
+                        
+                        <div class="dashboard-card warning" id="lowStockCard">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h3 id="dashboardLowStock">0</h3>
+                            <p>Productos con Stock Bajo</p>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <i class="fas fa-hand-holding"></i>
+                            <h3 id="dashboardTotalAssignments">0</h3>
+                            <p>Asignaciones este Mes</p>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <i class="fas fa-calculator"></i>
+                            <h3 id="dashboardTotalUnits">0</h3>
+                            <p>Total Unidades Disponibles</p>
+                        </div>
+                    </div>
+                    
+                    <div class="reports-container">
+                        <div class="report-card">
+                            <h3>Stock por Categoría</h3>
+                            <div class="chart-container">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="report-card">
+                            <h3>Productos con Stock Bajo</h3>
+                            <div id="lowStockList">
+                                <p style="text-align: center; color: #666; padding: 20px;">Cargando datos...</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Sección de Inventario -->
+                <section id="inventario" class="content-section">
+                    <h2><i class="fas fa-clipboard-list"></i> Inventario de Productos</h2>
+                    <div class="filters">
+                        <input type="text" id="searchProduct" placeholder="Buscar producto...">
+                        <select id="filterCategory">
+                            <option value="">Todas las Categorías</option>
+                            <option value="papeleria">Papelería</option>
+                            <option value="oficina">Artículos de Oficina</option>
+                            <option value="toner">Toner</option>
+                            <option value="electronica">Electrónica</option>
+                            <option value="limpieza">Limpieza</option>
+                            <option value="otros">Otros</option>
+                        </select>
+                        <select id="filterStock">
+                            <option value="">Todo el Stock</option>
+                            <option value="low">Stock Bajo</option>
+                            <option value="normal">Stock Normal</option>
+                            <option value="alto">Stock Alto</option>
+                        </select>
+                        <button id="clearFilters"><i class="fas fa-times"></i> Limpiar filtros</button>
+                    </div>
+                    <div class="table-container">
+                        <table id="inventarioTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Producto</th>
+                                    <th>Categoría</th>
+                                    <th>Stock</th>
+                                    <th>Unidades Totales</th>
+                                    <th>Unidad</th>
+                                    <th>Stock Mínimo</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventarioTableBody">
+                                <tr><td colspan="9" style="text-align: center; padding: 20px;">Cargando datos de Firebase...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Sección de Nuevo Producto -->
+                <section id="nuevo-producto" class="content-section">
+                    <h2><i class="fas fa-plus"></i> Registrar/Reponer Producto</h2>
+                    <form id="nuevoProductoForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="codigoProducto">Código del Producto *</label>
+                                <input type="text" id="codigoProducto" placeholder="Ej: OFI-001" required>
+                                <small class="unit-conversion">Para reponer, use el código existente</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="nombreProducto">Nombre del Producto *</label>
+                                <input type="text" id="nombreProducto" placeholder="Ej: Bolígrafos" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="categoriaProducto">Categoría *</label>
+                                <select id="categoriaProducto" required>
+                                    <option value="">Seleccione...</option>
+                                    <option value="papeleria">Papelería</option>
+                                    <option value="oficina">Artículos de Oficina</option>
+                                    <option value="toner">Toner</option>
+                                    <option value="electronica">Electrónica</option>
+                                    <option value="limpieza">Limpieza</option>
+                                    <option value="otros">Otros</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="unidadProducto">Unidad de Medida *</label>
+                                <select id="unidadProducto" required>
+                                    <option value="">Seleccione...</option>
+                                    <option value="UND">Unidades</option>
+                                    <option value="CAJAS">Cajas</option>
+                                    <option value="PAQ">Paquetes</option>
+                                    <option value="GALON">Galones</option>
+                                    <option value="LT">Litros</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="unidadesPorMedida">Unidades por Medida *</label>
+                                <input type="number" id="unidadesPorMedida" min="1" value="1" required>
+                                <small class="unit-conversion">Ej: 24 unidades por caja, 100 unidades por paquete</small>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="stockInicial">Stock a Agregar *</label>
+                                <input type="number" id="stockInicial" min="0" required>
+                                <small class="unit-conversion">En la unidad de medida seleccionada</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="stockMinimo">Stock Mínimo (Alerta) *</label>
+                                <input type="number" id="stockMinimo" min="1" value="5" required>
+                                <small class="unit-conversion">En la unidad de medida seleccionada</small>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <label for="descripcionProducto">Descripción / Motivo</label>
+                                <textarea id="descripcionProducto" rows="3" placeholder="Detalles del producto o motivo de reposición..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-buttons">
+                            <button type="submit" class="btn btn-primary" id="saveProductBtn">
+                                <i class="fas fa-save"></i> Guardar Producto
+                            </button>
+                            <button type="button" class="btn btn-success" id="repositionBtn" style="display: none;">
+                                <i class="fas fa-boxes"></i> Reponer Stock
+                            </button>
+                            <button type="reset" class="btn btn-secondary" id="resetProductBtn">
+                                <i class="fas fa-redo"></i> Limpiar
+                            </button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Sección de Asignación de Material -->
+                <section id="asignacion" class="content-section">
+                    <h2><i class="fas fa-hand-holding"></i> Asignar Material a Departamentos</h2>
+                    <form id="asignacionForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="productoAsignar">Producto *</label>
+                                <select id="productoAsignar" required>
+                                    <option value="">Seleccione...</option>
+                                    <!-- Los productos se cargarán dinámicamente -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="stockDisponible">Stock Disponible (Unidades)</label>
+                                <input type="text" id="stockDisponible" readonly style="background-color: #f5f5f5;">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="departamentoAsignar">Departamento *</label>
+                                <select id="departamentoAsignar" class="department-select" required>
+                                    <option value="">Seleccione...</option>
+                                    <option value="Administración">Administración</option>
+                                    <option value="Tesorería">Tesorería</option>
+                                    <option value="RRHH">RRHH</option>
+                                    <option value="Flota">Flota</option>
+                                    <option value="Almacén">Almacén</option>
+                                    <option value="Head End">Head End</option>
+                                    <option value="Seguridad Laboral">Seguridad Laboral</option>
+                                    <option value="Gerencia senior">Gerencia senior</option>
+                                    <option value="Sistemas">Sistemas</option>
+                                    <option value="Colaboradores">Colaboradores</option>
+                                    <option value="Los Ruices">Los Ruices</option>
+                                    <option value="El Rosal">El Rosal</option>
+                                    <option value="La Naya">La Naya</option>
+                                    <option value="TDH">TDH</option>
+                                    <option value="Obras">Obras</option>
+                                    <option value="Comerciales">Comerciales</option>
+                                    <option value="Obras Corporativo">Obras Corporativo</option>
+                                    <option value="MSO">MSO</option>
+                                    <option value="El Paraiso">El Paraiso</option>
+                                    <option value="Backbone">Backbone</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="usuarioAsignar">Usuario que Recibe *</label>
+                                <input type="text" id="usuarioAsignar" placeholder="Nombre del usuario" required>
+                            </div>
+                        </div>
+
+                        <div class="unit-assignment">
+                            <h4>Asignación por Unidades</h4>
+                            <div class="unit-calc">
+                                <div>
+                                    <label for="cantidadAsignarUnidades">Cantidad en Unidades *</label>
+                                    <input type="number" id="cantidadAsignarUnidades" min="1" required>
+                                </div>
+                                <div>
+                                    <label>Equivalencia:</label>
+                                    <div class="unit-result" id="equivalenciaUnidades">0 unidades</div>
+                                </div>
+                                <div>
+                                    <label>Nuevo Stock:</label>
+                                    <div class="unit-result" id="nuevoStockUnidades">0 unidades</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="fechaAsignacion">Fecha de Asignación *</label>
+                                <input type="datetime-local" id="fechaAsignacion" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <label for="observacionesAsignacion">Observaciones</label>
+                                <textarea id="observacionesAsignacion" rows="3" placeholder="Detalles de la asignación..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-buttons">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check"></i> Registrar Asignación
+                            </button>
+                            <button type="reset" class="btn btn-secondary">
+                                <i class="fas fa-redo"></i> Limpiar
+                            </button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Sección de Movimientos -->
+                <section id="movimientos" class="content-section">
+                    <h2><i class="fas fa-exchange-alt"></i> Historial de Movimientos</h2>
+                    <div class="filters">
+                        <select id="filterMovimiento">
+                            <option value="">Todos los Movimientos</option>
+                            <option value="entrada">Entradas</option>
+                            <option value="salida">Salidas/Asignaciones</option>
+                            <option value="ajuste">Ajustes</option>
+                            <option value="reposicion">Reposiciones</option>
+                        </select>
+                        <select id="filterMovDept" class="department-select">
+                            <option value="">Todos los Departamentos</option>
+                            <!-- Los departamentos se cargarán dinámicamente -->
+                        </select>
+                        <input type="date" id="filterMovFecha">
+                        <button id="clearMovFilters"><i class="fas fa-times"></i> Limpiar filtros</button>
+                    </div>
+                    <div class="table-container">
+                        <table id="movimientosTable">
+                            <thead>
+                                <tr>
+                                    <th>Fecha y Hora</th>
+                                    <th>Tipo</th>
+                                    <th>Producto</th>
+                                    <th>Cantidad (Unidades)</th>
+                                    <th>Departamento</th>
+                                    <th>Usuario</th>
+                                    <th>Observaciones</th>
+                                    <th>Responsable</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="movimientosTableBody">
+                                <tr><td colspan="9" style="text-align: center; padding: 20px;">Cargando datos de Firebase...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Sección de Reportes -->
+                <section id="reportes" class="content-section">
+                    <h2><i class="fas fa-chart-bar"></i> Reportes y Estadísticas</h2>
+                    
+                    <div class="report-controls">
+                        <select id="reportType">
+                            <option value="mensual">Reporte Mensual</option>
+                            <option value="anual">Reporte Anual</option>
+                            <option value="departamento">Por Departamento</option>
+                            <option value="productos">Por Producto</option>
+                        </select>
+                        <select id="reportMonth">
+                            <!-- Los meses se cargarán dinámicamente -->
+                        </select>
+                        <select id="reportYear">
+                            <!-- Los años se cargarán dinámicamente -->
+                        </select>
+                        <button id="generateReport" class="btn btn-primary">
+                            <i class="fas fa-chart-bar"></i> Generar Reporte
                         </button>
-                        <button class="menu-btn" data-section="inventario">
-                            <i class="fas fa-clipboard-list"></i> Inventario
-                        </button>
-                        <button class="menu-btn" data-section="nuevo-producto">
-                            <i class="fas fa-plus"></i> Nuevo Producto
-                        </button>
-                        <button class="menu-btn" data-section="asignacion">
-                            <i class="fas fa-hand-holding"></i> Asignar Material
-                        </button>
-                        <button class="menu-btn" data-section="movimientos">
-                            <i class="fas fa-exchange-alt"></i> Movimientos
-                        </button>
-                        <button class="menu-btn" data-section="reportes">
-                            <i class="fas fa-chart-bar"></i> Reportes
-                        </button>
-                        <div class="menu-divider"></div>
-                        <button class="menu-btn export-btn" id="exportPdf">
-                            <i class="fas fa-file-pdf"></i> Exportar PDF
-                        </button>
-                        <button class="menu-btn export-btn" id="exportExcel">
-                            <i class="fas fa-file-excel"></i> Exportar Excel
-                        </button>
-                        <button class="menu-btn export-btn" id="exportInventoryExcel">
-                            <i class="fas fa-file-excel"></i> Inventario Actual
+                        <button id="exportReportExcel" class="btn btn-success">
+                            <i class="fas fa-file-excel"></i> Exportar Reporte
                         </button>
                     </div>
 
-                    <div class="stats">
-                        <h3>Resumen del Inventario</h3>
-                        <div class="stat-item">
-                            <span>Productos bajos:</span>
-                            <strong id="lowStockCount">0</strong>
+                    <div class="reports-container">
+                        <div class="report-card">
+                            <h3 id="chartTitle1">Consumo por Departamento (Unidades)</h3>
+                            <div class="chart-container">
+                                <canvas id="deptChart"></canvas>
+                            </div>
                         </div>
-                        <div class="stat-item">
-                            <span>Asignaciones hoy:</span>
-                            <strong id="todayAssignments">0</strong>
+                        
+                        <div class="report-card">
+                            <h3 id="chartTitle2">Top 10 Productos Más Utilizados (Unidades)</h3>
+                            <div class="chart-container">
+                                <canvas id="topProductsChart"></canvas>
+                            </div>
                         </div>
-                        <div class="stat-item">
-                            <span>Stock total (unidades):</span>
-                            <strong id="totalStock">0</strong>
+                        
+                        <div class="report-card full-width">
+                            <h3>Resumen de Movimientos</h3>
+                            <div id="resumenAsignaciones">
+                                <p style="text-align: center; color: #666; padding: 20px;">Cargando datos...</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="content">
-                    <!-- Sección Dashboard -->
-                    <section id="dashboard" class="content-section active">
-                        <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
-                        
-                        <div class="dashboard-cards">
-                            <div class="dashboard-card">
-                                <i class="fas fa-boxes"></i>
-                                <h3 id="dashboardTotalProducts">0</h3>
-                                <p>Productos en Inventario</p>
-                            </div>
-                            
-                            <div class="dashboard-card warning" id="lowStockCard">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <h3 id="dashboardLowStock">0</h3>
-                                <p>Productos con Stock Bajo</p>
-                            </div>
-                            
-                            <div class="dashboard-card">
-                                <i class="fas fa-hand-holding"></i>
-                                <h3 id="dashboardTotalAssignments">0</h3>
-                                <p>Asignaciones este Mes</p>
-                            </div>
-                            
-                            <div class="dashboard-card">
-                                <i class="fas fa-calculator"></i>
-                                <h3 id="dashboardTotalUnits">0</h3>
-                                <p>Total Unidades Disponibles</p>
-                            </div>
-                        </div>
-                        
-                        <div class="reports-container">
-                            <div class="report-card">
-                                <h3>Stock por Categoría</h3>
-                                <div class="chart-container">
-                                    <canvas id="categoryChart"></canvas>
-                                </div>
-                            </div>
-                            
-                            <div class="report-card">
-                                <h3>Productos con Stock Bajo</h3>
-                                <div id="lowStockList">
-                                    <div class="loading">
-                                        <div class="loading-spinner"></div>
-                                        <p>Cargando...</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Sección de Inventario -->
-                    <section id="inventario" class="content-section">
-                        <h2><i class="fas fa-clipboard-list"></i> Inventario de Productos</h2>
-                        <div class="filters">
-                            <input type="text" id="searchProduct" placeholder="Buscar producto...">
-                            <select id="filterCategory">
-                                <option value="">Todas las Categorías</option>
-                                <option value="papeleria">Papelería</option>
-                                <option value="oficina">Artículos de Oficina</option>
-                                <option value="toner">Toner</option>
-                                <option value="electronica">Electrónica</option>
-                                <option value="limpieza">Limpieza</option>
-                                <option value="otros">Otros</option>
-                            </select>
-                            <select id="filterStock">
-                                <option value="">Todo el Stock</option>
-                                <option value="low">Stock Bajo</option>
-                                <option value="normal">Stock Normal</option>
-                                <option value="alto">Stock Alto</option>
-                            </select>
-                            <button id="clearFilters"><i class="fas fa-times"></i> Limpiar filtros</button>
-                        </div>
-                        <div class="table-container">
-                            <table id="inventarioTable">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Producto</th>
-                                        <th>Categoría</th>
-                                        <th>Stock</th>
-                                        <th>Unidades Totales</th>
-                                        <th>Unidad</th>
-                                        <th>Stock Mínimo</th>
-                                        <th>Estado</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="inventarioTableBody">
-                                    <tr>
-                                        <td colspan="9" style="text-align: center; padding: 20px;">
-                                            <div class="loading">
-                                                <div class="loading-spinner"></div>
-                                                <p>Cargando inventario...</p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
-
-                    <!-- Sección de Nuevo Producto -->
-                    <section id="nuevo-producto" class="content-section">
-                        <h2><i class="fas fa-plus"></i> Registrar/Reponer Producto</h2>
-                        <form id="nuevoProductoForm">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="codigoProducto">Código del Producto *</label>
-                                    <input type="text" id="codigoProducto" placeholder="Ej: OFI-001" required>
-                                    <small class="unit-conversion">Para reponer, use el código existente</small>
-                                </div>
-                                <div class="form-group">
-                                    <label for="nombreProducto">Nombre del Producto *</label>
-                                    <input type="text" id="nombreProducto" placeholder="Ej: Bolígrafos" required>
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="categoriaProducto">Categoría *</label>
-                                    <select id="categoriaProducto" required>
-                                        <option value="">Seleccione...</option>
-                                        <option value="papeleria">Papelería</option>
-                                        <option value="oficina">Artículos de Oficina</option>
-                                        <option value="toner">Toner</option>
-                                        <option value="electronica">Electrónica</option>
-                                        <option value="limpieza">Limpieza</option>
-                                        <option value="otros">Otros</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="unidadProducto">Unidad de Medida *</label>
-                                    <select id="unidadProducto" required>
-                                        <option value="">Seleccione...</option>
-                                        <option value="UND">Unidades</option>
-                                        <option value="CAJAS">Cajas</option>
-                                        <option value="PAQ">Paquetes</option>
-                                        <option value="GALON">Galones</option>
-                                        <option value="LT">Litros</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="unidadesPorMedida">Unidades por Medida *</label>
-                                    <input type="number" id="unidadesPorMedida" min="1" value="1" required>
-                                    <small class="unit-conversion">Ej: 24 unidades por caja, 100 unidades por paquete</small>
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="stockInicial">Stock a Agregar *</label>
-                                    <input type="number" id="stockInicial" min="0" required>
-                                    <small class="unit-conversion">En la unidad de medida seleccionada</small>
-                                </div>
-                                <div class="form-group">
-                                    <label for="stockMinimo">Stock Mínimo (Alerta) *</label>
-                                    <input type="number" id="stockMinimo" min="1" value="5" required>
-                                    <small class="unit-conversion">En la unidad de medida seleccionada</small>
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group full-width">
-                                    <label for="descripcionProducto">Descripción / Motivo</label>
-                                    <textarea id="descripcionProducto" rows="3" placeholder="Detalles del producto o motivo de reposición..."></textarea>
-                                </div>
-                            </div>
-
-                            <div class="form-buttons">
-                                <button type="submit" class="btn btn-primary" id="saveProductBtn">
-                                    <i class="fas fa-save"></i> Guardar Producto
-                                </button>
-                                <button type="button" class="btn btn-success" id="repositionBtn" style="display: none;">
-                                    <i class="fas fa-boxes"></i> Reponer Stock
-                                </button>
-                                <button type="reset" class="btn btn-secondary" id="resetProductBtn">
-                                    <i class="fas fa-redo"></i> Limpiar
-                                </button>
-                            </div>
-                        </form>
-                    </section>
-
-                    <!-- Sección de Asignación de Material -->
-                    <section id="asignacion" class="content-section">
-                        <h2><i class="fas fa-hand-holding"></i> Asignar Material a Departamentos</h2>
-                        <form id="asignacionForm">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="productoAsignar">Producto *</label>
-                                    <select id="productoAsignar" required>
-                                        <option value="">Seleccione...</option>
-                                        <!-- Los productos se cargarán dinámicamente -->
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="stockDisponible">Stock Disponible (Unidades)</label>
-                                    <input type="text" id="stockDisponible" readonly style="background-color: #f5f5f5;">
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="departamentoAsignar">Departamento *</label>
-                                    <select id="departamentoAsignar" class="department-select" required>
-                                        <option value="">Seleccione...</option>
-                                        <option value="Administración">Administración</option>
-                                        <option value="Tesorería">Tesorería</option>
-                                        <option value="RRHH">RRHH</option>
-                                        <option value="Flota">Flota</option>
-                                        <option value="Almacén">Almacén</option>
-                                        <option value="Head End">Head End</option>
-                                        <option value="Seguridad Laboral">Seguridad Laboral</option>
-                                        <option value="Gerencia senior">Gerencia senior</option>
-                                        <option value="Sistemas">Sistemas</option>
-                                        <option value="Colaboradores">Colaboradores</option>
-                                        <option value="Los Ruices">Los Ruices</option>
-                                        <option value="El Rosal">El Rosal</option>
-                                        <option value="La Naya">La Naya</option>
-                                        <option value="TDH">TDH</option>
-                                        <option value="Obras">Obras</option>
-                                        <option value="Comerciales">Comerciales</option>
-                                        <option value="Obras Corporativo">Obras Corporativo</option>
-                                        <option value="MSO">MSO</option>
-                                        <option value="El Paraiso">El Paraiso</option>
-                                        <option value="Backbone">Backbone</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="usuarioAsignar">Usuario que Recibe *</label>
-                                    <input type="text" id="usuarioAsignar" placeholder="Nombre del usuario" required>
-                                </div>
-                            </div>
-
-                            <div class="unit-assignment">
-                                <h4>Asignación por Unidades</h4>
-                                <div class="unit-calc">
-                                    <div>
-                                        <label for="cantidadAsignarUnidades">Cantidad en Unidades *</label>
-                                        <input type="number" id="cantidadAsignarUnidades" min="1" required>
-                                    </div>
-                                    <div>
-                                        <label>Equivalencia:</label>
-                                        <div class="unit-result" id="equivalenciaUnidades">0 unidades</div>
-                                    </div>
-                                    <div>
-                                        <label>Nuevo Stock:</label>
-                                        <div class="unit-result" id="nuevoStockUnidades">0 unidades</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="fechaAsignacion">Fecha de Asignación *</label>
-                                    <input type="datetime-local" id="fechaAsignacion" required>
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group full-width">
-                                    <label for="observacionesAsignacion">Observaciones</label>
-                                    <textarea id="observacionesAsignacion" rows="3" placeholder="Detalles de la asignación..."></textarea>
-                                </div>
-                            </div>
-
-                            <div class="form-buttons">
-                                <button type="submit" class="btn btn-success">
-                                    <i class="fas fa-check"></i> Registrar Asignación
-                                </button>
-                                <button type="reset" class="btn btn-secondary">
-                                    <i class="fas fa-redo"></i> Limpiar
-                                </button>
-                            </div>
-                        </form>
-                    </section>
-
-                    <!-- Sección de Movimientos -->
-                    <section id="movimientos" class="content-section">
-                        <h2><i class="fas fa-exchange-alt"></i> Historial de Movimientos</h2>
-                        <div class="filters">
-                            <select id="filterMovimiento">
-                                <option value="">Todos los Movimientos</option>
-                                <option value="entrada">Entradas</option>
-                                <option value="salida">Salidas/Asignaciones</option>
-                                <option value="ajuste">Ajustes</option>
-                                <option value="reposicion">Reposiciones</option>
-                            </select>
-                            <select id="filterMovDept" class="department-select">
-                                <option value="">Todos los Departamentos</option>
-                                <!-- Los departamentos se cargarán dinámicamente -->
-                            </select>
-                            <input type="date" id="filterMovFecha">
-                            <button id="clearMovFilters"><i class="fas fa-times"></i> Limpiar filtros</button>
-                        </div>
-                        <div class="table-container">
-                            <table id="movimientosTable">
-                                <thead>
-                                    <tr>
-                                        <th>Fecha y Hora</th>
-                                        <th>Tipo</th>
-                                        <th>Producto</th>
-                                        <th>Cantidad (Unidades)</th>
-                                        <th>Departamento</th>
-                                        <th>Usuario</th>
-                                        <th>Observaciones</th>
-                                        <th>Responsable</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="movimientosTableBody">
-                                    <tr>
-                                        <td colspan="9" style="text-align: center; padding: 20px;">
-                                            <div class="loading">
-                                                <div class="loading-spinner"></div>
-                                                <p>Cargando movimientos...</p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
-
-                    <!-- Sección de Reportes -->
-                    <section id="reportes" class="content-section">
-                        <h2><i class="fas fa-chart-bar"></i> Reportes y Estadísticas</h2>
-                        
-                        <div class="report-controls">
-                            <select id="reportType">
-                                <option value="mensual">Reporte Mensual</option>
-                                <option value="anual">Reporte Anual</option>
-                                <option value="departamento">Por Departamento</option>
-                                <option value="productos">Por Producto</option>
-                            </select>
-                            <select id="reportMonth">
-                                <!-- Los meses se cargarán dinámicamente -->
-                            </select>
-                            <select id="reportYear">
-                                <!-- Los años se cargarán dinámicamente -->
-                            </select>
-                            <button id="generateReport" class="btn btn-primary">
-                                <i class="fas fa-chart-bar"></i> Generar Reporte
-                            </button>
-                            <button id="exportReportExcel" class="btn btn-success">
-                                <i class="fas fa-file-excel"></i> Exportar Reporte
-                            </button>
-                        </div>
-
-                        <div class="reports-container">
-                            <div class="report-card">
-                                <h3 id="chartTitle1">Consumo por Departamento (Unidades)</h3>
-                                <div class="chart-container">
-                                    <canvas id="deptChart"></canvas>
-                                </div>
-                            </div>
-                            
-                            <div class="report-card">
-                                <h3 id="chartTitle2">Top 10 Productos Más Utilizados (Unidades)</h3>
-                                <div class="chart-container">
-                                    <canvas id="topProductsChart"></canvas>
-                                </div>
-                            </div>
-                            
-                            <div class="report-card full-width">
-                                <h3>Resumen de Movimientos</h3>
-                                <div id="resumenAsignaciones">
-                                    <div class="loading">
-                                        <div class="loading-spinner"></div>
-                                        <p>Generando reporte...</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                </div>
+                </section>
             </div>
         </div>
 
@@ -1564,53 +1500,33 @@
         </div>
 
         <footer>
-            <p>Sistema de Inventario - Artículos de Oficina &copy; 2024 | Firebase Cloud Sync | Última actualización: <span id="lastUpdate"></span></p>
+            <p>Sistema de Inventario - Artículos de Oficina &copy; 2024 | <span id="lastUpdate"></span> | Firebase: <span id="firebaseConnectionStatus">Conectando...</span></p>
         </footer>
     </div>
 
     <script>
         // =============================================
-        // CONFIGURACIÓN DE FIREBASE
+        // MEJORAS PARA GITHUB Y FIREBASE
+        // 1. Integración completa con Firebase Firestore
+        // 2. Sincronización en tiempo real
+        // 3. Estado de conexión visible
+        // 4. Datos persistentes en la nube
         // =============================================
 
-        // Configuración de Firebase (usando tu configuración)
-        const firebaseConfig = {
-            apiKey: "AIzaSyDDh9GMKi2eOVI1OeuwaBiqlEhjGpphvvk",
-            authDomain: "inventario-administracion.firebaseapp.com",
-            projectId: "inventario-administracion",
-            storageBucket: "inventario-administracion.firebasestorage.app",
-            messagingSenderId: "927319095883",
-            appId: "1:927319095883:web:7c49d3294d1149990d2bce"
-        };
-
-        // Inicializar Firebase
-        firebase.initializeApp(firebaseConfig);
-        
-        // Inicializar servicios de Firebase
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        
-        // Referencias a colecciones de Firestore
-        const productosRef = db.collection('productos');
-        const movimientosRef = db.collection('movimientos');
-        
-        // =============================================
-        // VARIABLES GLOBALES
-        // =============================================
-        
+        // Variables globales
         let productos = [];
         let movimientos = [];
-        let currentUser = null;
-        
-        // Variables para seguimiento
         let currentEditId = null;
         let currentAdjustId = null;
         let currentMovEditId = null;
-        
-        // Instancias de gráficos
+        let nextProductId = 1;
+        let nextMovimientoId = 1;
         let categoryChartInstance = null;
         let deptChartInstance = null;
         let topProductsChartInstance = null;
+        let isFirebaseInitialized = false;
+        let firebaseUnsubscribeProducts = null;
+        let firebaseUnsubscribeMovimientos = null;
 
         // Departamentos disponibles
         const departamentos = [
@@ -1637,212 +1553,339 @@
         ];
 
         // =============================================
-        // FUNCIONES DE FIREBASE Y AUTENTICACIÓN
+        // FUNCIONES DE FIREBASE
         // =============================================
 
-        // Observador de estado de autenticación
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                // Usuario ha iniciado sesión
-                currentUser = user;
-                mostrarInterfazApp();
-                await cargarDatosIniciales();
-                inicializarSistema();
-            } else {
-                // Usuario no ha iniciado sesión
-                mostrarInterfazAutenticacion();
-            }
-        });
-
-        // Función para iniciar sesión
-        async function iniciarSesion(email, password) {
+        // Función para inicializar Firebase
+        async function initializeFirebase() {
             try {
-                // En modo demo, permitimos cualquier correo/contraseña
-                // Firebase Auth requiere verificación por correo, así que usaremos una cuenta demo
-                // Para producción, configurar Firebase Authentication con proveedores
-                
-                // Si es la primera vez, crear usuario anónimo
-                const userCredential = await auth.signInAnonymously();
-                return userCredential.user;
+                // Verificar si Firebase ya está inicializado
+                if (window.firebaseDB && window.firebaseFunctions) {
+                    console.log("Firebase ya está inicializado");
+                    isFirebaseInitialized = true;
+                    updateFirebaseStatus(true);
+                    
+                    // Cargar datos iniciales
+                    await loadInitialData();
+                    
+                    // Configurar listeners en tiempo real
+                    setupRealtimeListeners();
+                    
+                    return true;
+                } else {
+                    console.log("Esperando inicialización de Firebase...");
+                    setTimeout(initializeFirebase, 1000);
+                    return false;
+                }
             } catch (error) {
-                console.error("Error al iniciar sesión:", error);
-                throw error;
+                console.error("Error inicializando Firebase:", error);
+                updateFirebaseStatus(false);
+                return false;
             }
         }
 
-        // Función para cerrar sesión
-        function cerrarSesion() {
-            auth.signOut();
-        }
-
-        // Mostrar interfaz de autenticación
-        function mostrarInterfazAutenticacion() {
-            document.getElementById('authContainer').style.display = 'flex';
-            document.getElementById('appContainer').style.display = 'none';
-            document.getElementById('userInfo').style.display = 'none';
-        }
-
-        // Mostrar interfaz de la aplicación
-        function mostrarInterfazApp() {
-            document.getElementById('authContainer').style.display = 'none';
-            document.getElementById('appContainer').style.display = 'block';
-            
-            if (currentUser) {
-                document.getElementById('userInfo').style.display = 'flex';
-                const email = currentUser.email || 'Usuario Demo';
-                document.getElementById('userEmail').textContent = email;
-                document.getElementById('userAvatar').textContent = email.charAt(0).toUpperCase();
-            }
-        }
-
-        // =============================================
-        // FUNCIONES DE FIRESTORE
-        // =============================================
-
-        // Cargar datos iniciales desde Firestore
-        async function cargarDatosIniciales() {
+        // Cargar datos iniciales desde Firebase
+        async function loadInitialData() {
             try {
+                const { getDocs, collection, query, orderBy } = window.firebaseFunctions;
+                const db = window.firebaseDB;
+                
                 // Cargar productos
-                const productosSnapshot = await productosRef.orderBy('nombre').get();
-                productos = productosSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-
+                const productosSnapshot = await getDocs(query(collection(db, "productos"), orderBy("id")));
+                productos = [];
+                productosSnapshot.forEach((doc) => {
+                    productos.push(doc.data());
+                });
+                
                 // Cargar movimientos
-                const movimientosSnapshot = await movimientosRef.orderBy('fechaHora', 'desc').limit(100).get();
-                movimientos = movimientosSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-
-                // Configurar listeners en tiempo real
-                configurarListenersTiempoReal();
-
+                const movimientosSnapshot = await getDocs(query(collection(db, "movimientos"), orderBy("fechaHora", "desc")));
+                movimientos = [];
+                movimientosSnapshot.forEach((doc) => {
+                    movimientos.push(doc.data());
+                });
+                
+                // Actualizar IDs
+                if (productos.length > 0) {
+                    nextProductId = Math.max(...productos.map(p => p.id)) + 1;
+                }
+                if (movimientos.length > 0) {
+                    nextMovimientoId = Math.max(...movimientos.map(m => m.id)) + 1;
+                }
+                
+                console.log(`Datos cargados: ${productos.length} productos, ${movimientos.length} movimientos`);
                 return true;
             } catch (error) {
-                console.error("Error al cargar datos:", error);
-                alert("Error al cargar datos de Firebase. Verifica tu conexión.");
+                console.error("Error cargando datos iniciales:", error);
                 return false;
             }
         }
 
         // Configurar listeners en tiempo real
-        function configurarListenersTiempoReal() {
-            // Listener para productos
-            productosRef.orderBy('nombre').onSnapshot((snapshot) => {
-                productos = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
+        function setupRealtimeListeners() {
+            try {
+                const { onSnapshot, collection, query, orderBy } = window.firebaseFunctions;
+                const db = window.firebaseDB;
+                
+                // Listener para productos
+                firebaseUnsubscribeProducts = onSnapshot(
+                    query(collection(db, "productos"), orderBy("id")),
+                    (snapshot) => {
+                        productos = [];
+                        snapshot.forEach((doc) => {
+                            productos.push(doc.data());
+                        });
+                        
+                        // Actualizar IDs
+                        if (productos.length > 0) {
+                            nextProductId = Math.max(...productos.map(p => p.id)) + 1;
+                        }
+                        
+                        // Actualizar UI
+                        actualizarTablaInventario();
+                        cargarProductosAsignacion();
+                        actualizarEstadisticas();
+                        actualizarDashboard();
+                        verificarStockBajo();
+                        
+                        console.log("Productos actualizados en tiempo real");
+                    },
+                    (error) => {
+                        console.error("Error en listener de productos:", error);
+                    }
+                );
+                
+                // Listener para movimientos
+                firebaseUnsubscribeMovimientos = onSnapshot(
+                    query(collection(db, "movimientos"), orderBy("fechaHora", "desc")),
+                    (snapshot) => {
+                        movimientos = [];
+                        snapshot.forEach((doc) => {
+                            movimientos.push(doc.data());
+                        });
+                        
+                        // Actualizar IDs
+                        if (movimientos.length > 0) {
+                            nextMovimientoId = Math.max(...movimientos.map(m => m.id)) + 1;
+                        }
+                        
+                        // Actualizar UI
+                        actualizarTablaMovimientos();
+                        actualizarEstadisticas();
+                        actualizarDashboard();
+                        
+                        console.log("Movimientos actualizados en tiempo real");
+                    },
+                    (error) => {
+                        console.error("Error en listener de movimientos:", error);
+                    }
+                );
+                
+                console.log("Listeners de Firebase configurados");
+            } catch (error) {
+                console.error("Error configurando listeners:", error);
+            }
+        }
+
+        // Guardar producto en Firebase
+        async function saveProductToFirebase(producto) {
+            try {
+                const { addDoc, collection } = window.firebaseFunctions;
+                const db = window.firebaseDB;
+                
+                await addDoc(collection(db, "productos"), producto);
+                console.log("Producto guardado en Firebase:", producto.codigo);
+                return true;
+            } catch (error) {
+                console.error("Error guardando producto en Firebase:", error);
+                return false;
+            }
+        }
+
+        // Actualizar producto en Firebase
+        async function updateProductInFirebase(productoId, updates) {
+            try {
+                const { updateDoc, doc, collection, getDocs, query, where } = window.firebaseFunctions;
+                const db = window.firebaseDB;
+                
+                // Buscar el documento por ID
+                const productosQuery = query(collection(db, "productos"), where("id", "==", productoId));
+                const querySnapshot = await getDocs(productosQuery);
+                
+                if (!querySnapshot.empty) {
+                    const productDoc = querySnapshot.docs[0];
+                    await updateDoc(doc(db, "productos", productDoc.id), updates);
+                    console.log("Producto actualizado en Firebase:", productoId);
+                    return true;
+                } else {
+                    console.error("Producto no encontrado en Firebase:", productoId);
+                    return false;
+                }
+            } catch (error) {
+                console.error("Error actualizando producto en Firebase:", error);
+                return false;
+            }
+        }
+
+        // Eliminar producto de Firebase
+        async function deleteProductFromFirebase(productoId) {
+            try {
+                const { deleteDoc, doc, collection, getDocs, query, where } = window.firebaseFunctions;
+                const db = window.firebaseDB;
+                
+                // Buscar el documento por ID
+                const productosQuery = query(collection(db, "productos"), where("id", "==", productoId));
+                const querySnapshot = await getDocs(productosQuery);
+                
+                if (!querySnapshot.empty) {
+                    const productDoc = querySnapshot.docs[0];
+                    await deleteDoc(doc(db, "productos", productDoc.id));
+                    console.log("Producto eliminado de Firebase:", productoId);
+                    return true;
+                } else {
+                    console.error("Producto no encontrado en Firebase:", productoId);
+                    return false;
+                }
+            } catch (error) {
+                console.error("Error eliminando producto de Firebase:", error);
+                return false;
+            }
+        }
+
+        // Guardar movimiento en Firebase
+        async function saveMovementToFirebase(movimiento) {
+            try {
+                const { addDoc, collection } = window.firebaseFunctions;
+                const db = window.firebaseDB;
+                
+                await addDoc(collection(db, "movimientos"), movimiento);
+                console.log("Movimiento guardado en Firebase:", movimiento.id);
+                return true;
+            } catch (error) {
+                console.error("Error guardando movimiento en Firebase:", error);
+                return false;
+            }
+        }
+
+        // Actualizar movimiento en Firebase
+        async function updateMovementInFirebase(movimientoId, updates) {
+            try {
+                const { updateDoc, doc, collection, getDocs, query, where } = window.firebaseFunctions;
+                const db = window.firebaseDB;
+                
+                // Buscar el documento por ID
+                const movimientosQuery = query(collection(db, "movimientos"), where("id", "==", movimientoId));
+                const querySnapshot = await getDocs(movimientosQuery);
+                
+                if (!querySnapshot.empty) {
+                    const movementDoc = querySnapshot.docs[0];
+                    await updateDoc(doc(db, "movimientos", movementDoc.id), updates);
+                    console.log("Movimiento actualizado en Firebase:", movimientoId);
+                    return true;
+                } else {
+                    console.error("Movimiento no encontrado en Firebase:", movimientoId);
+                    return false;
+                }
+            } catch (error) {
+                console.error("Error actualizando movimiento en Firebase:", error);
+                return false;
+            }
+        }
+
+        // Eliminar movimiento de Firebase
+        async function deleteMovementFromFirebase(movimientoId) {
+            try {
+                const { deleteDoc, doc, collection, getDocs, query, where } = window.firebaseFunctions;
+                const db = window.firebaseDB;
+                
+                // Buscar el documento por ID
+                const movimientosQuery = query(collection(db, "movimientos"), where("id", "==", movimientoId));
+                const querySnapshot = await getDocs(movimientosQuery);
+                
+                if (!querySnapshot.empty) {
+                    const movementDoc = querySnapshot.docs[0];
+                    await deleteDoc(doc(db, "movimientos", movementDoc.id));
+                    console.log("Movimiento eliminado de Firebase:", movimientoId);
+                    return true;
+                } else {
+                    console.error("Movimiento no encontrado en Firebase:", movimientoId);
+                    return false;
+                }
+            } catch (error) {
+                console.error("Error eliminando movimiento de Firebase:", error);
+                return false;
+            }
+        }
+
+        // Sincronizar datos manualmente
+        async function syncData() {
+            const syncBtn = document.getElementById('syncData');
+            const originalText = syncBtn.innerHTML;
+            
+            syncBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando...';
+            syncBtn.disabled = true;
+            
+            try {
+                await loadInitialData();
+                
+                // Actualizar UI
                 actualizarTablaInventario();
+                actualizarTablaMovimientos();
                 cargarProductosAsignacion();
                 actualizarEstadisticas();
                 actualizarDashboard();
                 verificarStockBajo();
-            });
-
-            // Listener para movimientos
-            movimientosRef.orderBy('fechaHora', 'desc').limit(100).onSnapshot((snapshot) => {
-                movimientos = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-                actualizarTablaMovimientos();
-                actualizarEstadisticas();
-                actualizarDashboard();
-            });
-        }
-
-        // Guardar producto en Firestore
-        async function guardarProductoFirestore(producto) {
-            try {
-                const productoRef = await productosRef.add({
-                    ...producto,
-                    fechaRegistro: firebase.firestore.FieldValue.serverTimestamp(),
-                    ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                return productoRef.id;
+                
+                alert('Datos sincronizados correctamente con Firebase');
+                updateFirebaseStatus(true);
             } catch (error) {
-                console.error("Error al guardar producto:", error);
-                throw error;
+                console.error("Error sincronizando datos:", error);
+                alert('Error al sincronizar datos con Firebase');
+                updateFirebaseStatus(false);
+            } finally {
+                syncBtn.innerHTML = originalText;
+                syncBtn.disabled = false;
             }
         }
 
-        // Actualizar producto en Firestore
-        async function actualizarProductoFirestore(id, datos) {
-            try {
-                await productosRef.doc(id).update({
-                    ...datos,
-                    ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                return true;
-            } catch (error) {
-                console.error("Error al actualizar producto:", error);
-                throw error;
-            }
-        }
-
-        // Eliminar producto de Firestore
-        async function eliminarProductoFirestore(id) {
-            try {
-                await productosRef.doc(id).delete();
-                return true;
-            } catch (error) {
-                console.error("Error al eliminar producto:", error);
-                throw error;
-            }
-        }
-
-        // Guardar movimiento en Firestore
-        async function guardarMovimientoFirestore(movimiento) {
-            try {
-                await movimientosRef.add({
-                    ...movimiento,
-                    fechaHora: firebase.firestore.FieldValue.serverTimestamp(),
-                    creadoPor: currentUser ? currentUser.email : 'Sistema',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                return true;
-            } catch (error) {
-                console.error("Error al guardar movimiento:", error);
-                throw error;
-            }
-        }
-
-        // Actualizar movimiento en Firestore
-        async function actualizarMovimientoFirestore(id, datos) {
-            try {
-                await movimientosRef.doc(id).update(datos);
-                return true;
-            } catch (error) {
-                console.error("Error al actualizar movimiento:", error);
-                throw error;
-            }
-        }
-
-        // Eliminar movimiento de Firestore
-        async function eliminarMovimientoFirestore(id) {
-            try {
-                await movimientosRef.doc(id).delete();
-                return true;
-            } catch (error) {
-                console.error("Error al eliminar movimiento:", error);
-                throw error;
+        // Actualizar estado de Firebase en UI
+        function updateFirebaseStatus(isConnected) {
+            const statusElement = document.getElementById('firebaseStatus');
+            const connectionStatus = document.getElementById('firebaseConnectionStatus');
+            
+            if (isConnected) {
+                if (statusElement) {
+                    statusElement.style.display = 'flex';
+                    statusElement.classList.remove('offline');
+                    statusElement.innerHTML = '<span class="status-dot"></span><span>Conectado a Firebase</span>';
+                }
+                if (connectionStatus) {
+                    connectionStatus.textContent = 'Conectado';
+                    connectionStatus.style.color = '#27ae60';
+                }
+            } else {
+                if (statusElement) {
+                    statusElement.style.display = 'flex';
+                    statusElement.classList.add('offline');
+                    statusElement.innerHTML = '<span class="status-dot"></span><span>Desconectado de Firebase</span>';
+                }
+                if (connectionStatus) {
+                    connectionStatus.textContent = 'Desconectado';
+                    connectionStatus.style.color = '#e74c3c';
+                }
             }
         }
 
         // =============================================
-        // FUNCIONES AUXILIARES
+        // FUNCIONES AUXILIARES (sin cambios)
         // =============================================
 
-        // Funciones para calcular unidades
         function calcularUnidadesTotales(producto) {
-            return producto.stock * (producto.unidadesPorMedida || 1);
+            return producto.stock * producto.unidadesPorMedida;
         }
 
         function calcularStockDesdeUnidades(producto, unidadesTotales) {
-            if (!producto.unidadesPorMedida || producto.unidadesPorMedida === 0) {
+            if (producto.unidadesPorMedida === 0 || producto.unidadesPorMedida === undefined) {
+                console.warn(`Producto ${producto.nombre} tiene unidadesPorMedida = 0, usando 1 como valor por defecto`);
                 return unidadesTotales;
             }
             return unidadesTotales / producto.unidadesPorMedida;
@@ -1859,55 +1902,16 @@
         // INICIALIZACIÓN DEL SISTEMA
         // =============================================
 
-        // Inicialización cuando el DOM esté listo
         document.addEventListener('DOMContentLoaded', function() {
-            // Configurar evento del formulario de login
-            document.getElementById('loginForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-                
-                try {
-                    await iniciarSesion(email, password);
-                } catch (error) {
-                    alert("Error al iniciar sesión: " + error.message);
-                }
-            });
+            // Inicializar Firebase primero
+            initializeFirebase();
             
-            // Configurar botón de logout
-            document.getElementById('logoutBtn').addEventListener('click', cerrarSesion);
-            
-            // Configurar fecha y hora
+            // Configuración básica
             actualizarFechaHora();
             setInterval(actualizarFechaHora, 1000);
-        });
-
-        // Inicializar el sistema después de la autenticación
-        function inicializarSistema() {
-            // Cargar productos en el select de asignación
-            cargarProductosAsignacion();
             
-            // Cargar departamentos en filtros
-            cargarDepartamentosFiltros();
-            
-            // Mostrar la sección activa
-            mostrarSeccion('dashboard');
-            
-            // Actualizar la tabla de inventario
-            actualizarTablaInventario();
-            
-            // Actualizar la tabla de movimientos
-            actualizarTablaMovimientos();
-            
-            // Actualizar estadísticas
-            actualizarEstadisticas();
-            
-            // Actualizar dashboard
-            actualizarDashboard();
-            
-            // Actualizar fecha de última actualización
-            document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString();
+            generarOpcionesFechaReporte();
+            configurarEventos();
             
             // Establecer fecha y hora actual por defecto
             const fechaInput = document.getElementById('fechaAsignacion');
@@ -1929,18 +1933,42 @@
                 codigoInput.addEventListener('blur', verificarCodigoExistente);
             }
             
-            // Configurar eventos
-            configurarEventos();
+            // Actualizar fecha de última actualización
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString();
+        });
+
+        // Inicializar el sistema después de Firebase
+        async function inicializarSistema() {
+            // Cargar productos en el select de asignación
+            cargarProductosAsignacion();
             
-            // Generar meses y años para reportes
-            generarOpcionesFechaReporte();
+            // Cargar departamentos en filtros
+            cargarDepartamentosFiltros();
+            
+            // Mostrar la sección activa
+            mostrarSeccion('dashboard');
+            
+            // Actualizar la tabla de inventario
+            actualizarTablaInventario();
+            
+            // Actualizar la tabla de movimientos
+            actualizarTablaMovimientos();
+            
+            // Actualizar estadísticas
+            actualizarEstadisticas();
+            
+            // Actualizar dashboard
+            actualizarDashboard();
             
             // Generar reporte inicial
-            generarReporteMensual();
-            
-            // Verificar stock bajo
-            verificarStockBajo();
+            setTimeout(() => {
+                generarReporteMensual();
+            }, 500);
         }
+
+        // =============================================
+        // FUNCIONES DEL SISTEMA (modificadas para Firebase)
+        // =============================================
 
         // Configurar eventos
         function configurarEventos() {
@@ -1950,11 +1978,9 @@
                     const section = this.getAttribute('data-section');
                     mostrarSeccion(section);
                     
-                    // Actualizar clase activa
                     document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
                     
-                    // Si es la sección de reportes, actualizar gráficos
                     if (section === 'reportes') {
                         setTimeout(() => {
                             const reportType = document.getElementById('reportType').value;
@@ -1970,7 +1996,6 @@
                         }, 100);
                     }
                     
-                    // Si es la sección de dashboard, actualizar
                     if (section === 'dashboard') {
                         setTimeout(() => {
                             actualizarDashboard();
@@ -1980,28 +2005,22 @@
             });
             
             // Formulario de nuevo producto
-            document.getElementById('nuevoProductoForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                await guardarProducto();
-            });
+            document.getElementById('nuevoProductoForm').addEventListener('submit', guardarProducto);
             
             // Botón de reposición
-            document.getElementById('repositionBtn').addEventListener('click', async function(e) {
+            document.getElementById('repositionBtn').addEventListener('click', function(e) {
                 e.preventDefault();
-                await guardarReposicion();
+                guardarReposicion();
             });
             
             // Formulario de asignación
-            document.getElementById('asignacionForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                await registrarAsignacion();
-            });
+            document.getElementById('asignacionForm').addEventListener('submit', registrarAsignacion);
             
             // Select de producto en asignación
             document.getElementById('productoAsignar').addEventListener('change', function() {
                 const productoId = this.value;
                 if (productoId) {
-                    const producto = productos.find(p => p.id === productoId);
+                    const producto = productos.find(p => p.id == productoId);
                     if (producto) {
                         const unidadesTotales = calcularUnidadesTotales(producto);
                         document.getElementById('stockDisponible').value = `${unidadesTotales} unidades`;
@@ -2063,313 +2082,44 @@
             document.getElementById('exportExcel').addEventListener('click', exportarExcel);
             document.getElementById('exportInventoryExcel').addEventListener('click', exportarInventarioActualExcel);
             
+            // Botón de sincronización
+            document.getElementById('syncData').addEventListener('click', syncData);
+            
             // Modal - cerrar
             document.querySelectorAll('.close-modal').forEach(btn => {
                 btn.addEventListener('click', cerrarModal);
             });
             
             // Confirmar eliminación de producto
-            document.getElementById('confirmDelete').addEventListener('click', async function() {
-                await eliminarProducto();
-            });
+            document.getElementById('confirmDelete').addEventListener('click', eliminarProducto);
             document.getElementById('cancelDelete').addEventListener('click', cerrarModal);
             
             // Confirmar eliminación de movimiento
-            document.getElementById('confirmMovDelete').addEventListener('click', async function() {
-                await eliminarMovimiento();
-            });
+            document.getElementById('confirmMovDelete').addEventListener('click', eliminarMovimiento);
             document.getElementById('cancelMovDelete').addEventListener('click', cerrarModal);
             
             // Formulario de edición de movimiento
-            document.getElementById('editMovForm').addEventListener('submit', async function(e) {
+            document.getElementById('editMovForm').addEventListener('submit', function(e) {
                 e.preventDefault();
-                await guardarCambiosMovimiento();
+                guardarCambiosMovimiento();
             });
             
             // Cerrar modal al hacer clic fuera
             window.addEventListener('click', function(event) {
-                const editModal = document.getElementById('editModal');
-                const confirmModal = document.getElementById('confirmModal');
-                const adjustModal = document.getElementById('adjustModal');
-                const editMovModal = document.getElementById('editMovModal');
-                const confirmMovModal = document.getElementById('confirmMovModal');
-                
-                if (event.target === editModal) {
-                    cerrarModal();
-                }
-                
-                if (event.target === confirmModal) {
-                    cerrarModal();
-                }
-                
-                if (event.target === adjustModal) {
-                    cerrarModal();
-                }
-                
-                if (event.target === editMovModal) {
-                    cerrarModal();
-                }
-                
-                if (event.target === confirmMovModal) {
-                    cerrarModal();
-                }
+                const modals = ['editModal', 'confirmModal', 'adjustModal', 'editMovModal', 'confirmMovModal'];
+                modals.forEach(modalId => {
+                    const modal = document.getElementById(modalId);
+                    if (event.target === modal) {
+                        cerrarModal();
+                    }
+                });
             });
         }
 
-        // Verificar si el código ya existe
-        function verificarCodigoExistente() {
-            const codigo = document.getElementById('codigoProducto').value.trim();
-            const saveBtn = document.getElementById('saveProductBtn');
-            const repositionBtn = document.getElementById('repositionBtn');
+        // Función para guardar producto (con Firebase)
+        async function guardarProducto(e) {
+            e.preventDefault();
             
-            if (codigo) {
-                const productoExistente = productos.find(p => p.codigo === codigo);
-                if (productoExistente) {
-                    // Mostrar información del producto existente
-                    document.getElementById('nombreProducto').value = productoExistente.nombre;
-                    document.getElementById('categoriaProducto').value = productoExistente.categoria;
-                    document.getElementById('unidadProducto').value = productoExistente.unidad;
-                    document.getElementById('unidadesPorMedida').value = productoExistente.unidadesPorMedida || 1;
-                    document.getElementById('stockMinimo').value = productoExistente.stockMinimo;
-                    document.getElementById('descripcionProducto').value = `Reposición de stock para ${productoExistente.nombre}`;
-                    
-                    // Cambiar botones
-                    saveBtn.style.display = 'none';
-                    repositionBtn.style.display = 'block';
-                } else {
-                    saveBtn.style.display = 'block';
-                    repositionBtn.style.display = 'none';
-                }
-            }
-        }
-
-        // Guardar reposición de producto existente
-        async function guardarReposicion() {
-            const codigo = document.getElementById('codigoProducto').value.trim();
-            const cantidad = parseInt(document.getElementById('stockInicial').value);
-            const motivo = document.getElementById('descripcionProducto').value.trim();
-            
-            if (!codigo || isNaN(cantidad) || cantidad <= 0) {
-                alert('Por favor complete todos los campos requeridos');
-                return;
-            }
-            
-            const producto = productos.find(p => p.codigo === codigo);
-            if (!producto) {
-                alert('Producto no encontrado');
-                return;
-            }
-            
-            if (!producto.unidadesPorMedida || producto.unidadesPorMedida <= 0) {
-                alert('Error: El producto tiene una configuración de unidades inválida. Por favor edite el producto primero.');
-                return;
-            }
-            
-            const unidadesAAgregar = cantidad * producto.unidadesPorMedida;
-            
-            try {
-                // Actualizar stock en Firestore
-                const nuevoStock = producto.stock + cantidad;
-                await actualizarProductoFirestore(producto.id, { stock: nuevoStock });
-                
-                // Registrar movimiento de reposición
-                const nuevoMovimiento = {
-                    tipo: "reposicion",
-                    productoId: producto.id,
-                    producto: producto.nombre,
-                    cantidad: unidadesAAgregar,
-                    departamento: "Almacén",
-                    usuario: "N/A",
-                    observaciones: motivo || `Reposición de ${cantidad} ${producto.unidad}`,
-                    responsable: currentUser ? currentUser.email : "Admin Sistema"
-                };
-                
-                await guardarMovimientoFirestore(nuevoMovimiento);
-                
-                // Mostrar mensaje de éxito
-                const nuevasUnidades = calcularUnidadesTotales({...producto, stock: nuevoStock});
-                alert(`Reposición registrada exitosamente. Se agregaron ${unidadesAAgregar} unidades. Nuevo stock: ${nuevasUnidades} unidades`);
-                
-                // Limpiar formulario
-                document.getElementById('nuevoProductoForm').reset();
-                document.getElementById('saveProductBtn').style.display = 'block';
-                document.getElementById('repositionBtn').style.display = 'none';
-                
-                // Establecer valores por defecto
-                document.getElementById('stockMinimo').value = "5";
-                document.getElementById('unidadesPorMedida').value = "1";
-                
-            } catch (error) {
-                console.error("Error al guardar reposición:", error);
-                alert("Error al guardar la reposición: " + error.message);
-            }
-        }
-
-        // Calcular equivalencia en asignación
-        function calcularEquivalenciaAsignacion() {
-            const productoId = document.getElementById('productoAsignar').value;
-            const cantidadInput = document.getElementById('cantidadAsignarUnidades');
-            
-            if (!productoId || !cantidadInput) return;
-            
-            const producto = productos.find(p => p.id === productoId);
-            if (!producto) return;
-            
-            const cantidadUnidades = parseInt(cantidadInput.value) || 0;
-            const unidadesTotalesActuales = calcularUnidadesTotales(producto);
-            
-            // Calcular equivalencia en la unidad de medida
-            let equivalencia = '';
-            if (producto.unidad === "UND") {
-                equivalencia = `${cantidadUnidades} unidades`;
-            } else {
-                const equivalenciaMedida = cantidadUnidades / (producto.unidadesPorMedida || 1);
-                equivalencia = `${equivalenciaMedida.toFixed(2)} ${producto.unidad} (${cantidadUnidades} unidades)`;
-            }
-            
-            document.getElementById('equivalenciaUnidades').textContent = equivalencia;
-            
-            // Calcular nuevo stock
-            if (cantidadUnidades > 0) {
-                const nuevoStockUnidades = unidadesTotalesActuales - cantidadUnidades;
-                let nuevoStockMedida = '';
-                
-                if (producto.unidad === "UND") {
-                    nuevoStockMedida = `${nuevoStockUnidades} unidades`;
-                } else {
-                    const nuevoStock = calcularStockDesdeUnidades(producto, nuevoStockUnidades);
-                    nuevoStockMedida = `${nuevoStock.toFixed(2)} ${producto.unidad} (${nuevoStockUnidades} unidades)`;
-                }
-                
-                document.getElementById('nuevoStockUnidades').textContent = nuevoStockMedida;
-            } else {
-                document.getElementById('nuevoStockUnidades').textContent = `${unidadesTotalesActuales} unidades`;
-            }
-        }
-
-        // Mostrar sección específica
-        function mostrarSeccion(sectionId) {
-            // Ocultar todas las secciones
-            document.querySelectorAll('.content-section').forEach(section => {
-                section.classList.remove('active');
-            });
-            
-            // Mostrar la sección seleccionada
-            const seccion = document.getElementById(sectionId);
-            if (seccion) {
-                seccion.classList.add('active');
-            }
-            
-            // Actualizar el menú activo
-            document.querySelectorAll('.menu-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.getAttribute('data-section') === sectionId) {
-                    btn.classList.add('active');
-                }
-            });
-        }
-
-        // Actualizar fecha y hora actual
-        function actualizarFechaHora() {
-            const now = new Date();
-            const options = { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            };
-            
-            const dateTimeElement = document.getElementById('currentDateTime');
-            if (dateTimeElement) {
-                dateTimeElement.textContent = now.toLocaleDateString('es-ES', options);
-            }
-        }
-
-        // Generar opciones de fecha para reportes
-        function generarOpcionesFechaReporte() {
-            const monthSelect = document.getElementById('reportMonth');
-            const yearSelect = document.getElementById('reportYear');
-            
-            if (!monthSelect || !yearSelect) return;
-            
-            // Generar meses
-            const meses = [
-                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-            ];
-            
-            const currentDate = new Date();
-            
-            monthSelect.innerHTML = '';
-            meses.forEach((mes, index) => {
-                const option = document.createElement('option');
-                option.value = index + 1;
-                option.textContent = mes;
-                if (index + 1 === currentDate.getMonth() + 1) {
-                    option.selected = true;
-                }
-                monthSelect.appendChild(option);
-            });
-            
-            // Generar años (desde 2023 hasta el año en curso + 1 año futuro)
-            yearSelect.innerHTML = '';
-            const currentYearNow = currentDate.getFullYear();
-            const startYear = 2023;
-            const endYear = currentYearNow + 1;
-            
-            for (let year = startYear; year <= endYear; year++) {
-                const option = document.createElement('option');
-                option.value = year;
-                option.textContent = year;
-                if (year === currentYearNow) {
-                    option.selected = true;
-                }
-                yearSelect.appendChild(option);
-            }
-        }
-
-        // Cargar productos en el select de asignación
-        function cargarProductosAsignacion() {
-            const select = document.getElementById('productoAsignar');
-            if (!select) return;
-            
-            // Limpiar select
-            select.innerHTML = '<option value="">Seleccione...</option>';
-            
-            // Agregar productos con stock disponible
-            productos.forEach(producto => {
-                const unidadesTotales = calcularUnidadesTotales(producto);
-                if (unidadesTotales > 0) {
-                    const option = document.createElement('option');
-                    option.value = producto.id;
-                    option.textContent = `${producto.nombre} (${unidadesTotales} unidades)`;
-                    select.appendChild(option);
-                }
-            });
-        }
-
-        // Cargar departamentos en filtros
-        function cargarDepartamentosFiltros() {
-            const filterDept = document.getElementById('filterMovDept');
-            
-            if (!filterDept) return;
-            
-            // Limpiar select
-            filterDept.innerHTML = '<option value="">Todos los Departamentos</option>';
-            
-            // Agregar departamentos
-            departamentos.forEach(dept => {
-                const option = document.createElement('option');
-                option.value = dept;
-                option.textContent = dept;
-                filterDept.appendChild(option);
-            });
-        }
-
-        // Guardar nuevo producto
-        async function guardarProducto() {
             // Obtener valores del formulario
             const codigo = document.getElementById('codigoProducto').value.trim();
             const nombre = document.getElementById('nombreProducto').value.trim();
@@ -2398,56 +2148,141 @@
                 return;
             }
             
+            // Crear nuevo producto
+            const nuevoProducto = {
+                id: nextProductId,
+                codigo: codigo,
+                nombre: nombre,
+                categoria: categoria,
+                stock: stockInicial,
+                stockMinimo: stockMinimo,
+                unidad: unidad,
+                unidadesPorMedida: unidadesPorMedida,
+                descripcion: descripcion,
+                fechaRegistro: new Date().toISOString().split('T')[0],
+                createdAt: new Date().toISOString()
+            };
+            
             try {
-                // Crear nuevo producto
-                const nuevoProducto = {
-                    codigo: codigo,
-                    nombre: nombre,
-                    categoria: categoria,
-                    stock: stockInicial,
-                    stockMinimo: stockMinimo,
-                    unidad: unidad,
-                    unidadesPorMedida: unidadesPorMedida,
-                    descripcion: descripcion,
-                    fechaRegistro: new Date().toISOString()
-                };
+                // Guardar en Firebase
+                const saved = await saveProductToFirebase(nuevoProducto);
                 
-                // Guardar en Firestore
-                const productoId = await guardarProductoFirestore(nuevoProducto);
-                
-                // Registrar movimiento de entrada
-                const unidadesTotales = calcularUnidadesTotales(nuevoProducto);
-                const nuevoMovimiento = {
-                    tipo: "entrada",
-                    productoId: productoId,
-                    producto: nuevoProducto.nombre,
-                    cantidad: unidadesTotales,
-                    departamento: "Almacén",
-                    usuario: "N/A",
-                    observaciones: "Registro inicial de producto: " + (descripcion || "Sin observaciones"),
-                    responsable: currentUser ? currentUser.email : "Admin Sistema"
-                };
-                
-                await guardarMovimientoFirestore(nuevoMovimiento);
-                
-                // Mostrar mensaje de éxito
-                alert('Producto registrado exitosamente');
-                
-                // Limpiar formulario
-                document.getElementById('nuevoProductoForm').reset();
-                
-                // Establecer valores por defecto
-                document.getElementById('stockMinimo').value = "5";
-                document.getElementById('unidadesPorMedida').value = "1";
-                
+                if (saved) {
+                    // Agregar a la lista local
+                    productos.push(nuevoProducto);
+                    nextProductId++;
+                    
+                    // Registrar movimiento de entrada
+                    const unidadesTotales = calcularUnidadesTotales(nuevoProducto);
+                    const nuevoMovimiento = {
+                        id: nextMovimientoId++,
+                        fechaHora: formatearFechaHora(),
+                        tipo: "entrada",
+                        productoId: nuevoProducto.id,
+                        producto: nuevoProducto.nombre,
+                        cantidad: unidadesTotales,
+                        departamento: "Almacén",
+                        usuario: "N/A",
+                        observaciones: "Registro inicial de producto: " + (descripcion || "Sin observaciones"),
+                        responsable: "Admin Sistema",
+                        createdAt: new Date().toISOString()
+                    };
+                    
+                    // Guardar movimiento en Firebase
+                    await saveMovementToFirebase(nuevoMovimiento);
+                    
+                    // Los listeners en tiempo real actualizarán automáticamente la UI
+                    alert('Producto registrado exitosamente en Firebase');
+                    
+                    // Limpiar formulario
+                    document.getElementById('nuevoProductoForm').reset();
+                    document.getElementById('stockMinimo').value = "5";
+                    document.getElementById('unidadesPorMedida').value = "1";
+                    
+                    // Mostrar botón de guardar
+                    document.getElementById('saveProductBtn').style.display = 'block';
+                    document.getElementById('repositionBtn').style.display = 'none';
+                }
             } catch (error) {
-                console.error("Error al guardar producto:", error);
-                alert("Error al guardar el producto: " + error.message);
+                console.error("Error guardando producto:", error);
+                alert('Error al guardar el producto en Firebase');
             }
         }
 
-        // Registrar asignación de material
-        async function registrarAsignacion() {
+        // Función para guardar reposición (con Firebase)
+        async function guardarReposicion() {
+            const codigo = document.getElementById('codigoProducto').value.trim();
+            const cantidad = parseInt(document.getElementById('stockInicial').value);
+            const motivo = document.getElementById('descripcionProducto').value.trim();
+            
+            if (!codigo || isNaN(cantidad) || cantidad <= 0) {
+                alert('Por favor complete todos los campos requeridos');
+                return;
+            }
+            
+            const productoIndex = productos.findIndex(p => p.codigo === codigo);
+            if (productoIndex === -1) {
+                alert('Producto no encontrado');
+                return;
+            }
+            
+            const producto = productos[productoIndex];
+            
+            if (!producto.unidadesPorMedida || producto.unidadesPorMedida <= 0) {
+                alert('Error: El producto tiene una configuración de unidades inválida. Por favor edite el producto primero.');
+                return;
+            }
+            
+            const unidadesAAgregar = cantidad * producto.unidadesPorMedida;
+            
+            // Actualizar stock localmente
+            const nuevoStock = producto.stock + cantidad;
+            
+            try {
+                // Actualizar en Firebase
+                const updated = await updateProductInFirebase(producto.id, {
+                    stock: nuevoStock,
+                    updatedAt: new Date().toISOString()
+                });
+                
+                if (updated) {
+                    // Registrar movimiento de reposición
+                    const nuevoMovimiento = {
+                        id: nextMovimientoId++,
+                        fechaHora: formatearFechaHora(),
+                        tipo: "reposicion",
+                        productoId: producto.id,
+                        producto: producto.nombre,
+                        cantidad: unidadesAAgregar,
+                        departamento: "Almacén",
+                        usuario: "N/A",
+                        observaciones: motivo || `Reposición de ${cantidad} ${producto.unidad}`,
+                        responsable: "Admin Sistema",
+                        createdAt: new Date().toISOString()
+                    };
+                    
+                    // Guardar movimiento en Firebase
+                    await saveMovementToFirebase(nuevoMovimiento);
+                    
+                    alert(`Reposición registrada exitosamente en Firebase. Se agregaron ${unidadesAAgregar} unidades.`);
+                    
+                    // Limpiar formulario
+                    document.getElementById('nuevoProductoForm').reset();
+                    document.getElementById('saveProductBtn').style.display = 'block';
+                    document.getElementById('repositionBtn').style.display = 'none';
+                    document.getElementById('stockMinimo').value = "5";
+                    document.getElementById('unidadesPorMedida').value = "1";
+                }
+            } catch (error) {
+                console.error("Error guardando reposición:", error);
+                alert('Error al guardar la reposición en Firebase');
+            }
+        }
+
+        // Función para registrar asignación (con Firebase)
+        async function registrarAsignacion(e) {
+            e.preventDefault();
+            
             // Obtener valores del formulario
             const productoId = document.getElementById('productoAsignar').value;
             const cantidadUnidades = parseInt(document.getElementById('cantidadAsignarUnidades').value);
@@ -2463,12 +2298,13 @@
             }
             
             // Buscar producto
-            const producto = productos.find(p => p.id === productoId);
-            if (!producto) {
+            const productoIndex = productos.findIndex(p => p.id == productoId);
+            if (productoIndex === -1) {
                 alert('Producto no encontrado');
                 return;
             }
             
+            const producto = productos[productoIndex];
             const unidadesTotalesActuales = calcularUnidadesTotales(producto);
             
             // Verificar stock disponible
@@ -2477,56 +2313,350 @@
                 return;
             }
             
+            // Calcular nuevo stock en unidades
+            const nuevasUnidadesTotales = unidadesTotalesActuales - cantidadUnidades;
+            const nuevoStock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
+            
             try {
-                // Calcular nuevo stock en unidades
-                const nuevasUnidadesTotales = unidadesTotalesActuales - cantidadUnidades;
-                const nuevoStock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
+                // Actualizar producto en Firebase
+                const updated = await updateProductInFirebase(producto.id, {
+                    stock: nuevoStock,
+                    updatedAt: new Date().toISOString()
+                });
                 
-                // Actualizar stock del producto en Firestore
-                await actualizarProductoFirestore(productoId, { stock: nuevoStock });
-                
-                // Formatear fecha y hora
-                const fechaHoraFormateada = formatearFechaHora(fechaHora);
-                
-                // Registrar movimiento
-                const nuevoMovimiento = {
-                    fechaHora: fechaHoraFormateada,
-                    tipo: "salida",
-                    productoId: producto.id,
-                    producto: producto.nombre,
-                    cantidad: cantidadUnidades,
-                    departamento: departamento,
-                    usuario: usuario,
-                    observaciones: observaciones || "Asignación de material",
-                    responsable: currentUser ? currentUser.email : "Admin Sistema"
-                };
-                
-                await guardarMovimientoFirestore(nuevoMovimiento);
-                
-                // Mostrar mensaje de éxito
-                const nuevasUnidades = calcularUnidadesTotales({...producto, stock: nuevoStock});
-                alert(`Asignación registrada exitosamente. Nuevo stock: ${nuevasUnidades} unidades`);
-                
-                // Limpiar formulario
-                document.getElementById('asignacionForm').reset();
-                
-                // Establecer fecha y hora actual
-                const ahora = new Date();
-                ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
-                document.getElementById('fechaAsignacion').value = ahora.toISOString().slice(0, 16);
-                
-                // Limpiar stock disponible y cálculos
-                document.getElementById('stockDisponible').value = '';
-                document.getElementById('equivalenciaUnidades').textContent = '0 unidades';
-                document.getElementById('nuevoStockUnidades').textContent = '0 unidades';
-                
+                if (updated) {
+                    // Formatear fecha y hora
+                    const fechaHoraFormateada = formatearFechaHora(fechaHora);
+                    
+                    // Registrar movimiento en Firebase
+                    const nuevoMovimiento = {
+                        id: nextMovimientoId++,
+                        fechaHora: fechaHoraFormateada,
+                        tipo: "salida",
+                        productoId: producto.id,
+                        producto: producto.nombre,
+                        cantidad: cantidadUnidades,
+                        departamento: departamento,
+                        usuario: usuario,
+                        observaciones: observaciones || "Asignación de material",
+                        responsable: "Admin Sistema",
+                        createdAt: new Date().toISOString()
+                    };
+                    
+                    await saveMovementToFirebase(nuevoMovimiento);
+                    
+                    alert(`Asignación registrada exitosamente en Firebase. Se asignaron ${cantidadUnidades} unidades.`);
+                    
+                    // Limpiar formulario
+                    document.getElementById('asignacionForm').reset();
+                    
+                    // Establecer fecha y hora actual
+                    const ahora = new Date();
+                    ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
+                    document.getElementById('fechaAsignacion').value = ahora.toISOString().slice(0, 16);
+                    
+                    // Limpiar stock disponible y cálculos
+                    document.getElementById('stockDisponible').value = '';
+                    document.getElementById('equivalenciaUnidades').textContent = '0 unidades';
+                    document.getElementById('nuevoStockUnidades').textContent = '0 unidades';
+                }
             } catch (error) {
-                console.error("Error al registrar asignación:", error);
-                alert("Error al registrar la asignación: " + error.message);
+                console.error("Error registrando asignación:", error);
+                alert('Error al registrar la asignación en Firebase');
             }
         }
 
-        // Actualizar tabla de inventario
+        // Función para eliminar producto (con Firebase)
+        async function eliminarProducto() {
+            const productoIndex = productos.findIndex(p => p.id === currentEditId);
+            
+            if (productoIndex !== -1) {
+                const producto = productos[productoIndex];
+                
+                // Verificar si hay movimientos asociados
+                const movimientosAsociados = movimientos.filter(m => m.productoId === currentEditId);
+                
+                if (movimientosAsociados.length > 0) {
+                    alert('No se puede eliminar el producto porque tiene movimientos asociados');
+                    cerrarModal();
+                    return;
+                }
+                
+                try {
+                    // Eliminar de Firebase
+                    const deleted = await deleteProductFromFirebase(currentEditId);
+                    
+                    if (deleted) {
+                        // Los listeners en tiempo real actualizarán automáticamente la UI
+                        alert('Producto eliminado exitosamente de Firebase');
+                    }
+                } catch (error) {
+                    console.error("Error eliminando producto:", error);
+                    alert('Error al eliminar el producto de Firebase');
+                }
+            }
+            
+            cerrarModal();
+        }
+
+        // Función para eliminar movimiento (con Firebase)
+        async function eliminarMovimiento() {
+            const movimientoIndex = movimientos.findIndex(m => m.id === currentMovEditId);
+            
+            if (movimientoIndex !== -1) {
+                const movimiento = movimientos[movimientoIndex];
+                
+                // Revertir el efecto del movimiento en el stock
+                const productoIndex = productos.findIndex(p => p.id === movimiento.productoId);
+                
+                if (productoIndex !== -1) {
+                    const producto = productos[productoIndex];
+                    const unidadesTotalesActuales = calcularUnidadesTotales(producto);
+                    
+                    let nuevasUnidadesTotales = unidadesTotalesActuales;
+                    
+                    if (movimiento.tipo === 'entrada' || movimiento.tipo === 'reposicion') {
+                        nuevasUnidadesTotales = unidadesTotalesActuales - movimiento.cantidad;
+                    } else if (movimiento.tipo === 'salida') {
+                        nuevasUnidadesTotales = unidadesTotalesActuales + movimiento.cantidad;
+                    }
+                    
+                    const nuevoStock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
+                    
+                    try {
+                        // Actualizar producto en Firebase
+                        await updateProductInFirebase(producto.id, {
+                            stock: nuevoStock,
+                            updatedAt: new Date().toISOString()
+                        });
+                        
+                        // Eliminar movimiento de Firebase
+                        await deleteMovementFromFirebase(movimiento.id);
+                        
+                        alert('Movimiento eliminado exitosamente de Firebase');
+                    } catch (error) {
+                        console.error("Error eliminando movimiento:", error);
+                        alert('Error al eliminar el movimiento de Firebase');
+                    }
+                }
+            }
+            
+            cerrarModal();
+        }
+
+        // Función para guardar cambios en movimiento (con Firebase)
+        async function guardarCambiosMovimiento() {
+            const movimientoIndex = movimientos.findIndex(m => m.id === currentMovEditId);
+            
+            if (movimientoIndex === -1) {
+                cerrarModal();
+                return;
+            }
+            
+            // Obtener valores del formulario
+            const departamento = document.getElementById('editMovDepartamento').value.trim();
+            const usuario = document.getElementById('editMovUsuario').value.trim();
+            const observaciones = document.getElementById('editMovObservaciones').value.trim();
+            
+            // Validaciones
+            if (!departamento || !usuario) {
+                alert('Por favor complete los campos requeridos');
+                return;
+            }
+            
+            try {
+                // Actualizar en Firebase
+                const updated = await updateMovementInFirebase(currentMovEditId, {
+                    departamento: departamento,
+                    usuario: usuario,
+                    observaciones: observaciones,
+                    updatedAt: new Date().toISOString()
+                });
+                
+                if (updated) {
+                    alert('Movimiento actualizado exitosamente en Firebase');
+                    cerrarModal();
+                }
+            } catch (error) {
+                console.error("Error actualizando movimiento:", error);
+                alert('Error al actualizar el movimiento en Firebase');
+            }
+        }
+
+        // =============================================
+        // FUNCIONES DE UI (sin cambios, excepto por actualizaciones menores)
+        // =============================================
+
+        function mostrarSeccion(sectionId) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            const seccion = document.getElementById(sectionId);
+            if (seccion) {
+                seccion.classList.add('active');
+            }
+            
+            document.querySelectorAll('.menu-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-section') === sectionId) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        function actualizarFechaHora() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            
+            const dateTimeElement = document.getElementById('currentDateTime');
+            if (dateTimeElement) {
+                dateTimeElement.textContent = now.toLocaleDateString('es-ES', options);
+            }
+        }
+
+        function verificarCodigoExistente() {
+            const codigo = document.getElementById('codigoProducto').value.trim();
+            const saveBtn = document.getElementById('saveProductBtn');
+            const repositionBtn = document.getElementById('repositionBtn');
+            
+            if (codigo) {
+                const productoExistente = productos.find(p => p.codigo === codigo);
+                if (productoExistente) {
+                    document.getElementById('nombreProducto').value = productoExistente.nombre;
+                    document.getElementById('categoriaProducto').value = productoExistente.categoria;
+                    document.getElementById('unidadProducto').value = productoExistente.unidad;
+                    document.getElementById('unidadesPorMedida').value = productoExistente.unidadesPorMedida || 1;
+                    document.getElementById('stockMinimo').value = productoExistente.stockMinimo;
+                    document.getElementById('descripcionProducto').value = `Reposición de stock para ${productoExistente.nombre}`;
+                    
+                    saveBtn.style.display = 'none';
+                    repositionBtn.style.display = 'block';
+                } else {
+                    saveBtn.style.display = 'block';
+                    repositionBtn.style.display = 'none';
+                }
+            }
+        }
+
+        function calcularEquivalenciaAsignacion() {
+            const productoId = document.getElementById('productoAsignar').value;
+            const cantidadInput = document.getElementById('cantidadAsignarUnidades');
+            
+            if (!productoId || !cantidadInput) return;
+            
+            const producto = productos.find(p => p.id == productoId);
+            if (!producto) return;
+            
+            const cantidadUnidades = parseInt(cantidadInput.value) || 0;
+            const unidadesTotalesActuales = calcularUnidadesTotales(producto);
+            
+            let equivalencia = '';
+            if (producto.unidad === "UND") {
+                equivalencia = `${cantidadUnidades} unidades`;
+            } else {
+                const equivalenciaMedida = cantidadUnidades / (producto.unidadesPorMedida || 1);
+                equivalencia = `${equivalenciaMedida.toFixed(2)} ${producto.unidad} (${cantidadUnidades} unidades)`;
+            }
+            
+            document.getElementById('equivalenciaUnidades').textContent = equivalencia;
+            
+            if (cantidadUnidades > 0) {
+                const nuevoStockUnidades = unidadesTotalesActuales - cantidadUnidades;
+                let nuevoStockMedida = '';
+                
+                if (producto.unidad === "UND") {
+                    nuevoStockMedida = `${nuevoStockUnidades} unidades`;
+                } else {
+                    const nuevoStock = calcularStockDesdeUnidades(producto, nuevoStockUnidades);
+                    nuevoStockMedida = `${nuevoStock.toFixed(2)} ${producto.unidad} (${nuevoStockUnidades} unidades)`;
+                }
+                
+                document.getElementById('nuevoStockUnidades').textContent = nuevoStockMedida;
+            } else {
+                document.getElementById('nuevoStockUnidades').textContent = `${unidadesTotalesActuales} unidades`;
+            }
+        }
+
+        function generarOpcionesFechaReporte() {
+            const monthSelect = document.getElementById('reportMonth');
+            const yearSelect = document.getElementById('reportYear');
+            
+            if (!monthSelect || !yearSelect) return;
+            
+            const meses = [
+                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+            ];
+            
+            const currentDate = new Date();
+            
+            monthSelect.innerHTML = '';
+            meses.forEach((mes, index) => {
+                const option = document.createElement('option');
+                option.value = index + 1;
+                option.textContent = mes;
+                if (index + 1 === currentDate.getMonth() + 1) {
+                    option.selected = true;
+                }
+                monthSelect.appendChild(option);
+            });
+            
+            yearSelect.innerHTML = '';
+            const currentYearNow = currentDate.getFullYear();
+            const startYear = 2023;
+            const endYear = currentYearNow + 1;
+            
+            for (let year = startYear; year <= endYear; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                if (year === currentYearNow) {
+                    option.selected = true;
+                }
+                yearSelect.appendChild(option);
+            }
+        }
+
+        function cargarProductosAsignacion() {
+            const select = document.getElementById('productoAsignar');
+            if (!select) return;
+            
+            select.innerHTML = '<option value="">Seleccione...</option>';
+            
+            productos.forEach(producto => {
+                const unidadesTotales = calcularUnidadesTotales(producto);
+                if (unidadesTotales > 0) {
+                    const option = document.createElement('option');
+                    option.value = producto.id;
+                    option.textContent = `${producto.nombre} (${unidadesTotales} unidades)`;
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        function cargarDepartamentosFiltros() {
+            const filterDept = document.getElementById('filterMovDept');
+            
+            if (!filterDept) return;
+            
+            filterDept.innerHTML = '<option value="">Todos los Departamentos</option>';
+            
+            departamentos.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept;
+                option.textContent = dept;
+                filterDept.appendChild(option);
+            });
+        }
+
         function actualizarTablaInventario() {
             const tableBody = document.getElementById('inventarioTableBody');
             if (!tableBody) return;
@@ -2535,17 +2665,13 @@
             const filterCategory = document.getElementById('filterCategory') ? document.getElementById('filterCategory').value : '';
             const filterStock = document.getElementById('filterStock') ? document.getElementById('filterStock').value : '';
             
-            // Filtrar productos
             let productosFiltrados = productos.filter(producto => {
-                // Filtro por búsqueda
                 const searchMatch = searchProduct === '' || 
                     producto.nombre.toLowerCase().includes(searchProduct) ||
                     producto.codigo.toLowerCase().includes(searchProduct);
                 
-                // Filtro por categoría
                 const categoryMatch = filterCategory === '' || producto.categoria === filterCategory;
                 
-                // Filtro por stock (basado en unidades totales)
                 let stockMatch = true;
                 const unidadesTotales = calcularUnidadesTotales(producto);
                 const stockMinimoUnidades = producto.stockMinimo * (producto.unidadesPorMedida || 1);
@@ -2561,7 +2687,6 @@
                 return searchMatch && categoryMatch && stockMatch;
             });
             
-            // Ordenar por categoría y nombre
             productosFiltrados.sort((a, b) => {
                 if (a.categoria === b.categoria) {
                     return a.nombre.localeCompare(b.nombre);
@@ -2569,33 +2694,20 @@
                 return a.categoria.localeCompare(b.categoria);
             });
             
-            // Limpiar tabla
             tableBody.innerHTML = '';
             
-            // Si no hay productos
             if (productosFiltrados.length === 0) {
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="9" style="text-align: center; padding: 20px; color: #666;">
-                            No se encontraron productos con los filtros aplicados
-                        </td>
-                    </tr>
-                `;
+                tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px;">No hay productos que coincidan con los filtros</td></tr>';
                 return;
             }
             
-            // Llenar tabla
             productosFiltrados.forEach(producto => {
                 const row = document.createElement('tr');
                 
-                // Obtener número del código
                 const codigoNum = producto.codigo.split('-')[1] || producto.id;
-                
-                // Calcular unidades totales
                 const unidadesTotales = calcularUnidadesTotales(producto);
                 const stockMinimoUnidades = producto.stockMinimo * (producto.unidadesPorMedida || 1);
                 
-                // Determinar estado del stock (basado en unidades)
                 let estadoClase = '';
                 let estadoTexto = '';
                 let stockIndicator = '';
@@ -2614,7 +2726,6 @@
                     stockIndicator = '<span class="stock-indicator stock-high"></span>';
                 }
                 
-                // Obtener nombre de categoría
                 let categoriaNombre = '';
                 let categoriaClase = '';
                 switch(producto.categoria) {
@@ -2647,7 +2758,6 @@
                         categoriaClase = 'badge-otros';
                 }
                 
-                // Formatear información de unidades
                 let infoUnidades = '';
                 if (producto.unidad === "UND") {
                     infoUnidades = `${producto.stock} ${producto.unidad}`;
@@ -2655,7 +2765,6 @@
                     infoUnidades = `${producto.stock} ${producto.unidad}`;
                 }
                 
-                // Formatear información de stock mínimo
                 let infoStockMinimo = '';
                 if (producto.unidad === "UND") {
                     infoStockMinimo = `${producto.stockMinimo} ${producto.unidad}`;
@@ -2704,57 +2813,53 @@
                 tableBody.appendChild(row);
             });
             
-            // Agregar eventos a los botones de acción
             document.querySelectorAll('.btn-edit').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
+                    const id = parseInt(this.getAttribute('data-id'));
                     editarProducto(id);
                 });
             });
             
             document.querySelectorAll('.btn-assign').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
+                    const id = parseInt(this.getAttribute('data-id'));
                     irAAsignacion(id);
                 });
             });
             
             document.querySelectorAll('.btn-adjust').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
+                    const id = parseInt(this.getAttribute('data-id'));
                     ajustarStock(id);
                 });
             });
             
             document.querySelectorAll('.btn-reposition').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
+                    const id = parseInt(this.getAttribute('data-id'));
                     irAReposicion(id);
                 });
             });
             
             document.querySelectorAll('.btn-delete').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
+                    const id = parseInt(this.getAttribute('data-id'));
                     confirmarEliminacion(id);
                 });
             });
             
-            // Actualizar contador
             const totalProductsElement = document.getElementById('totalProducts');
             if (totalProductsElement) {
                 totalProductsElement.textContent = productos.length;
             }
         }
 
-        // Ir a sección de reposición
         function irAReposicion(productoId) {
             const producto = productos.find(p => p.id === productoId);
             if (!producto) return;
             
             mostrarSeccion('nuevo-producto');
             
-            // Llenar formulario con datos del producto
             document.getElementById('codigoProducto').value = producto.codigo;
             document.getElementById('nombreProducto').value = producto.nombre;
             document.getElementById('categoriaProducto').value = producto.categoria;
@@ -2763,12 +2868,10 @@
             document.getElementById('stockMinimo').value = producto.stockMinimo;
             document.getElementById('descripcionProducto').value = `Reposición de stock para ${producto.nombre}`;
             
-            // Mostrar botón de reposición
             document.getElementById('saveProductBtn').style.display = 'none';
             document.getElementById('repositionBtn').style.display = 'block';
         }
 
-        // Actualizar tabla de movimientos
         function actualizarTablaMovimientos() {
             const tableBody = document.getElementById('movimientosTableBody');
             if (!tableBody) return;
@@ -2777,48 +2880,26 @@
             const filterDept = document.getElementById('filterMovDept') ? document.getElementById('filterMovDept').value : '';
             const filterFecha = document.getElementById('filterMovFecha') ? document.getElementById('filterMovFecha').value : '';
             
-            // Filtrar movimientos
             let movimientosFiltrados = movimientos.filter(movimiento => {
-                // Filtro por tipo
                 const tipoMatch = filterMovimiento === '' || movimiento.tipo === filterMovimiento;
-                
-                // Filtro por departamento
                 const deptMatch = filterDept === '' || movimiento.departamento === filterDept;
-                
-                // Filtro por fecha
-                const fechaMatch = filterFecha === '' || 
-                    (movimiento.fechaHora && movimiento.fechaHora.startsWith(filterFecha));
+                const fechaMatch = filterFecha === '' || movimiento.fechaHora.startsWith(filterFecha);
                 
                 return tipoMatch && deptMatch && fechaMatch;
             });
             
-            // Ordenar por fecha más reciente primero
-            movimientosFiltrados.sort((a, b) => {
-                const fechaA = a.fechaHora ? new Date(a.fechaHora) : new Date(0);
-                const fechaB = b.fechaHora ? new Date(b.fechaHora) : new Date(0);
-                return fechaB - fechaA;
-            });
+            movimientosFiltrados.sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora));
             
-            // Limpiar tabla
             tableBody.innerHTML = '';
             
-            // Si no hay movimientos
             if (movimientosFiltrados.length === 0) {
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="9" style="text-align: center; padding: 20px; color: #666;">
-                            No se encontraron movimientos con los filtros aplicados
-                        </td>
-                    </tr>
-                `;
+                tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px;">No hay movimientos que coincidan con los filtros</td></tr>';
                 return;
             }
             
-            // Llenar tabla
             movimientosFiltrados.forEach(movimiento => {
                 const row = document.createElement('tr');
                 
-                // Determinar tipo y color
                 let tipoTexto = '';
                 let tipoColor = '';
                 
@@ -2844,14 +2925,14 @@
                 }
                 
                 row.innerHTML = `
-                    <td>${movimiento.fechaHora || 'N/A'}</td>
+                    <td>${movimiento.fechaHora}</td>
                     <td><span style="color: ${tipoColor}; font-weight: 600;">${tipoTexto}</span></td>
                     <td>${movimiento.producto}</td>
                     <td>${movimiento.cantidad} unidades</td>
                     <td>${movimiento.departamento}</td>
                     <td>${movimiento.usuario}</td>
                     <td>${movimiento.observaciones || '-'}</td>
-                    <td>${movimiento.responsable || 'Sistema'}</td>
+                    <td>${movimiento.responsable}</td>
                     <td>
                         <div class="action-buttons">
                             <button class="btn-action btn-edit-mov" data-id="${movimiento.id}">
@@ -2867,25 +2948,22 @@
                 tableBody.appendChild(row);
             });
             
-            // Agregar eventos a los botones de acción de movimientos
             document.querySelectorAll('.btn-edit-mov').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
+                    const id = parseInt(this.getAttribute('data-id'));
                     editarMovimiento(id);
                 });
             });
             
             document.querySelectorAll('.btn-delete-mov').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
+                    const id = parseInt(this.getAttribute('data-id'));
                     confirmarEliminacionMovimiento(id);
                 });
             });
         }
 
-        // Actualizar estadísticas
         function actualizarEstadisticas() {
-            // Calcular productos con stock bajo (basado en unidades)
             let lowStockCount = 0;
             let totalUnidades = 0;
             
@@ -2904,10 +2982,9 @@
                 lowStockElement.textContent = lowStockCount;
             }
             
-            // Calcular asignaciones de hoy
             const hoy = new Date().toISOString().split('T')[0];
             const todayAssignments = movimientos.filter(m => 
-                m.fechaHora && m.fechaHora.startsWith(hoy) && m.tipo === 'salida'
+                m.fechaHora.startsWith(hoy) && m.tipo === 'salida'
             ).length;
             
             const todayAssignmentsElement = document.getElementById('todayAssignments');
@@ -2915,16 +2992,13 @@
                 todayAssignmentsElement.textContent = todayAssignments;
             }
             
-            // Calcular stock total en unidades
             const totalStockElement = document.getElementById('totalStock');
             if (totalStockElement) {
                 totalStockElement.textContent = totalUnidades.toLocaleString();
             }
         }
 
-        // Actualizar dashboard
         function actualizarDashboard() {
-            // Calcular estadísticas
             let totalUnidades = 0;
             let lowStockCount = 0;
             
@@ -2938,18 +3012,15 @@
                 }
             });
             
-            // Actualizar tarjetas
             document.getElementById('dashboardTotalProducts').textContent = productos.length;
             document.getElementById('dashboardLowStock').textContent = lowStockCount;
             document.getElementById('dashboardTotalUnits').textContent = totalUnidades.toLocaleString();
             
-            // Calcular asignaciones este mes
             const hoy = new Date();
             const mesActual = hoy.getMonth() + 1;
             const añoActual = hoy.getFullYear();
             
             const asignacionesEsteMes = movimientos.filter(m => {
-                if (!m.fechaHora) return false;
                 const fechaMov = new Date(m.fechaHora);
                 return m.tipo === 'salida' && 
                        fechaMov.getMonth() + 1 === mesActual && 
@@ -2958,21 +3029,15 @@
             
             document.getElementById('dashboardTotalAssignments').textContent = asignacionesEsteMes;
             
-            // Actualizar gráfico de categorías
             actualizarGraficoCategorias();
-            
-            // Actualizar lista de productos con stock bajo
             actualizarListaStockBajo();
         }
 
-        // Actualizar gráfico de categorías
         function actualizarGraficoCategorias() {
-            // Destruir gráfico anterior si existe
             if (categoryChartInstance) {
                 categoryChartInstance.destroy();
             }
             
-            // Datos para gráfico de categorías (basado en unidades totales)
             const categorias = {
                 papeleria: 0,
                 oficina: 0,
@@ -2982,7 +3047,6 @@
                 otros: 0
             };
             
-            // Sumar unidades por categoría
             productos.forEach(producto => {
                 const unidadesTotales = calcularUnidadesTotales(producto);
                 if (categorias.hasOwnProperty(producto.categoria)) {
@@ -2990,7 +3054,6 @@
                 }
             });
             
-            // Gráfico de categorías
             const categoryChartCanvas = document.getElementById('categoryChart');
             if (categoryChartCanvas) {
                 const ctx = categoryChartCanvas.getContext('2d');
@@ -3039,12 +3102,10 @@
             }
         }
 
-        // Actualizar lista de productos con stock bajo
         function actualizarListaStockBajo() {
             const container = document.getElementById('lowStockList');
             if (!container) return;
             
-            // Filtrar productos con stock bajo (basado en unidades)
             const productosBajos = productos.filter(producto => {
                 const unidadesTotales = calcularUnidadesTotales(producto);
                 const stockMinimoUnidades = producto.stockMinimo * (producto.unidadesPorMedida || 1);
@@ -3087,9 +3148,7 @@
             container.innerHTML = html;
         }
 
-        // Verificar stock bajo y mostrar alerta
         function verificarStockBajo() {
-            // Calcular productos con stock bajo
             let lowStockCount = 0;
             
             productos.forEach(producto => {
@@ -3108,7 +3167,6 @@
                 alertElement.classList.add('show');
                 alertMessage.textContent = `Hay ${lowStockCount} producto(s) con stock bajo. Verifique el inventario.`;
                 
-                // Actualizar tarjeta de stock bajo
                 const lowStockCard = document.getElementById('lowStockCard');
                 if (lowStockCard) {
                     lowStockCard.classList.remove('warning');
@@ -3117,7 +3175,6 @@
             } else {
                 alertElement.classList.remove('show');
                 
-                // Actualizar tarjeta de stock bajo
                 const lowStockCard = document.getElementById('lowStockCard');
                 if (lowStockCard) {
                     lowStockCard.classList.remove('danger');
@@ -3126,22 +3183,18 @@
             }
         }
 
-        // Ir a sección de asignación con producto seleccionado
         function irAAsignacion(productoId) {
             mostrarSeccion('asignacion');
             
-            // Seleccionar producto en el select
             const selectProducto = document.getElementById('productoAsignar');
             if (selectProducto) {
                 selectProducto.value = productoId;
                 
-                // Disparar evento change para cargar stock disponible
                 const event = new Event('change');
                 selectProducto.dispatchEvent(event);
             }
         }
 
-        // Ajustar stock de producto
         function ajustarStock(productoId) {
             currentAdjustId = productoId;
             const producto = productos.find(p => p.id === productoId);
@@ -3150,30 +3203,27 @@
             
             const unidadesTotales = calcularUnidadesTotales(producto);
             
-            // Llenar formulario
             document.getElementById('adjustProductName').value = producto.nombre;
             document.getElementById('adjustCurrentStock').value = `${unidadesTotales} unidades`;
             document.getElementById('adjustCurrentStockMedida').value = `${producto.stock} ${producto.unidad}`;
             
-            // Mostrar modal
             document.getElementById('adjustModal').style.display = 'flex';
             
-            // Configurar evento del formulario
             const adjustForm = document.getElementById('adjustStockForm');
             if (adjustForm) {
-                adjustForm.onsubmit = async function(e) {
+                adjustForm.onsubmit = function(e) {
                     e.preventDefault();
-                    await aplicarAjusteStock();
+                    aplicarAjusteStock();
                 };
             }
         }
 
-        // Aplicar ajuste de stock
         async function aplicarAjusteStock() {
-            const producto = productos.find(p => p.id === currentAdjustId);
+            const productoIndex = productos.findIndex(p => p.id === currentAdjustId);
             
-            if (!producto) return;
+            if (productoIndex === -1) return;
             
+            const producto = productos[productoIndex];
             const tipo = document.getElementById('adjustType').value;
             const cantidad = parseInt(document.getElementById('adjustQuantity').value);
             const motivo = document.getElementById('adjustReason').value.trim();
@@ -3184,62 +3234,59 @@
             }
             
             const unidadesTotalesActuales = calcularUnidadesTotales(producto);
+            let nuevasUnidadesTotales = unidadesTotalesActuales;
+            
+            if (tipo === 'entrada' || tipo === 'reposicion') {
+                nuevasUnidadesTotales = unidadesTotalesActuales + cantidad;
+            } else {
+                if (cantidad > unidadesTotalesActuales) {
+                    alert(`Cantidad excede el stock disponible. Disponible: ${unidadesTotalesActuales} unidades`);
+                    return;
+                }
+                nuevasUnidadesTotales = unidadesTotalesActuales - cantidad;
+            }
+            
+            const nuevoStock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
             
             try {
-                // Aplicar ajuste
-                let nuevoStock;
-                if (tipo === 'entrada' || tipo === 'reposicion') {
-                    // Sumar unidades
-                    const nuevasUnidadesTotales = unidadesTotalesActuales + cantidad;
-                    nuevoStock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
-                } else {
-                    // Restar unidades
-                    if (cantidad > unidadesTotalesActuales) {
-                        alert(`Cantidad excede el stock disponible. Disponible: ${unidadesTotalesActuales} unidades`);
-                        return;
-                    }
-                    const nuevasUnidadesTotales = unidadesTotalesActuales - cantidad;
-                    nuevoStock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
-                }
+                // Actualizar producto en Firebase
+                await updateProductInFirebase(producto.id, {
+                    stock: nuevoStock,
+                    updatedAt: new Date().toISOString()
+                });
                 
-                // Actualizar producto en Firestore
-                await actualizarProductoFirestore(producto.id, { stock: nuevoStock });
-                
-                // Registrar movimiento
+                // Registrar movimiento en Firebase
+                const movimientoTipo = tipo === 'reposicion' ? 'reposicion' : 'ajuste';
                 const nuevoMovimiento = {
-                    tipo: tipo === 'reposicion' ? 'reposicion' : 'ajuste',
+                    id: nextMovimientoId++,
+                    fechaHora: formatearFechaHora(),
+                    tipo: movimientoTipo,
                     productoId: producto.id,
                     producto: producto.nombre,
                     cantidad: cantidad,
                     departamento: "Almacén",
                     usuario: "N/A",
                     observaciones: motivo,
-                    responsable: currentUser ? currentUser.email : "Admin Sistema"
+                    responsable: "Admin Sistema",
+                    createdAt: new Date().toISOString()
                 };
                 
-                await guardarMovimientoFirestore(nuevoMovimiento);
+                await saveMovementToFirebase(nuevoMovimiento);
                 
-                // Mostrar mensaje
-                const nuevasUnidades = calcularUnidadesTotales({...producto, stock: nuevoStock});
-                alert(`Stock ajustado exitosamente. Nuevo stock: ${nuevasUnidades} unidades`);
-                
-                // Cerrar modal
+                alert(`Stock ajustado exitosamente en Firebase. Nuevo stock: ${nuevasUnidadesTotales} unidades`);
                 cerrarModal();
-                
             } catch (error) {
-                console.error("Error al ajustar stock:", error);
-                alert("Error al ajustar el stock: " + error.message);
+                console.error("Error aplicando ajuste:", error);
+                alert('Error al aplicar el ajuste en Firebase');
             }
         }
 
-        // Editar producto
         function editarProducto(id) {
             currentEditId = id;
             const producto = productos.find(p => p.id === id);
             
             if (!producto) return;
             
-            // Crear formulario de edición
             const modalBody = document.querySelector('#editModal .modal-body');
             if (!modalBody) return;
             
@@ -3316,32 +3363,27 @@
                 </form>
             `;
             
-            // Mostrar modal
             document.getElementById('editModal').style.display = 'flex';
             
-            // Configurar evento del formulario de edición
             const editForm = document.getElementById('editForm');
             if (editForm) {
-                editForm.addEventListener('submit', async function(e) {
+                editForm.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    await guardarCambiosEdicion();
+                    guardarCambiosEdicion();
                 });
             }
             
-            // Configurar botón cancelar
             const cancelEditBtn = document.getElementById('cancelEdit');
             if (cancelEditBtn) {
                 cancelEditBtn.addEventListener('click', cerrarModal);
             }
         }
 
-        // Guardar cambios de edición
         async function guardarCambiosEdicion() {
-            const producto = productos.find(p => p.id === currentEditId);
+            const productoIndex = productos.findIndex(p => p.id === currentEditId);
             
-            if (!producto) return;
+            if (productoIndex === -1) return;
             
-            // Obtener valores del formulario
             const codigo = document.getElementById('editCodigo').value.trim();
             const nombre = document.getElementById('editNombre').value.trim();
             const categoria = document.getElementById('editCategoria').value;
@@ -3351,7 +3393,6 @@
             const stockMinimo = parseInt(document.getElementById('editStockMinimo').value);
             const descripcion = document.getElementById('editDescripcion').value.trim();
             
-            // Validaciones
             if (!codigo || !nombre || !categoria || !unidad || isNaN(unidadesPorMedida) || isNaN(stock) || isNaN(stockMinimo)) {
                 alert('Por favor complete todos los campos requeridos');
                 return;
@@ -3362,16 +3403,15 @@
                 return;
             }
             
-            // Verificar si el código ya existe (excluyendo el producto actual)
-            const codigoExiste = productos.some(p => p.codigo === codigo && p.id !== currentEditId);
+            const codigoExiste = productos.some((p, index) => p.codigo === codigo && index !== productoIndex);
             if (codigoExiste) {
                 alert('Ya existe otro producto con este código');
                 return;
             }
             
             try {
-                // Actualizar producto en Firestore
-                await actualizarProductoFirestore(currentEditId, {
+                // Actualizar en Firebase
+                await updateProductInFirebase(currentEditId, {
                     codigo: codigo,
                     nombre: nombre,
                     categoria: categoria,
@@ -3379,22 +3419,18 @@
                     unidadesPorMedida: unidadesPorMedida,
                     stock: stock,
                     stockMinimo: stockMinimo,
-                    descripcion: descripcion
+                    descripcion: descripcion,
+                    updatedAt: new Date().toISOString()
                 });
                 
-                // Cerrar modal
+                alert('Producto actualizado exitosamente en Firebase');
                 cerrarModal();
-                
-                // Mostrar mensaje
-                alert('Producto actualizado exitosamente');
-                
             } catch (error) {
-                console.error("Error al actualizar producto:", error);
-                alert("Error al actualizar el producto: " + error.message);
+                console.error("Error actualizando producto:", error);
+                alert('Error al actualizar el producto en Firebase');
             }
         }
 
-        // Confirmar eliminación de producto
         function confirmarEliminacion(id) {
             currentEditId = id;
             const confirmModal = document.getElementById('confirmModal');
@@ -3403,7 +3439,6 @@
             }
         }
 
-        // Confirmar eliminación de movimiento
         function confirmarEliminacionMovimiento(id) {
             currentMovEditId = id;
             const movimiento = movimientos.find(m => m.id === id);
@@ -3419,93 +3454,17 @@
             }
         }
 
-        // Eliminar producto
-        async function eliminarProducto() {
-            try {
-                // Verificar si hay movimientos asociados
-                const movimientosAsociados = movimientos.filter(m => m.productoId === currentEditId);
-                
-                if (movimientosAsociados.length > 0) {
-                    alert('No se puede eliminar el producto porque tiene movimientos asociados');
-                    cerrarModal();
-                    return;
-                }
-                
-                // Eliminar producto de Firestore
-                await eliminarProductoFirestore(currentEditId);
-                
-                alert('Producto eliminado exitosamente');
-                
-            } catch (error) {
-                console.error("Error al eliminar producto:", error);
-                alert("Error al eliminar el producto: " + error.message);
-            } finally {
-                cerrarModal();
-            }
-        }
-
-        // Eliminar movimiento
-        async function eliminarMovimiento() {
-            try {
-                const movimiento = movimientos.find(m => m.id === currentMovEditId);
-                
-                if (!movimiento) {
-                    cerrarModal();
-                    return;
-                }
-                
-                // Revertir el efecto del movimiento en el stock
-                const producto = productos.find(p => p.id === movimiento.productoId);
-                
-                if (producto) {
-                    const unidadesTotalesActuales = calcularUnidadesTotales(producto);
-                    
-                    if (movimiento.tipo === 'entrada' || movimiento.tipo === 'reposicion') {
-                        // Restar las unidades que se agregaron
-                        const nuevasUnidadesTotales = unidadesTotalesActuales - movimiento.cantidad;
-                        const nuevoStock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
-                        await actualizarProductoFirestore(producto.id, { stock: nuevoStock });
-                    } else if (movimiento.tipo === 'salida') {
-                        // Sumar las unidades que se retiraron
-                        const nuevasUnidadesTotales = unidadesTotalesActuales + movimiento.cantidad;
-                        const nuevoStock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
-                        await actualizarProductoFirestore(producto.id, { stock: nuevoStock });
-                    }
-                    // Los ajustes no se pueden revertir automáticamente
-                }
-                
-                // Eliminar el movimiento de Firestore
-                await eliminarMovimientoFirestore(currentMovEditId);
-                
-                alert('Movimiento eliminado exitosamente');
-                
-            } catch (error) {
-                console.error("Error al eliminar movimiento:", error);
-                alert("Error al eliminar el movimiento: " + error.message);
-            } finally {
-                cerrarModal();
-            }
-        }
-
-        // Cerrar modal
         function cerrarModal() {
-            const editModal = document.getElementById('editModal');
-            const confirmModal = document.getElementById('confirmModal');
-            const adjustModal = document.getElementById('adjustModal');
-            const editMovModal = document.getElementById('editMovModal');
-            const confirmMovModal = document.getElementById('confirmMovModal');
-            
-            if (editModal) editModal.style.display = 'none';
-            if (confirmModal) confirmModal.style.display = 'none';
-            if (adjustModal) adjustModal.style.display = 'none';
-            if (editMovModal) editMovModal.style.display = 'none';
-            if (confirmMovModal) confirmMovModal.style.display = 'none';
+            const modals = ['editModal', 'confirmModal', 'adjustModal', 'editMovModal', 'confirmMovModal'];
+            modals.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (modal) modal.style.display = 'none';
+            });
             
             currentEditId = null;
             currentAdjustId = null;
             currentMovEditId = null;
             
-            // Limpiar formularios
             const adjustForm = document.getElementById('adjustStockForm');
             if (adjustForm) adjustForm.reset();
             
@@ -3513,7 +3472,6 @@
             if (editMovForm) editMovForm.reset();
         }
 
-        // Limpiar filtros inventario
         function limpiarFiltrosInventario() {
             const searchProduct = document.getElementById('searchProduct');
             const filterCategory = document.getElementById('filterCategory');
@@ -3526,7 +3484,6 @@
             actualizarTablaInventario();
         }
 
-        // Limpiar filtros movimientos
         function limpiarFiltrosMovimientos() {
             const filterMovimiento = document.getElementById('filterMovimiento');
             const filterDept = document.getElementById('filterMovDept');
@@ -3539,14 +3496,12 @@
             actualizarTablaMovimientos();
         }
 
-        // Editar movimiento
         function editarMovimiento(id) {
             currentMovEditId = id;
             const movimiento = movimientos.find(m => m.id === id);
             
             if (!movimiento) return;
             
-            // Llenar formulario de edición
             document.getElementById('editMovProducto').value = movimiento.producto;
             document.getElementById('editMovTipo').value = movimiento.tipo;
             document.getElementById('editMovCantidad').value = movimiento.cantidad;
@@ -3554,49 +3509,9 @@
             document.getElementById('editMovUsuario').value = movimiento.usuario;
             document.getElementById('editMovObservaciones').value = movimiento.observaciones || '';
             
-            // Mostrar modal
             document.getElementById('editMovModal').style.display = 'flex';
         }
 
-        // Guardar cambios en movimiento
-        async function guardarCambiosMovimiento() {
-            const movimiento = movimientos.find(m => m.id === currentMovEditId);
-            
-            if (!movimiento) {
-                cerrarModal();
-                return;
-            }
-            
-            // Obtener valores del formulario
-            const departamento = document.getElementById('editMovDepartamento').value.trim();
-            const usuario = document.getElementById('editMovUsuario').value.trim();
-            const observaciones = document.getElementById('editMovObservaciones').value.trim();
-            
-            // Validaciones
-            if (!departamento || !usuario) {
-                alert('Por favor complete los campos requeridos');
-                return;
-            }
-            
-            try {
-                // Actualizar movimiento en Firestore
-                await actualizarMovimientoFirestore(currentMovEditId, {
-                    departamento: departamento,
-                    usuario: usuario,
-                    observaciones: observaciones
-                });
-                
-                // Cerrar modal y mostrar mensaje
-                cerrarModal();
-                alert('Movimiento actualizado exitosamente');
-                
-            } catch (error) {
-                console.error("Error al actualizar movimiento:", error);
-                alert("Error al actualizar el movimiento: " + error.message);
-            }
-        }
-
-        // Generar reporte mensual
         function generarReporteMensual() {
             const monthSelect = document.getElementById('reportMonth');
             const yearSelect = document.getElementById('reportYear');
@@ -3606,78 +3521,53 @@
             const month = parseInt(monthSelect.value);
             const year = parseInt(yearSelect.value);
             
-            // Filtrar movimientos del mes y año seleccionados
             const movimientosMensuales = movimientos.filter(movimiento => {
-                if (!movimiento.fechaHora) return false;
                 const fecha = new Date(movimiento.fechaHora);
                 return fecha.getMonth() + 1 === month && fecha.getFullYear() === year;
             });
             
-            // Actualizar títulos
             document.getElementById('chartTitle1').textContent = `Consumo por Departamento - ${monthSelect.options[monthSelect.selectedIndex].text} ${year}`;
             document.getElementById('chartTitle2').textContent = `Top 10 Productos Más Utilizados - ${monthSelect.options[monthSelect.selectedIndex].text} ${year}`;
             
-            // Actualizar gráficos
             actualizarGraficosReporte(movimientosMensuales);
-            
-            // Actualizar resumen de asignaciones
             actualizarResumenAsignaciones(movimientosMensuales);
         }
 
-        // Generar reporte anual
         function generarReporteAnual() {
             const yearSelect = document.getElementById('reportYear');
             if (!yearSelect) return;
             
             const year = parseInt(yearSelect.value);
             
-            // Filtrar movimientos del año seleccionado
             const movimientosAnuales = movimientos.filter(movimiento => {
-                if (!movimiento.fechaHora) return false;
                 const fecha = new Date(movimiento.fechaHora);
                 return fecha.getFullYear() === year;
             });
             
-            // Actualizar títulos
             document.getElementById('chartTitle1').textContent = `Consumo por Departamento - Año ${year}`;
             document.getElementById('chartTitle2').textContent = `Top 10 Productos Más Utilizados - Año ${year}`;
             
-            // Actualizar gráficos
             actualizarGraficosReporte(movimientosAnuales);
-            
-            // Actualizar resumen de asignaciones
             actualizarResumenAsignaciones(movimientosAnuales);
         }
 
-        // Generar reporte por departamento
         function generarReporteDepartamento() {
-            // Actualizar títulos
             document.getElementById('chartTitle1').textContent = 'Consumo por Departamento (Total)';
             document.getElementById('chartTitle2').textContent = 'Top 10 Productos Más Utilizados (Total)';
             
-            // Actualizar gráficos con todos los movimientos
             actualizarGraficosReporte(movimientos);
-            
-            // Actualizar resumen de asignaciones
             actualizarResumenAsignaciones(movimientos);
         }
 
-        // Generar reporte por productos
         function generarReporteProductos() {
-            // Actualizar títulos
             document.getElementById('chartTitle1').textContent = 'Stock por Categoría (Actual)';
             document.getElementById('chartTitle2').textContent = 'Productos con Menor Stock';
             
-            // Crear gráfico de productos con menor stock
             actualizarGraficoProductosBajos();
-            
-            // Actualizar resumen de productos
             actualizarResumenProductos();
         }
 
-        // Actualizar gráfico de productos bajos
         function actualizarGraficoProductosBajos() {
-            // Destruir gráficos anteriores si existen
             if (deptChartInstance) {
                 deptChartInstance.destroy();
             }
@@ -3685,14 +3575,12 @@
                 topProductsChartInstance.destroy();
             }
             
-            // Ordenar productos por porcentaje de stock (menor a mayor)
             const productosOrdenados = [...productos].sort((a, b) => {
                 const porcentajeA = calcularUnidadesTotales(a) / (a.stockMinimo * (a.unidadesPorMedida || 1));
                 const porcentajeB = calcularUnidadesTotales(b) / (b.stockMinimo * (b.unidadesPorMedida || 1));
                 return porcentajeA - porcentajeB;
             }).slice(0, 10);
             
-            // Gráfico de productos con menor stock
             const deptChartCanvas = document.getElementById('deptChart');
             if (deptChartCanvas && productosOrdenados.length > 0) {
                 const ctx = deptChartCanvas.getContext('2d');
@@ -3748,21 +3636,18 @@
                 });
             }
             
-            // Gráfico de categorías actualizado
             const topProductsChartCanvas = document.getElementById('topProductsChart');
             if (topProductsChartCanvas) {
                 const ctx = topProductsChartCanvas.getContext('2d');
                 
-                // Datos para gráfico de categorías
                 const categorias = {};
                 productos.forEach(producto => {
                     if (!categorias[producto.categoria]) {
                         categorias[producto.categoria] = 0;
                     }
-                    categorias[producto.categoria] += calcularUnidadesTotales(producto);
+                    categorias[producto.categoria]++;
                 });
                 
-                // Nombres de categorías
                 const nombresCategorias = {
                     'papeleria': 'Papelería',
                     'oficina': 'Oficina',
@@ -3777,7 +3662,7 @@
                     data: {
                         labels: Object.keys(categorias).map(cat => nombresCategorias[cat] || cat),
                         datasets: [{
-                            label: 'Unidades por Categoría',
+                            label: 'Productos por Categoría',
                             data: Object.values(categorias),
                             backgroundColor: [
                                 '#3498db',
@@ -3799,7 +3684,7 @@
                             tooltip: {
                                 callbacks: {
                                     label: function(context) {
-                                        return `${context.label}: ${context.raw.toLocaleString()} unidades`;
+                                        return `${context.label}: ${context.raw} productos`;
                                     }
                                 }
                             }
@@ -3809,12 +3694,10 @@
             }
         }
 
-        // Actualizar resumen de productos
         function actualizarResumenProductos() {
             const container = document.getElementById('resumenAsignaciones');
             if (!container) return;
             
-            // Calcular estadísticas
             let totalProductos = productos.length;
             let productosBajos = 0;
             let productosAgotados = 0;
@@ -3868,7 +3751,6 @@
                 <div style="margin-top: 10px;">
             `;
             
-            // Listar productos que necesitan reposición
             const productosReponer = productos.filter(p => {
                 const unidades = calcularUnidadesTotales(p);
                 const minimo = p.stockMinimo * (p.unidadesPorMedida || 1);
@@ -3907,9 +3789,7 @@
             container.innerHTML = html;
         }
 
-        // Actualizar gráficos de reporte
         function actualizarGraficosReporte(movimientosFiltrados) {
-            // Destruir gráficos anteriores si existen
             if (deptChartInstance) {
                 deptChartInstance.destroy();
             }
@@ -3917,7 +3797,6 @@
                 topProductsChartInstance.destroy();
             }
             
-            // Datos para gráfico de departamentos (solo salidas)
             const deptSalidas = {};
             const movimientosSalidas = movimientosFiltrados.filter(m => m.tipo === 'salida');
             
@@ -3929,12 +3808,10 @@
                 deptSalidas[dept] += movimiento.cantidad;
             });
             
-            // Gráfico de departamentos
             const deptChartCanvas = document.getElementById('deptChart');
             if (deptChartCanvas && Object.keys(deptSalidas).length > 0) {
                 const ctx = deptChartCanvas.getContext('2d');
                 
-                // Ordenar departamentos por cantidad
                 const deptsOrdenados = Object.entries(deptSalidas)
                     .sort((a, b) => b[1] - a[1])
                     .slice(0, 10);
@@ -3981,7 +3858,6 @@
                 deptChartCanvas.parentNode.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No hay datos de asignaciones para mostrar</p>';
             }
             
-            // Datos para top 10 productos más utilizados
             const productoUso = {};
             movimientosSalidas.forEach(movimiento => {
                 const producto = movimiento.producto;
@@ -3991,12 +3867,10 @@
                 productoUso[producto] += movimiento.cantidad;
             });
             
-            // Ordenar productos por uso
             const topProductos = Object.entries(productoUso)
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 10);
             
-            // Gráfico de top productos
             const topProductsChartCanvas = document.getElementById('topProductsChart');
             if (topProductsChartCanvas && topProductos.length > 0) {
                 const ctx = topProductsChartCanvas.getContext('2d');
@@ -4045,12 +3919,10 @@
             }
         }
 
-        // Actualizar resumen de asignaciones
         function actualizarResumenAsignaciones(movimientosFiltrados) {
             const container = document.getElementById('resumenAsignaciones');
             if (!container) return;
             
-            // Calcular estadísticas por tipo
             const porTipo = {
                 entrada: { cantidad: 0, unidades: 0 },
                 salida: { cantidad: 0, unidades: 0 },
@@ -4065,7 +3937,6 @@
                 }
             });
             
-            // Calcular estadísticas generales
             const totalMovimientos = movimientosFiltrados.length;
             const totalUnidades = movimientosFiltrados.reduce((sum, m) => sum + m.cantidad, 0);
             
@@ -4092,7 +3963,6 @@
                 <div style="margin-top: 10px;">
             `;
             
-            // Agregar estadísticas por tipo
             Object.keys(porTipo).forEach(tipo => {
                 const data = porTipo[tipo];
                 if (data.cantidad > 0) {
@@ -4132,7 +4002,6 @@
                 }
             });
             
-            // Agrupar por departamento (solo salidas)
             const porDepartamento = {};
             const movimientosSalidas = movimientosFiltrados.filter(m => m.tipo === 'salida');
             
@@ -4178,23 +4047,17 @@
             container.innerHTML = html;
         }
 
-        // Exportar a PDF
         function exportarPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('landscape');
             
-            // Título
             doc.setFontSize(16);
             doc.text('Reporte de Inventario - Artículos de Oficina', 14, 15);
             
-            // Fecha de generación
             doc.setFontSize(10);
             doc.text(`Generado: ${new Date().toLocaleString('es-ES')}`, 14, 23);
             
-            // Estadísticas
             const totalProducts = productos.length;
-            
-            // Calcular unidades totales
             let totalUnidades = 0;
             let lowStockCount = 0;
             
@@ -4215,12 +4078,9 @@
             doc.text(`Productos con stock bajo: ${lowStockCount}`, 14, 47);
             doc.text(`Stock total: ${totalUnidades.toLocaleString()} unidades`, 14, 54);
             
-            // Tabla de productos
             const headers = [['#', 'Código', 'Producto', 'Categoría', 'Stock', 'Unidades Totales', 'Unidad', 'Estado']];
             const data = productos.map(p => {
-                // Obtener número del código
                 const codigoNum = p.codigo.split('-')[1] || p.id;
-                
                 const unidadesTotales = calcularUnidadesTotales(p);
                 const stockMinimoUnidades = p.stockMinimo * (p.unidadesPorMedida || 1);
                 
@@ -4254,13 +4114,10 @@
                 margin: { horizontal: 14 }
             });
             
-            // Guardar PDF
             doc.save(`inventario-oficina-${new Date().toISOString().slice(0,10)}.pdf`);
         }
 
-        // Exportar a Excel
         function exportarExcel() {
-            // Preparar datos de productos
             const productosData = productos.map(p => {
                 const unidadesTotales = calcularUnidadesTotales(p);
                 const stockMinimoUnidades = p.stockMinimo * (p.unidadesPorMedida || 1);
@@ -4274,7 +4131,6 @@
                     estado = 'Stock Alto';
                 }
                 
-                // Obtener número del código
                 const codigoNum = p.codigo.split('-')[1] || p.id;
                 
                 return {
@@ -4293,7 +4149,6 @@
                 };
             });
             
-            // Preparar datos de movimientos
             const movimientosData = movimientos.map(m => {
                 let tipo = '';
                 switch(m.tipo) {
@@ -4314,63 +4169,56 @@
                 }
                 
                 return {
-                    'Fecha y Hora': m.fechaHora || 'N/A',
+                    'Fecha y Hora': m.fechaHora,
                     'Tipo': tipo,
                     'Producto': m.producto,
                     'Cantidad (Unidades)': m.cantidad,
                     'Departamento': m.departamento,
                     'Usuario': m.usuario,
                     'Observaciones': m.observaciones || '',
-                    'Responsable': m.responsable || 'Sistema'
+                    'Responsable': m.responsable
                 };
             });
             
-            // Crear hojas de trabajo
             const wsProductos = XLSX.utils.json_to_sheet(productosData);
             const wsMovimientos = XLSX.utils.json_to_sheet(movimientosData);
             
-            // Ajustar anchos de columna para productos
             const wscolsProductos = [
-                {wch: 5},  // #
-                {wch: 10}, // Código
-                {wch: 30}, // Producto
-                {wch: 12}, // Categoría
-                {wch: 15}, // Stock
-                {wch: 15}, // Unidades Totales
-                {wch: 8},  // Unidad
-                {wch: 15}, // Unidades por Medida
-                {wch: 15}, // Stock Mínimo
-                {wch: 20}, // Stock Mínimo (Unidades)
-                {wch: 12}, // Estado
-                {wch: 40}  // Descripción
+                {wch: 5},
+                {wch: 10},
+                {wch: 30},
+                {wch: 12},
+                {wch: 15},
+                {wch: 15},
+                {wch: 8},
+                {wch: 15},
+                {wch: 15},
+                {wch: 20},
+                {wch: 12},
+                {wch: 40}
             ];
             wsProductos['!cols'] = wscolsProductos;
             
-            // Ajustar anchos de columna para movimientos
             const wscolsMovimientos = [
-                {wch: 20}, // Fecha y Hora
-                {wch: 10}, // Tipo
-                {wch: 25}, // Producto
-                {wch: 15}, // Cantidad (Unidades)
-                {wch: 15}, // Departamento
-                {wch: 20}, // Usuario
-                {wch: 30}, // Observaciones
-                {wch: 15}  // Responsable
+                {wch: 20},
+                {wch: 10},
+                {wch: 25},
+                {wch: 15},
+                {wch: 15},
+                {wch: 20},
+                {wch: 30},
+                {wch: 15}
             ];
             wsMovimientos['!cols'] = wscolsMovimientos;
             
-            // Crear libro de trabajo
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, wsProductos, 'Inventario');
             XLSX.utils.book_append_sheet(wb, wsMovimientos, 'Movimientos');
             
-            // Exportar
             XLSX.writeFile(wb, `inventario-completo-${new Date().toISOString().slice(0,10)}.xlsx`);
         }
 
-        // Exportar inventario actual a Excel
         function exportarInventarioActualExcel() {
-            // Preparar datos de productos actuales
             const productosData = productos.map(p => {
                 const unidadesTotales = calcularUnidadesTotales(p);
                 const stockMinimoUnidades = p.stockMinimo * (p.unidadesPorMedida || 1);
@@ -4411,42 +4259,36 @@
                 };
             });
             
-            // Ordenar por prioridad (URGENTE primero)
             productosData.sort((a, b) => {
                 const prioridadOrden = { 'URGENTE': 1, 'ALTA': 2, 'MEDIA': 3, 'BAJA': 4 };
                 return prioridadOrden[a['Prioridad Reposición']] - prioridadOrden[b['Prioridad Reposición']];
             });
             
-            // Crear hoja de trabajo
             const ws = XLSX.utils.json_to_sheet(productosData);
             
-            // Ajustar anchos de columna
             const wscols = [
-                {wch: 10}, // Código
-                {wch: 30}, // Producto
-                {wch: 12}, // Categoría
-                {wch: 12}, // Stock Actual
-                {wch: 8},  // Unidad
-                {wch: 15}, // Unidades por Medida
-                {wch: 15}, // Unidades Totales
-                {wch: 12}, // Stock Mínimo
-                {wch: 20}, // Stock Mínimo (Unidades)
-                {wch: 15}, // Faltan (Unidades)
-                {wch: 10}, // Estado
-                {wch: 18}, // Prioridad Reposición
-                {wch: 20}  // Última Actualización
+                {wch: 10},
+                {wch: 30},
+                {wch: 12},
+                {wch: 12},
+                {wch: 8},
+                {wch: 15},
+                {wch: 15},
+                {wch: 12},
+                {wch: 20},
+                {wch: 15},
+                {wch: 10},
+                {wch: 18},
+                {wch: 20}
             ];
             ws['!cols'] = wscols;
             
-            // Crear libro de trabajo
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Inventario Actual');
             
-            // Exportar
             XLSX.writeFile(wb, `inventario-actual-${new Date().toISOString().slice(0,10)}.xlsx`);
         }
 
-        // Exportar reporte a Excel
         function exportarReporteExcel() {
             const reportType = document.getElementById('reportType').value;
             let nombreReporte = '';
@@ -4455,7 +4297,6 @@
             if (reportType === 'productos') {
                 nombreReporte = 'Reporte de Productos';
                 
-                // Datos de productos
                 datos = productos.map(p => {
                     const unidades = calcularUnidadesTotales(p);
                     const minimo = p.stockMinimo * (p.unidadesPorMedida || 1);
@@ -4478,13 +4319,11 @@
             } else {
                 nombreReporte = 'Reporte de Movimientos';
                 
-                // Filtrar movimientos según tipo de reporte
                 let movimientosFiltrados = [];
                 if (reportType === 'mensual') {
                     const month = parseInt(document.getElementById('reportMonth').value);
                     const year = parseInt(document.getElementById('reportYear').value);
                     movimientosFiltrados = movimientos.filter(m => {
-                        if (!m.fechaHora) return false;
                         const fecha = new Date(m.fechaHora);
                         return fecha.getMonth() + 1 === month && fecha.getFullYear() === year;
                     });
@@ -4492,7 +4331,6 @@
                 } else if (reportType === 'anual') {
                     const year = parseInt(document.getElementById('reportYear').value);
                     movimientosFiltrados = movimientos.filter(m => {
-                        if (!m.fechaHora) return false;
                         const fecha = new Date(m.fechaHora);
                         return fecha.getFullYear() === year;
                     });
@@ -4501,47 +4339,24 @@
                     movimientosFiltrados = movimientos;
                 }
                 
-                // Datos de movimientos
                 datos = movimientosFiltrados.map(m => {
-                    let tipo = '';
-                    switch(m.tipo) {
-                        case 'entrada':
-                            tipo = 'ENTRADA';
-                            break;
-                        case 'salida':
-                            tipo = 'SALIDA';
-                            break;
-                        case 'ajuste':
-                            tipo = 'AJUSTE';
-                            break;
-                        case 'reposicion':
-                            tipo = 'REPOSICIÓN';
-                            break;
-                        default:
-                            tipo = m.tipo.toUpperCase();
-                    }
-                    
                     return {
-                        'Fecha y Hora': m.fechaHora || 'N/A',
-                        'Tipo': tipo,
+                        'Fecha y Hora': m.fechaHora,
+                        'Tipo': m.tipo.toUpperCase(),
                         'Producto': m.producto,
                         'Cantidad (Unidades)': m.cantidad,
                         'Departamento': m.departamento,
                         'Usuario': m.usuario,
                         'Observaciones': m.observaciones || '',
-                        'Responsable': m.responsable || 'Sistema'
+                        'Responsable': m.responsable
                     };
                 });
             }
             
-            // Crear hoja de trabajo
             const ws = XLSX.utils.json_to_sheet(datos);
-            
-            // Crear libro de trabajo
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Reporte');
             
-            // Exportar
             XLSX.writeFile(wb, `${nombreReporte}-${new Date().toISOString().slice(0,10)}.xlsx`);
         }
     </script>
