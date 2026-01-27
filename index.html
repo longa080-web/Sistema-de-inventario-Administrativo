@@ -9,6 +9,9 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-database-compat.js"></script>
     <style>
         /* ESTILOS (se mantienen igual que en tu archivo original) */
         * {
@@ -864,15 +867,65 @@
         .btn-reposition:hover {
             background-color: #8e44ad;
         }
+
+        /* Loading indicator */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .loading-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
     </style>
 </head>
 <body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading"></div>
+            <p>Cargando datos del inventario...</p>
+        </div>
+    </div>
+
     <div class="container">
         <header>
             <h1><i class="fas fa-boxes"></i> Sistema de Inventario - Artículos de Oficina</h1>
             <div class="header-info">
                 <div class="date-time" id="currentDateTime"></div>
-                <div class="total-products">Productos: <span id="totalProducts">60</span></div>
+                <div class="total-products">Productos: <span id="totalProducts">0</span></div>
+                <div class="connection-status" id="connectionStatus">
+                    <i class="fas fa-circle" style="color: #ccc;"></i>
+                    <span>Conectando...</span>
+                </div>
             </div>
             <div class="stock-alert" id="stockAlert">
                 <i class="fas fa-exclamation-triangle"></i> 
@@ -911,6 +964,9 @@
                     <button class="menu-btn export-btn" id="exportInventoryExcel">
                         <i class="fas fa-file-excel"></i> Inventario Actual
                     </button>
+                    <button class="menu-btn" id="syncData" style="background-color: #9b59b6;">
+                        <i class="fas fa-sync-alt"></i> Sincronizar
+                    </button>
                 </div>
 
                 <div class="stats">
@@ -927,6 +983,10 @@
                         <span>Stock total (unidades):</span>
                         <strong id="totalStock">0</strong>
                     </div>
+                    <div class="stat-item">
+                        <span>Última sincronización:</span>
+                        <small id="lastSync">--:--</small>
+                    </div>
                 </div>
             </div>
 
@@ -938,7 +998,7 @@
                     <div class="dashboard-cards">
                         <div class="dashboard-card">
                             <i class="fas fa-boxes"></i>
-                            <h3 id="dashboardTotalProducts">60</h3>
+                            <h3 id="dashboardTotalProducts">0</h3>
                             <p>Productos en Inventario</p>
                         </div>
                         
@@ -1227,7 +1287,7 @@
                                     <th>Usuario</th>
                                     <th>Observaciones</th>
                                     <th>Responsable</th>
-                                    <th>Acciones</th> <!-- NUEVA COLUMNA -->
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="movimientosTableBody">
@@ -1430,6 +1490,23 @@
 
     <script>
         // =============================================
+        // CONFIGURACIÓN DE FIREBASE
+        // =============================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDDh9GMKi2eOVI1OeuwaBiqlEhjGpphvvk",
+            authDomain: "inventario-administracion.firebaseapp.com",
+            projectId: "inventario-administracion",
+            storageBucket: "inventario-administracion.firebasestorage.app",
+            messagingSenderId: "927319095883",
+            appId: "1:927319095883:web:7c49d3294d1149990d2bce",
+            databaseURL: "https://inventario-administracion-default-rtdb.firebaseio.com/"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // =============================================
         // CORRECCIONES APLICADAS:
         // 1. IDs duplicados corregidos
         // 2. unidadesPorMedida: 0 cambiado a 1
@@ -1438,88 +1515,24 @@
         // 5. Validación mejorada en guardarReposicion
         // 6. Historial de movimientos de prueba ELIMINADO
         // 7. Botones de Editar/Eliminar agregados a movimientos
+        // 8. INTEGRACIÓN CON FIREBASE DATABASE
         // =============================================
 
-        // Datos de productos CORREGIDOS
-        const productosIniciales = [
-            // Papelería
-            { id: 1, codigo: "PAP-001", nombre: "BOLIGRAFOS", categoria: "papeleria", stock: 2, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 24, descripcion: "Bolígrafos de tinta azul, 24 unidades por caja" },
-            { id: 2, codigo: "PAP-002", nombre: "LAPIZ", categoria: "papeleria", stock: 5, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 60, descripcion: "Lápices grafito, 60 unidades por caja" },
-            { id: 3, codigo: "PAP-003", nombre: "CUADERNOS", categoria: "papeleria", stock: 4, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cuadernos profesionales" },
-            { id: 4, codigo: "PAP-004", nombre: "GOMA DE BORRAR", categoria: "papeleria", stock: 3, stockMinimo: 3, unidad: "UND", unidadesPorMedida: 1, descripcion: "Gomas de borrar" },
-            { id: 5, codigo: "PAP-005", nombre: "LIGAS", categoria: "papeleria", stock: 2, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 600, descripcion: "Ligas para oficina, 600 unidades por paquete" },
-            { id: 6, codigo: "PAP-006", nombre: "POS IT", categoria: "papeleria", stock: 3, stockMinimo: 3, unidad: "UND", unidadesPorMedida: 1, descripcion: "Notas adhesivas" },
-            { id: 7, codigo: "PAP-007", nombre: "PEGA EN BARRA", categoria: "papeleria", stock: 2, stockMinimo: 3, unidad: "UND", unidadesPorMedida: 1, descripcion: "Pegamento en barra" },
-            { id: 8, codigo: "PAP-008", nombre: "FUNDAS TRANSPARENTES", categoria: "papeleria", stock: 29, stockMinimo: 5, unidad: "PAQ", unidadesPorMedida: 1, descripcion: "Fundas plásticas transparentes" },
-            { id: 9, codigo: "PAP-009", nombre: "SEPARADORES", categoria: "papeleria", stock: 4, stockMinimo: 3, unidad: "PAQ", unidadesPorMedida: 25, descripcion: "Separadores para archivadores, 25 unidades por paquete" },
-            { id: 10, codigo: "PAP-010", nombre: "CARPETAS OFICIO (MANILA)", categoria: "papeleria", stock: 3, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 300, descripcion: "Carpetas tamaño oficio manila, 300 unidades por paquete" },
-            { id: 11, codigo: "PAP-011", nombre: "CARPETAS CARTA (MANILA)", categoria: "papeleria", stock: 0, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 1, descripcion: "Carpetas tamaño carta manila" }, // CORREGIDO: unidadesPorMedida de 0 a 1
-            { id: 12, codigo: "PAP-012", nombre: "CARPETAS OFICIO (MARRON)", categoria: "papeleria", stock: 11, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 275, descripcion: "Carpetas tamaño oficio marrón, 275 unidades por paquete" },
-            { id: 13, codigo: "PAP-013", nombre: "CARPETAS CARTA (MARRON)", categoria: "papeleria", stock: 0, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 1, descripcion: "Carpetas tamaño carta marrón" }, // CORREGIDO: unidadesPorMedida de 0 a 1
-            { id: 14, codigo: "PAP-014", nombre: "TIRRO DE PAPEL 3/4", categoria: "papeleria", stock: 1, stockMinimo: 5, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cinta adhesiva de papel 3/4\"" },
-            { id: 15, codigo: "PAP-015", nombre: "TIRRO DE PAPEL 1", categoria: "papeleria", stock: 2, stockMinimo: 5, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cinta adhesiva de papel 1\"" },
-            { id: 16, codigo: "PAP-016", nombre: "ROLLO PUNTOS 5CM,07MM X 3CM,09MM", categoria: "papeleria", stock: 12, stockMinimo: 5, unidad: "PAQ", unidadesPorMedida: 1, descripcion: "Rollos de puntos adhesivos" },
-            { id: 17, codigo: "PAP-017", nombre: "ROLLOS PUNTO 80MM X 35MM", categoria: "papeleria", stock: 5, stockMinimo: 2, unidad: "PAQ", unidadesPorMedida: 1, descripcion: "Rollos de puntos adhesivos grandes" },
-            { id: 18, codigo: "PAP-018", nombre: "HOJAS BLANCAS T/CARTA", categoria: "papeleria", stock: 3, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 30, descripcion: "Hojas tamaño carta, 30 resmas por caja" },
-            { id: 19, codigo: "PAP-019", nombre: "HOJAS BLANCAS T/OFICIO", categoria: "papeleria", stock: 0, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Hojas tamaño oficio" }, // CORREGIDO: unidadesPorMedida de 0 a 1
-            { id: 20, codigo: "PAP-020", nombre: "SOBRES T/CARTA", categoria: "papeleria", stock: 4, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 200, descripcion: "Sobres tamaño carta, 200 unidades por paquete" },
-            { id: 21, codigo: "PAP-021", nombre: "SOBRES T/OFICIO", categoria: "papeleria", stock: 2, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 100, descripcion: "Sobres tamaño oficio, 100 unidades por paquete" },
-            { id: 22, codigo: "PAP-022", nombre: "SOBRES T/EXTRAOFICIO", categoria: "papeleria", stock: 1, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 50, descripcion: "Sobres tamaño extraoficio, 50 unidades por paquete" },
-            
-            // Artículos de Oficina
-            { id: 23, codigo: "OFI-001", nombre: "MARCADOR PERMANENTE P/GRUESA", categoria: "oficina", stock: 11, stockMinimo: 3, unidad: "UND", unidadesPorMedida: 1, descripcion: "Marcador permanente punta gruesa" },
-            { id: 24, codigo: "OFI-002", nombre: "MARCADORES SHARPIE P/FINA", categoria: "oficina", stock: 5, stockMinimo: 2, unidad: "UND", unidadesPorMedida: 1, descripcion: "Marcadores Sharpie punta fina" },
-            { id: 25, codigo: "OFI-003", nombre: "TIJERAS", categoria: "oficina", stock: 4, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Tijeras de oficina" },
-            { id: 26, codigo: "OFI-004", nombre: "RESALTADORES", categoria: "oficina", stock: 11, stockMinimo: 4, unidad: "UND", unidadesPorMedida: 1, descripcion: "Resaltadores de colores" },
-            { id: 27, codigo: "OFI-005", nombre: "ENGRAPADORAS", categoria: "oficina", stock: 3, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Engrapadoras de oficina" },
-            { id: 28, codigo: "OFI-006", nombre: "MARCADOR DE PIZARRA", categoria: "oficina", stock: 3, stockMinimo: 3, unidad: "UND", unidadesPorMedida: 1, descripcion: "Marcadores para pizarra" },
-            { id: 29, codigo: "OFI-007", nombre: "GRAPAS USO PESADO", categoria: "oficina", stock: 1, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 900, descripcion: "Grapas para uso pesado, 900 unidades por caja" },
-            { id: 30, codigo: "OFI-008", nombre: "REGLAS", categoria: "oficina", stock: 1, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Reglas de 30 cm" },
-            { id: 31, codigo: "OFI-009", nombre: "TIRRO DE EMBALAR", categoria: "oficina", stock: 9, stockMinimo: 4, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cinta de embalar" },
-            { id: 32, codigo: "OFI-010", nombre: "CELOVEN", categoria: "oficina", stock: 12, stockMinimo: 4, unidad: "UND", unidadesPorMedida: 1, descripcion: "Celoven" },
-            { id: 33, codigo: "OFI-011", nombre: "GRAPAS LISAS", categoria: "oficina", stock: 3, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 15000, descripcion: "Grapas lisas estándar, 15,000 unidades por caja" },
-            { id: 34, codigo: "OFI-012", nombre: "GRAPAS CURRUGADAS", categoria: "oficina", stock: 2, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 5000, descripcion: "Grapas corrugadas, 5,000 unidades por caja" },
-            { id: 35, codigo: "OFI-013", nombre: "BLINDER CLIPS", categoria: "oficina", stock: 1, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 11, descripcion: "Clips binder, 11 unidades por caja" },
-            { id: 36, codigo: "OFI-014", nombre: "CLIPS", categoria: "oficina", stock: 4, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 1, descripcion: "Clips metálicos" },
-            { id: 37, codigo: "OFI-015", nombre: "EXACTO", categoria: "oficina", stock: 1, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cuchillo exacto" },
-            { id: 38, codigo: "OFI-016", nombre: "CLIPS MARIPOSA", categoria: "oficina", stock: 30, stockMinimo: 5, unidad: "CAJAS", unidadesPorMedida: 1, descripcion: "Clips mariposa" },
-            { id: 39, codigo: "OFI-017", nombre: "ABRE HUECOS", categoria: "oficina", stock: 3, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Perforador de papel" },
-            
-            // Toner
-            { id: 40, codigo: "TON-001", nombre: "TONER 105 A", categoria: "toner", stock: 4, stockMinimo: 2, unidad: "UND", unidadesPorMedida: 1, descripcion: "Toner 105A para impresora" },
-            { id: 41, codigo: "TON-002", nombre: "TONER 151 A", categoria: "toner", stock: 3, stockMinimo: 2, unidad: "UND", unidadesPorMedida: 1, descripcion: "Toner 151A para impresora" },
-            { id: 42, codigo: "TON-003", nombre: "TONER 42 A", categoria: "toner", stock: 2, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Toner 42A para impresora" },
-            { id: 43, codigo: "TON-004", nombre: "TONER 12 A", categoria: "toner", stock: 2, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Toner 12A para impresora" },
-            { id: 44, codigo: "TON-005", nombre: "TONER GPR22", categoria: "toner", stock: 1, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Toner GPR22 para impresora" },
-            
-            // Electrónica
-            { id: 45, codigo: "ELE-001", nombre: "PILAS AA RECARGABLES", categoria: "electronica", stock: 4, stockMinimo: 8, unidad: "UND", unidadesPorMedida: 1, descripcion: "Pilas AA recargables" },
-            { id: 46, codigo: "ELE-002", nombre: "PILAS AA", categoria: "electronica", stock: 46, stockMinimo: 8, unidad: "UND", unidadesPorMedida: 1, descripcion: "Pilas AA estándar" },
-            { id: 47, codigo: "ELE-003", nombre: "PILAS AAA", categoria: "electronica", stock: 19, stockMinimo: 8, unidad: "UND", unidadesPorMedida: 1, descripcion: "Pilas AAA" },
-            
-            // Materiales de Limpieza
-            { id: 48, codigo: "LIM-001", nombre: "BULTOS PAPEL JUMBO", categoria: "limpieza", stock: 1, stockMinimo: 5, unidad: "PAQ", unidadesPorMedida: 4, descripcion: "Papel jumbo para limpieza" },
-            { id: 49, codigo: "LIM-002", nombre: "BULTOS PAPEL SECANTE", categoria: "limpieza", stock: 6, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 6, descripcion: "Papel secante" },
-            { id: 50, codigo: "LIM-003", nombre: "PAQ VASOS V-5", categoria: "limpieza", stock: 3, stockMinimo: 2, unidad: "PAQ", unidadesPorMedida: 100, descripcion: "Vasos desechables V-5" },
-            { id: 51, codigo: "LIM-004", nombre: "PAQ VASOS V-8", categoria: "limpieza", stock: 18, stockMinimo: 2, unidad: "PAQ", unidadesPorMedida: 50, descripcion: "Vasos desechables V-8" },
-            { id: 52, codigo: "LIM-005", nombre: "SERVILLETAS", categoria: "limpieza", stock: 14, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 14, descripcion: "Servilletas" },
-            { id: 53, codigo: "LIM-006", nombre: "GUANTES DE GOMA (TALLA S)", categoria: "limpieza", stock: 2, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Guantes de goma talla S" },
-            { id: 54, codigo: "LIM-007", nombre: "GALONES DE JABON MULTIUSO", categoria: "limpieza", stock: 5, stockMinimo: 3, unidad: "GALON", unidadesPorMedida: 1, descripcion: "Jabón multiuso" },
-            { id: 55, codigo: "LIM-008", nombre: "PALAS", categoria: "limpieza", stock: 1, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Palas para limpieza" },
-            { id: 56, codigo: "LIM-009", nombre: "CEPILLO PARA BARRER", categoria: "limpieza", stock: 2, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cepillo para barrer" },
-            { id: 57, codigo: "LIM-010", nombre: "ESPONJA DOBLE USO", categoria: "limpieza", stock: 16, stockMinimo: 2, unidad: "UND", unidadesPorMedida: 1, descripcion: "Esponja doble uso" },
-            { id: 58, codigo: "LIM-011", nombre: "MOPAS", categoria: "limpieza", stock: 8, stockMinimo: 2, unidad: "UND", unidadesPorMedida: 1, descripcion: "Mopas para limpieza" },
-            { id: 59, codigo: "LIM-012", nombre: "COLETOS", categoria: "limpieza", stock: 2, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Coletos" },
-            { id: 60, codigo: "LIM-013", nombre: "VENSOL", categoria: "limpieza", stock: 1, stockMinimo: 1, unidad: "LT", unidadesPorMedida: 1, descripcion: "Vensol limpiador" }
-        ];
+        // Variables globales
+        let productos = [];
+        let movimientos = [];
+        let currentEditId = null;
+        let currentAdjustId = null;
+        let currentMovEditId = null;
+        let categoryChartInstance = null;
+        let deptChartInstance = null;
+        let topProductsChartInstance = null;
+        let isInitialLoad = true;
 
-        // Movimientos iniciales - AHORA VACÍO (eliminados datos de prueba)
-        const movimientosIniciales = [];
-
-        // Departamentos disponibles (CORREGIDO: "Tesoreria" a "Tesorería")
+        // Departamentos disponibles
         const departamentos = [
             "Administración",
-            "Tesorería", // CORREGIDO
+            "Tesorería",
             "RRHH",
             "Flota",
             "Almacén",
@@ -1540,17 +1553,307 @@
             "Backbone"
         ];
 
-        // Variables globales
-        let productos = [...productosIniciales];
-        let movimientos = [...movimientosIniciales];
-        let currentEditId = null;
-        let currentAdjustId = null;
-        let currentMovEditId = null; // Para edición de movimientos
-        let nextProductId = 61; // Siguiente ID disponible
-        let nextMovimientoId = 1; // Comienza en 1
-        let categoryChartInstance = null;
-        let deptChartInstance = null;
-        let topProductsChartInstance = null;
+        // =============================================
+        // FUNCIONES FIREBASE
+        // =============================================
+
+        // Mostrar/ocultar loading
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        // Actualizar estado de conexión
+        function updateConnectionStatus(connected) {
+            const statusElement = document.getElementById('connectionStatus');
+            const icon = statusElement.querySelector('i');
+            const text = statusElement.querySelector('span');
+            
+            if (connected) {
+                icon.style.color = '#27ae60';
+                text.textContent = 'Conectado';
+            } else {
+                icon.style.color = '#e74c3c';
+                text.textContent = 'Desconectado';
+            }
+        }
+
+        // Configurar listeners de Firebase para cambios en tiempo real
+        function setupFirebaseListeners() {
+            // Listener para productos
+            const productosRef = database.ref('productos');
+            productosRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                productos = data ? Object.values(data) : [];
+                
+                // Asignar IDs basados en las claves de Firebase
+                if (data) {
+                    const keys = Object.keys(data);
+                    productos.forEach((producto, index) => {
+                        producto.firebaseKey = keys[index];
+                    });
+                }
+                
+                // Actualizar UI
+                if (!isInitialLoad) {
+                    actualizarTablaInventario();
+                    cargarProductosAsignacion();
+                    actualizarEstadisticas();
+                    actualizarDashboard();
+                    verificarStockBajo();
+                }
+                
+                console.log('Productos actualizados desde Firebase:', productos.length);
+            });
+
+            // Listener para movimientos
+            const movimientosRef = database.ref('movimientos');
+            movimientosRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                movimientos = data ? Object.values(data) : [];
+                
+                // Asignar IDs basados en las claves de Firebase
+                if (data) {
+                    const keys = Object.keys(data);
+                    movimientos.forEach((movimiento, index) => {
+                        movimiento.firebaseKey = keys[index];
+                    });
+                }
+                
+                // Actualizar UI
+                if (!isInitialLoad) {
+                    actualizarTablaMovimientos();
+                    actualizarEstadisticas();
+                    actualizarDashboard();
+                }
+                
+                console.log('Movimientos actualizados desde Firebase:', movimientos.length);
+            });
+
+            // Listener para estado de conexión
+            const connectedRef = database.ref('.info/connected');
+            connectedRef.on('value', (snapshot) => {
+                updateConnectionStatus(snapshot.val() === true);
+            });
+        }
+
+        // Guardar producto en Firebase
+        async function guardarProductoFirebase(producto) {
+            try {
+                const productosRef = database.ref('productos');
+                const newProductRef = productosRef.push();
+                await newProductRef.set(producto);
+                return newProductRef.key;
+            } catch (error) {
+                console.error('Error al guardar producto en Firebase:', error);
+                throw error;
+            }
+        }
+
+        // Actualizar producto en Firebase
+        async function actualizarProductoFirebase(key, producto) {
+            try {
+                const productoRef = database.ref('productos/' + key);
+                await productoRef.update(producto);
+                return true;
+            } catch (error) {
+                console.error('Error al actualizar producto en Firebase:', error);
+                throw error;
+            }
+        }
+
+        // Eliminar producto de Firebase
+        async function eliminarProductoFirebase(key) {
+            try {
+                const productoRef = database.ref('productos/' + key);
+                await productoRef.remove();
+                return true;
+            } catch (error) {
+                console.error('Error al eliminar producto de Firebase:', error);
+                throw error;
+            }
+        }
+
+        // Guardar movimiento en Firebase
+        async function guardarMovimientoFirebase(movimiento) {
+            try {
+                const movimientosRef = database.ref('movimientos');
+                const newMovimientoRef = movimientosRef.push();
+                await newMovimientoRef.set(movimiento);
+                return newMovimientoRef.key;
+            } catch (error) {
+                console.error('Error al guardar movimiento en Firebase:', error);
+                throw error;
+            }
+        }
+
+        // Actualizar movimiento en Firebase
+        async function actualizarMovimientoFirebase(key, movimiento) {
+            try {
+                const movimientoRef = database.ref('movimientos/' + key);
+                await movimientoRef.update(movimiento);
+                return true;
+            } catch (error) {
+                console.error('Error al actualizar movimiento en Firebase:', error);
+                throw error;
+            }
+        }
+
+        // Eliminar movimiento de Firebase
+        async function eliminarMovimientoFirebase(key) {
+            try {
+                const movimientoRef = database.ref('movimientos/' + key);
+                await movimientoRef.remove();
+                return true;
+            } catch (error) {
+                console.error('Error al eliminar movimiento de Firebase:', error);
+                throw error;
+            }
+        }
+
+        // Cargar datos iniciales desde Firebase
+        async function cargarDatosIniciales() {
+            showLoading();
+            try {
+                // Cargar productos
+                const productosSnapshot = await database.ref('productos').once('value');
+                const productosData = productosSnapshot.val();
+                
+                if (productosData) {
+                    productos = Object.values(productosData);
+                    const keys = Object.keys(productosData);
+                    productos.forEach((producto, index) => {
+                        producto.firebaseKey = keys[index];
+                    });
+                } else {
+                    // Si no hay datos, cargar datos iniciales
+                    await cargarDatosInicialesFirebase();
+                }
+
+                // Cargar movimientos
+                const movimientosSnapshot = await database.ref('movimientos').once('value');
+                const movimientosData = movimientosSnapshot.val();
+                
+                if (movimientosData) {
+                    movimientos = Object.values(movimientosData);
+                    const keys = Object.keys(movimientosData);
+                    movimientos.forEach((movimiento, index) => {
+                        movimiento.firebaseKey = keys[index];
+                    });
+                }
+
+                console.log('Datos cargados desde Firebase');
+                console.log('Productos:', productos.length);
+                console.log('Movimientos:', movimientos.length);
+
+                // Actualizar última sincronización
+                const now = new Date();
+                document.getElementById('lastSync').textContent = 
+                    now.getHours().toString().padStart(2, '0') + ':' + 
+                    now.getMinutes().toString().padStart(2, '0');
+
+                return true;
+            } catch (error) {
+                console.error('Error al cargar datos iniciales:', error);
+                alert('Error al cargar datos desde Firebase. Por favor, recargue la página.');
+                return false;
+            } finally {
+                hideLoading();
+                isInitialLoad = false;
+            }
+        }
+
+        // Cargar datos iniciales en Firebase si está vacío
+        async function cargarDatosInicialesFirebase() {
+            try {
+                const productosIniciales = [
+                    // Papelería
+                    { codigo: "PAP-001", nombre: "BOLIGRAFOS", categoria: "papeleria", stock: 2, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 24, descripcion: "Bolígrafos de tinta azul, 24 unidades por caja", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "PAP-002", nombre: "LAPIZ", categoria: "papeleria", stock: 5, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 60, descripcion: "Lápices grafito, 60 unidades por caja", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "PAP-003", nombre: "CUADERNOS", categoria: "papeleria", stock: 4, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cuadernos profesionales", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "PAP-004", nombre: "GOMA DE BORRAR", categoria: "papeleria", stock: 3, stockMinimo: 3, unidad: "UND", unidadesPorMedida: 1, descripcion: "Gomas de borrar", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "PAP-005", nombre: "LIGAS", categoria: "papeleria", stock: 2, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 600, descripcion: "Ligas para oficina, 600 unidades por paquete", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "PAP-006", nombre: "POS IT", categoria: "papeleria", stock: 3, stockMinimo: 3, unidad: "UND", unidadesPorMedida: 1, descripcion: "Notas adhesivas", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "PAP-007", nombre: "PEGA EN BARRA", categoria: "papeleria", stock: 2, stockMinimo: 3, unidad: "UND", unidadesPorMedida: 1, descripcion: "Pegamento en barra", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "PAP-008", nombre: "FUNDAS TRANSPARENTES", categoria: "papeleria", stock: 29, stockMinimo: 5, unidad: "PAQ", unidadesPorMedida: 1, descripcion: "Fundas plásticas transparentes", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "PAP-009", nombre: "SEPARADORES", categoria: "papeleria", stock: 4, stockMinimo: 3, unidad: "PAQ", unidadesPorMedida: 25, descripcion: "Separadores para archivadores, 25 unidades por paquete", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "PAP-010", nombre: "CARPETAS OFICIO (MANILA)", categoria: "papeleria", stock: 3, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 300, descripcion: "Carpetas tamaño oficio manila, 300 unidades por paquete", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "PAP-011", nombre: "CARPETAS CARTA (MANILA)", categoria: "papeleria", stock: 0, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 1, descripcion: "Carpetas tamaño carta manila", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "PAP-012", nombre: "CARPETAS OFICIO (MARRON)", categoria: "papeleria", stock: 11, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 275, descripcion: "Carpetas tamaño oficio marrón, 275 unidades por paquete", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "PAP-013", nombre: "CARPETAS CARTA (MARRON)", categoria: "papeleria", stock: 0, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 1, descripcion: "Carpetas tamaño carta marrón", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "PAP-014", nombre: "TIRRO DE PAPEL 3/4", categoria: "papeleria", stock: 1, stockMinimo: 5, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cinta adhesiva de papel 3/4\"", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "PAP-015", nombre: "TIRRO DE PAPEL 1", categoria: "papeleria", stock: 2, stockMinimo: 5, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cinta adhesiva de papel 1\"", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "PAP-016", nombre: "ROLLO PUNTOS 5CM,07MM X 3CM,09MM", categoria: "papeleria", stock: 12, stockMinimo: 5, unidad: "PAQ", unidadesPorMedida: 1, descripcion: "Rollos de puntos adhesivos", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "PAP-017", nombre: "ROLLOS PUNTO 80MM X 35MM", categoria: "papeleria", stock: 5, stockMinimo: 2, unidad: "PAQ", unidadesPorMedida: 1, descripcion: "Rollos de puntos adhesivos grandes", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "PAP-018", nombre: "HOJAS BLANCAS T/CARTA", categoria: "papeleria", stock: 3, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 30, descripcion: "Hojas tamaño carta, 30 resmas por caja", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "PAP-019", nombre: "HOJAS BLANCAS T/OFICIO", categoria: "papeleria", stock: 0, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Hojas tamaño oficio", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "PAP-020", nombre: "SOBRES T/CARTA", categoria: "papeleria", stock: 4, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 200, descripcion: "Sobres tamaño carta, 200 unidades por paquete", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "PAP-021", nombre: "SOBRES T/OFICIO", categoria: "papeleria", stock: 2, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 100, descripcion: "Sobres tamaño oficio, 100 unidades por paquete", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "PAP-022", nombre: "SOBRES T/EXTRAOFICIO", categoria: "papeleria", stock: 1, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 50, descripcion: "Sobres tamaño extraoficio, 50 unidades por paquete", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    
+                    // Artículos de Oficina
+                    { codigo: "OFI-001", nombre: "MARCADOR PERMANENTE P/GRUESA", categoria: "oficina", stock: 11, stockMinimo: 3, unidad: "UND", unidadesPorMedida: 1, descripcion: "Marcador permanente punta gruesa", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "OFI-002", nombre: "MARCADORES SHARPIE P/FINA", categoria: "oficina", stock: 5, stockMinimo: 2, unidad: "UND", unidadesPorMedida: 1, descripcion: "Marcadores Sharpie punta fina", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "OFI-003", nombre: "TIJERAS", categoria: "oficina", stock: 4, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Tijeras de oficina", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "OFI-004", nombre: "RESALTADORES", categoria: "oficina", stock: 11, stockMinimo: 4, unidad: "UND", unidadesPorMedida: 1, descripcion: "Resaltadores de colores", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "OFI-005", nombre: "ENGRAPADORAS", categoria: "oficina", stock: 3, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Engrapadoras de oficina", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "OFI-006", nombre: "MARCADOR DE PIZARRA", categoria: "oficina", stock: 3, stockMinimo: 3, unidad: "UND", unidadesPorMedida: 1, descripcion: "Marcadores para pizarra", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "OFI-007", nombre: "GRAPAS USO PESADO", categoria: "oficina", stock: 1, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 900, descripcion: "Grapas para uso pesado, 900 unidades por caja", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "OFI-008", nombre: "REGLAS", categoria: "oficina", stock: 1, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Reglas de 30 cm", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "OFI-009", nombre: "TIRRO DE EMBALAR", categoria: "oficina", stock: 9, stockMinimo: 4, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cinta de embalar", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "OFI-010", nombre: "CELOVEN", categoria: "oficina", stock: 12, stockMinimo: 4, unidad: "UND", unidadesPorMedida: 1, descripcion: "Celoven", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "OFI-011", nombre: "GRAPAS LISAS", categoria: "oficina", stock: 3, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 15000, descripcion: "Grapas lisas estándar, 15,000 unidades por caja", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "OFI-012", nombre: "GRAPAS CURRUGADAS", categoria: "oficina", stock: 2, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 5000, descripcion: "Grapas corrugadas, 5,000 unidades por caja", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "OFI-013", nombre: "BLINDER CLIPS", categoria: "oficina", stock: 1, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 11, descripcion: "Clips binder, 11 unidades por caja", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "OFI-014", nombre: "CLIPS", categoria: "oficina", stock: 4, stockMinimo: 1, unidad: "CAJAS", unidadesPorMedida: 1, descripcion: "Clips metálicos", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "OFI-015", nombre: "EXACTO", categoria: "oficina", stock: 1, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cuchillo exacto", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "OFI-016", nombre: "CLIPS MARIPOSA", categoria: "oficina", stock: 30, stockMinimo: 5, unidad: "CAJAS", unidadesPorMedida: 1, descripcion: "Clips mariposa", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "OFI-017", nombre: "ABRE HUECOS", categoria: "oficina", stock: 3, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Perforador de papel", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    
+                    // Toner
+                    { codigo: "TON-001", nombre: "TONER 105 A", categoria: "toner", stock: 4, stockMinimo: 2, unidad: "UND", unidadesPorMedida: 1, descripcion: "Toner 105A para impresora", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "TON-002", nombre: "TONER 151 A", categoria: "toner", stock: 3, stockMinimo: 2, unidad: "UND", unidadesPorMedida: 1, descripcion: "Toner 151A para impresora", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "TON-003", nombre: "TONER 42 A", categoria: "toner", stock: 2, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Toner 42A para impresora", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "TON-004", nombre: "TONER 12 A", categoria: "toner", stock: 2, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Toner 12A para impresora", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "TON-005", nombre: "TONER GPR22", categoria: "toner", stock: 1, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Toner GPR22 para impresora", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    
+                    // Electrónica
+                    { codigo: "ELE-001", nombre: "PILAS AA RECARGABLES", categoria: "electronica", stock: 4, stockMinimo: 8, unidad: "UND", unidadesPorMedida: 1, descripcion: "Pilas AA recargables", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "ELE-002", nombre: "PILAS AA", categoria: "electronica", stock: 46, stockMinimo: 8, unidad: "UND", unidadesPorMedida: 1, descripcion: "Pilas AA estándar", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "ELE-003", nombre: "PILAS AAA", categoria: "electronica", stock: 19, stockMinimo: 8, unidad: "UND", unidadesPorMedida: 1, descripcion: "Pilas AAA", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    
+                    // Materiales de Limpieza
+                    { codigo: "LIM-001", nombre: "BULTOS PAPEL JUMBO", categoria: "limpieza", stock: 1, stockMinimo: 5, unidad: "PAQ", unidadesPorMedida: 4, descripcion: "Papel jumbo para limpieza", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "LIM-002", nombre: "BULTOS PAPEL SECANTE", categoria: "limpieza", stock: 6, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 6, descripcion: "Papel secante", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "LIM-003", nombre: "PAQ VASOS V-5", categoria: "limpieza", stock: 3, stockMinimo: 2, unidad: "PAQ", unidadesPorMedida: 100, descripcion: "Vasos desechables V-5", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "LIM-004", nombre: "PAQ VASOS V-8", categoria: "limpieza", stock: 18, stockMinimo: 2, unidad: "PAQ", unidadesPorMedida: 50, descripcion: "Vasos desechables V-8", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "LIM-005", nombre: "SERVILLETAS", categoria: "limpieza", stock: 14, stockMinimo: 1, unidad: "PAQ", unidadesPorMedida: 14, descripcion: "Servilletas", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "LIM-006", nombre: "GUANTES DE GOMA (TALLA S)", categoria: "limpieza", stock: 2, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Guantes de goma talla S", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "LIM-007", nombre: "GALONES DE JABON MULTIUSO", categoria: "limpieza", stock: 5, stockMinimo: 3, unidad: "GALON", unidadesPorMedida: 1, descripcion: "Jabón multiuso", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "LIM-008", nombre: "PALAS", categoria: "limpieza", stock: 1, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Palas para limpieza", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "LIM-009", nombre: "CEPILLO PARA BARRER", categoria: "limpieza", stock: 2, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Cepillo para barrer", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "LIM-010", nombre: "ESPONJA DOBLE USO", categoria: "limpieza", stock: 16, stockMinimo: 2, unidad: "UND", unidadesPorMedida: 1, descripcion: "Esponja doble uso", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "LIM-011", nombre: "MOPAS", categoria: "limpieza", stock: 8, stockMinimo: 2, unidad: "UND", unidadesPorMedida: 1, descripcion: "Mopas para limpieza", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "LIM-012", nombre: "COLETOS", categoria: "limpieza", stock: 2, stockMinimo: 1, unidad: "UND", unidadesPorMedida: 1, descripcion: "Coletos", fechaRegistro: new Date().toISOString().split('T')[0] },
+                    { codigo: "LIM-013", nombre: "VENSOL", categoria: "limpieza", stock: 1, stockMinimo: 1, unidad: "LT", unidadesPorMedida: 1, descripcion: "Vensol limpiador", fechaRegistro: new Date().toISOString().split('T')[0] }
+                ];
+
+                // Guardar productos iniciales
+                const productosRef = database.ref('productos');
+                for (const producto of productosIniciales) {
+                    await productosRef.push().set(producto);
+                }
+
+                console.log('Datos iniciales cargados en Firebase');
+                return true;
+            } catch (error) {
+                console.error('Error al cargar datos iniciales en Firebase:', error);
+                throw error;
+            }
+        }
 
         // =============================================
         // FUNCIONES CORREGIDAS
@@ -1563,9 +1866,8 @@
 
         function calcularStockDesdeUnidades(producto, unidadesTotales) {
             if (producto.unidadesPorMedida === 0 || producto.unidadesPorMedida === undefined) {
-                // CORRECCIÓN: Evitar división por cero
                 console.warn(`Producto ${producto.nombre} tiene unidadesPorMedida = 0, usando 1 como valor por defecto`);
-                return unidadesTotales; // Si no hay conversión, cada unidad es 1
+                return unidadesTotales;
             }
             return unidadesTotales / producto.unidadesPorMedida;
         }
@@ -1578,22 +1880,36 @@
         }
 
         // Inicialización cuando el DOM esté listo
-        document.addEventListener('DOMContentLoaded', function() {
-            inicializarSistema();
-            actualizarFechaHora();
-            setInterval(actualizarFechaHora, 1000);
-            
-            // Generar meses y años para reportes
-            generarOpcionesFechaReporte();
-            
-            // Generar reporte inicial
-            generarReporteMensual();
-            
-            // Configurar eventos
-            configurarEventos();
-            
-            // Verificar stock bajo
-            verificarStockBajo();
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Configurar listeners de Firebase
+                setupFirebaseListeners();
+                
+                // Cargar datos iniciales
+                await cargarDatosIniciales();
+                
+                // Inicializar sistema
+                inicializarSistema();
+                actualizarFechaHora();
+                setInterval(actualizarFechaHora, 1000);
+                
+                // Generar meses y años para reportes
+                generarOpcionesFechaReporte();
+                
+                // Generar reporte inicial
+                generarReporteMensual();
+                
+                // Configurar eventos
+                configurarEventos();
+                
+                // Verificar stock bajo
+                verificarStockBajo();
+                
+                console.log('Sistema inicializado correctamente');
+            } catch (error) {
+                console.error('Error al inicializar el sistema:', error);
+                alert('Error al inicializar el sistema. Por favor, recargue la página.');
+            }
         });
 
         // Inicializar el sistema
@@ -1681,22 +1997,28 @@
             });
             
             // Formulario de nuevo producto
-            document.getElementById('nuevoProductoForm').addEventListener('submit', guardarProducto);
+            document.getElementById('nuevoProductoForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                guardarProducto();
+            });
             
-            // Botón de reposición - CORREGIDO: validación mejorada
+            // Botón de reposición
             document.getElementById('repositionBtn').addEventListener('click', function(e) {
                 e.preventDefault();
                 guardarReposicion();
             });
             
             // Formulario de asignación
-            document.getElementById('asignacionForm').addEventListener('submit', registrarAsignacion);
+            document.getElementById('asignacionForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                registrarAsignacion();
+            });
             
             // Select de producto en asignación
             document.getElementById('productoAsignar').addEventListener('change', function() {
                 const productoId = this.value;
                 if (productoId) {
-                    const producto = productos.find(p => p.id == productoId);
+                    const producto = productos.find(p => p.firebaseKey === productoId);
                     if (producto) {
                         const unidadesTotales = calcularUnidadesTotales(producto);
                         document.getElementById('stockDisponible').value = `${unidadesTotales} unidades`;
@@ -1757,6 +2079,19 @@
             document.getElementById('exportPdf').addEventListener('click', exportarPDF);
             document.getElementById('exportExcel').addEventListener('click', exportarExcel);
             document.getElementById('exportInventoryExcel').addEventListener('click', exportarInventarioActualExcel);
+            
+            // Botón sincronizar
+            document.getElementById('syncData').addEventListener('click', async function() {
+                showLoading();
+                try {
+                    await cargarDatosIniciales();
+                    alert('Datos sincronizados correctamente');
+                } catch (error) {
+                    alert('Error al sincronizar datos: ' + error.message);
+                } finally {
+                    hideLoading();
+                }
+            });
             
             // Modal - cerrar
             document.querySelectorAll('.close-modal').forEach(btn => {
@@ -1834,8 +2169,8 @@
             }
         }
 
-        // Guardar reposición de producto existente - CORREGIDO con validación
-        function guardarReposicion() {
+        // Guardar reposición de producto existente
+        async function guardarReposicion() {
             const codigo = document.getElementById('codigoProducto').value.trim();
             const cantidad = parseInt(document.getElementById('stockInicial').value);
             const motivo = document.getElementById('descripcionProducto').value.trim();
@@ -1845,15 +2180,13 @@
                 return;
             }
             
-            const productoIndex = productos.findIndex(p => p.codigo === codigo);
-            if (productoIndex === -1) {
+            const producto = productos.find(p => p.codigo === codigo);
+            if (!producto) {
                 alert('Producto no encontrado');
                 return;
             }
             
-            const producto = productos[productoIndex];
-            
-            // CORRECCIÓN: Validar unidadesPorMedida
+            // Validar unidadesPorMedida
             if (!producto.unidadesPorMedida || producto.unidadesPorMedida <= 0) {
                 alert('Error: El producto tiene una configuración de unidades inválida. Por favor edite el producto primero.');
                 return;
@@ -1862,54 +2195,54 @@
             const unidadesAAgregar = cantidad * producto.unidadesPorMedida;
             
             // Actualizar stock
-            productos[productoIndex].stock += cantidad;
+            producto.stock += cantidad;
             
-            // Registrar movimiento de reposición
-            const nuevoMovimiento = {
-                id: nextMovimientoId++,
-                fechaHora: formatearFechaHora(),
-                tipo: "reposicion",
-                productoId: producto.id,
-                producto: producto.nombre,
-                cantidad: unidadesAAgregar,
-                departamento: "Almacén",
-                usuario: "N/A",
-                observaciones: motivo || `Reposición de ${cantidad} ${producto.unidad}`,
-                responsable: "Admin Sistema"
-            };
-            
-            movimientos.push(nuevoMovimiento);
-            
-            // Actualizar interfaz
-            actualizarTablaInventario();
-            actualizarTablaMovimientos();
-            cargarProductosAsignacion();
-            actualizarEstadisticas();
-            actualizarDashboard();
-            verificarStockBajo();
-            
-            // Mostrar mensaje de éxito
-            const nuevasUnidades = calcularUnidadesTotales(productos[productoIndex]);
-            alert(`Reposición registrada exitosamente. Se agregaron ${unidadesAAgregar} unidades. Nuevo stock: ${nuevasUnidades} unidades`);
-            
-            // Limpiar formulario
-            document.getElementById('nuevoProductoForm').reset();
-            document.getElementById('saveProductBtn').style.display = 'block';
-            document.getElementById('repositionBtn').style.display = 'none';
-            
-            // Establecer valores por defecto
-            document.getElementById('stockMinimo').value = "5";
-            document.getElementById('unidadesPorMedida').value = "1";
+            try {
+                // Actualizar en Firebase
+                await actualizarProductoFirebase(producto.firebaseKey, producto);
+                
+                // Registrar movimiento de reposición
+                const nuevoMovimiento = {
+                    fechaHora: formatearFechaHora(),
+                    tipo: "reposicion",
+                    productoId: producto.firebaseKey,
+                    producto: producto.nombre,
+                    cantidad: unidadesAAgregar,
+                    departamento: "Almacén",
+                    usuario: "N/A",
+                    observaciones: motivo || `Reposición de ${cantidad} ${producto.unidad}`,
+                    responsable: "Admin Sistema"
+                };
+                
+                await guardarMovimientoFirebase(nuevoMovimiento);
+                
+                // Mostrar mensaje de éxito
+                const nuevasUnidades = calcularUnidadesTotales(producto);
+                alert(`Reposición registrada exitosamente. Se agregaron ${unidadesAAgregar} unidades. Nuevo stock: ${nuevasUnidades} unidades`);
+                
+                // Limpiar formulario
+                document.getElementById('nuevoProductoForm').reset();
+                document.getElementById('saveProductBtn').style.display = 'block';
+                document.getElementById('repositionBtn').style.display = 'none';
+                
+                // Establecer valores por defecto
+                document.getElementById('stockMinimo').value = "5";
+                document.getElementById('unidadesPorMedida').value = "1";
+                
+            } catch (error) {
+                console.error('Error al guardar reposición:', error);
+                alert('Error al guardar la reposición. Por favor, intente nuevamente.');
+            }
         }
 
         // Calcular equivalencia en asignación
         function calcularEquivalenciaAsignacion() {
-            const productoId = document.getElementById('productoAsignar').value;
+            const productoKey = document.getElementById('productoAsignar').value;
             const cantidadInput = document.getElementById('cantidadAsignarUnidades');
             
-            if (!productoId || !cantidadInput) return;
+            if (!productoKey || !cantidadInput) return;
             
-            const producto = productos.find(p => p.id == productoId);
+            const producto = productos.find(p => p.firebaseKey === productoKey);
             if (!producto) return;
             
             const cantidadUnidades = parseInt(cantidadInput.value) || 0;
@@ -2040,7 +2373,7 @@
                 const unidadesTotales = calcularUnidadesTotales(producto);
                 if (unidadesTotales > 0) {
                     const option = document.createElement('option');
-                    option.value = producto.id;
+                    option.value = producto.firebaseKey;
                     option.textContent = `${producto.nombre} (${unidadesTotales} unidades)`;
                     select.appendChild(option);
                 }
@@ -2066,9 +2399,7 @@
         }
 
         // Guardar nuevo producto
-        function guardarProducto(e) {
-            e.preventDefault();
-            
+        async function guardarProducto() {
             // Obtener valores del formulario
             const codigo = document.getElementById('codigoProducto').value.trim();
             const nombre = document.getElementById('nombreProducto').value.trim();
@@ -2099,7 +2430,6 @@
             
             // Crear nuevo producto
             const nuevoProducto = {
-                id: nextProductId++,
                 codigo: codigo,
                 nombre: nombre,
                 categoria: categoria,
@@ -2111,51 +2441,50 @@
                 fechaRegistro: new Date().toISOString().split('T')[0]
             };
             
-            // Agregar a la lista de productos
-            productos.push(nuevoProducto);
-            
-            // Registrar movimiento de entrada
-            const unidadesTotales = calcularUnidadesTotales(nuevoProducto);
-            const nuevoMovimiento = {
-                id: nextMovimientoId++,
-                fechaHora: formatearFechaHora(),
-                tipo: "entrada",
-                productoId: nuevoProducto.id,
-                producto: nuevoProducto.nombre,
-                cantidad: unidadesTotales,
-                departamento: "Almacén",
-                usuario: "N/A",
-                observaciones: "Registro inicial de producto: " + (descripcion || "Sin observaciones"),
-                responsable: "Admin Sistema"
-            };
-            
-            movimientos.push(nuevoMovimiento);
-            
-            // Actualizar interfaz
-            actualizarTablaInventario();
-            actualizarTablaMovimientos();
-            cargarProductosAsignacion();
-            actualizarEstadisticas();
-            actualizarDashboard();
-            verificarStockBajo();
-            
-            // Mostrar mensaje de éxito
-            alert('Producto registrado exitosamente');
-            
-            // Limpiar formulario
-            document.getElementById('nuevoProductoForm').reset();
-            
-            // Establecer valores por defecto
-            document.getElementById('stockMinimo').value = "5";
-            document.getElementById('unidadesPorMedida').value = "1";
+            try {
+                showLoading();
+                
+                // Guardar en Firebase
+                const productoKey = await guardarProductoFirebase(nuevoProducto);
+                
+                // Registrar movimiento de entrada
+                const unidadesTotales = calcularUnidadesTotales(nuevoProducto);
+                const nuevoMovimiento = {
+                    fechaHora: formatearFechaHora(),
+                    tipo: "entrada",
+                    productoId: productoKey,
+                    producto: nuevoProducto.nombre,
+                    cantidad: unidadesTotales,
+                    departamento: "Almacén",
+                    usuario: "N/A",
+                    observaciones: "Registro inicial de producto: " + (descripcion || "Sin observaciones"),
+                    responsable: "Admin Sistema"
+                };
+                
+                await guardarMovimientoFirebase(nuevoMovimiento);
+                
+                // Mostrar mensaje de éxito
+                alert('Producto registrado exitosamente');
+                
+                // Limpiar formulario
+                document.getElementById('nuevoProductoForm').reset();
+                
+                // Establecer valores por defecto
+                document.getElementById('stockMinimo').value = "5";
+                document.getElementById('unidadesPorMedida').value = "1";
+                
+            } catch (error) {
+                console.error('Error al guardar producto:', error);
+                alert('Error al guardar el producto. Por favor, intente nuevamente.');
+            } finally {
+                hideLoading();
+            }
         }
 
         // Registrar asignación de material
-        function registrarAsignacion(e) {
-            e.preventDefault();
-            
+        async function registrarAsignacion() {
             // Obtener valores del formulario
-            const productoId = document.getElementById('productoAsignar').value;
+            const productoKey = document.getElementById('productoAsignar').value;
             const cantidadUnidades = parseInt(document.getElementById('cantidadAsignarUnidades').value);
             const departamento = document.getElementById('departamentoAsignar').value;
             const usuario = document.getElementById('usuarioAsignar').value.trim();
@@ -2163,19 +2492,18 @@
             const observaciones = document.getElementById('observacionesAsignacion').value.trim();
             
             // Validaciones
-            if (!productoId || !cantidadUnidades || !departamento || !usuario || !fechaHora) {
+            if (!productoKey || !cantidadUnidades || !departamento || !usuario || !fechaHora) {
                 alert('Por favor complete todos los campos requeridos');
                 return;
             }
             
             // Buscar producto
-            const productoIndex = productos.findIndex(p => p.id == productoId);
-            if (productoIndex === -1) {
+            const producto = productos.find(p => p.firebaseKey === productoKey);
+            if (!producto) {
                 alert('Producto no encontrado');
                 return;
             }
             
-            const producto = productos[productoIndex];
             const unidadesTotalesActuales = calcularUnidadesTotales(producto);
             
             // Verificar stock disponible
@@ -2187,52 +2515,56 @@
             // Calcular nuevo stock en unidades
             const nuevasUnidadesTotales = unidadesTotalesActuales - cantidadUnidades;
             
-            // Actualizar stock del producto (recalcular stock en la unidad de medida)
-            productos[productoIndex].stock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
+            // Actualizar stock del producto
+            producto.stock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
             
-            // Formatear fecha y hora
-            const fechaHoraFormateada = formatearFechaHora(fechaHora);
-            
-            // Registrar movimiento
-            const nuevoMovimiento = {
-                id: nextMovimientoId++,
-                fechaHora: fechaHoraFormateada,
-                tipo: "salida",
-                productoId: producto.id,
-                producto: producto.nombre,
-                cantidad: cantidadUnidades,
-                departamento: departamento,
-                usuario: usuario,
-                observaciones: observaciones || "Asignación de material",
-                responsable: "Admin Sistema"
-            };
-            
-            movimientos.push(nuevoMovimiento);
-            
-            // Actualizar interfaz
-            actualizarTablaInventario();
-            actualizarTablaMovimientos();
-            cargarProductosAsignacion();
-            actualizarEstadisticas();
-            actualizarDashboard();
-            verificarStockBajo();
-            
-            // Mostrar mensaje de éxito
-            const nuevasUnidades = calcularUnidadesTotales(productos[productoIndex]);
-            alert(`Asignación registrada exitosamente. Nuevo stock: ${nuevasUnidades} unidades`);
-            
-            // Limpiar formulario
-            document.getElementById('asignacionForm').reset();
-            
-            // Establecer fecha y hora actual
-            const ahora = new Date();
-            ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
-            document.getElementById('fechaAsignacion').value = ahora.toISOString().slice(0, 16);
-            
-            // Limpiar stock disponible y cálculos
-            document.getElementById('stockDisponible').value = '';
-            document.getElementById('equivalenciaUnidades').textContent = '0 unidades';
-            document.getElementById('nuevoStockUnidades').textContent = '0 unidades';
+            try {
+                showLoading();
+                
+                // Actualizar producto en Firebase
+                await actualizarProductoFirebase(producto.firebaseKey, producto);
+                
+                // Formatear fecha y hora
+                const fechaHoraFormateada = formatearFechaHora(fechaHora);
+                
+                // Registrar movimiento
+                const nuevoMovimiento = {
+                    fechaHora: fechaHoraFormateada,
+                    tipo: "salida",
+                    productoId: producto.firebaseKey,
+                    producto: producto.nombre,
+                    cantidad: cantidadUnidades,
+                    departamento: departamento,
+                    usuario: usuario,
+                    observaciones: observaciones || "Asignación de material",
+                    responsable: "Admin Sistema"
+                };
+                
+                await guardarMovimientoFirebase(nuevoMovimiento);
+                
+                // Mostrar mensaje de éxito
+                const nuevasUnidades = calcularUnidadesTotales(producto);
+                alert(`Asignación registrada exitosamente. Nuevo stock: ${nuevasUnidades} unidades`);
+                
+                // Limpiar formulario
+                document.getElementById('asignacionForm').reset();
+                
+                // Establecer fecha y hora actual
+                const ahora = new Date();
+                ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
+                document.getElementById('fechaAsignacion').value = ahora.toISOString().slice(0, 16);
+                
+                // Limpiar stock disponible y cálculos
+                document.getElementById('stockDisponible').value = '';
+                document.getElementById('equivalenciaUnidades').textContent = '0 unidades';
+                document.getElementById('nuevoStockUnidades').textContent = '0 unidades';
+                
+            } catch (error) {
+                console.error('Error al registrar asignación:', error);
+                alert('Error al registrar la asignación. Por favor, intente nuevamente.');
+            } finally {
+                hideLoading();
+            }
         }
 
         // Actualizar tabla de inventario
@@ -2286,7 +2618,7 @@
                 const row = document.createElement('tr');
                 
                 // Obtener número del código
-                const codigoNum = producto.codigo.split('-')[1] || producto.id;
+                const codigoNum = producto.codigo.split('-')[1] || 'N/A';
                 
                 // Calcular unidades totales
                 const unidadesTotales = calcularUnidadesTotales(producto);
@@ -2379,19 +2711,19 @@
                     <td class="${estadoClase}">${stockIndicator} ${estadoTexto}</td>
                     <td>
                         <div class="action-buttons">
-                            <button class="btn-action btn-edit" data-id="${producto.id}">
+                            <button class="btn-action btn-edit" data-key="${producto.firebaseKey}">
                                 <i class="fas fa-edit"></i> Editar
                             </button>
-                            <button class="btn-action btn-assign" data-id="${producto.id}">
+                            <button class="btn-action btn-assign" data-key="${producto.firebaseKey}">
                                 <i class="fas fa-hand-holding"></i> Asignar
                             </button>
-                            <button class="btn-action btn-adjust" data-id="${producto.id}">
+                            <button class="btn-action btn-adjust" data-key="${producto.firebaseKey}">
                                 <i class="fas fa-adjust"></i> Ajustar
                             </button>
-                            <button class="btn-action btn-reposition" data-id="${producto.id}">
+                            <button class="btn-action btn-reposition" data-key="${producto.firebaseKey}">
                                 <i class="fas fa-boxes"></i> Reponer
                             </button>
-                            <button class="btn-action btn-delete" data-id="${producto.id}">
+                            <button class="btn-action btn-delete" data-key="${producto.firebaseKey}">
                                 <i class="fas fa-trash"></i> Eliminar
                             </button>
                         </div>
@@ -2404,36 +2736,36 @@
             // Agregar eventos a los botones de acción
             document.querySelectorAll('.btn-edit').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const id = parseInt(this.getAttribute('data-id'));
-                    editarProducto(id);
+                    const key = this.getAttribute('data-key');
+                    editarProducto(key);
                 });
             });
             
             document.querySelectorAll('.btn-assign').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const id = parseInt(this.getAttribute('data-id'));
-                    irAAsignacion(id);
+                    const key = this.getAttribute('data-key');
+                    irAAsignacion(key);
                 });
             });
             
             document.querySelectorAll('.btn-adjust').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const id = parseInt(this.getAttribute('data-id'));
-                    ajustarStock(id);
+                    const key = this.getAttribute('data-key');
+                    ajustarStock(key);
                 });
             });
             
             document.querySelectorAll('.btn-reposition').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const id = parseInt(this.getAttribute('data-id'));
-                    irAReposicion(id);
+                    const key = this.getAttribute('data-key');
+                    irAReposicion(key);
                 });
             });
             
             document.querySelectorAll('.btn-delete').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const id = parseInt(this.getAttribute('data-id'));
-                    confirmarEliminacion(id);
+                    const key = this.getAttribute('data-key');
+                    confirmarEliminacion(key);
                 });
             });
             
@@ -2445,8 +2777,8 @@
         }
 
         // Ir a sección de reposición
-        function irAReposicion(productoId) {
-            const producto = productos.find(p => p.id === productoId);
+        function irAReposicion(productoKey) {
+            const producto = productos.find(p => p.firebaseKey === productoKey);
             if (!producto) return;
             
             mostrarSeccion('nuevo-producto');
@@ -2534,10 +2866,10 @@
                     <td>${movimiento.responsable}</td>
                     <td>
                         <div class="action-buttons">
-                            <button class="btn-action btn-edit-mov" data-id="${movimiento.id}">
+                            <button class="btn-action btn-edit-mov" data-key="${movimiento.firebaseKey}">
                                 <i class="fas fa-edit"></i> Editar
                             </button>
-                            <button class="btn-action btn-delete-mov" data-id="${movimiento.id}">
+                            <button class="btn-action btn-delete-mov" data-key="${movimiento.firebaseKey}">
                                 <i class="fas fa-trash"></i> Eliminar
                             </button>
                         </div>
@@ -2550,15 +2882,15 @@
             // Agregar eventos a los botones de acción de movimientos
             document.querySelectorAll('.btn-edit-mov').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const id = parseInt(this.getAttribute('data-id'));
-                    editarMovimiento(id);
+                    const key = this.getAttribute('data-key');
+                    editarMovimiento(key);
                 });
             });
             
             document.querySelectorAll('.btn-delete-mov').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const id = parseInt(this.getAttribute('data-id'));
-                    confirmarEliminacionMovimiento(id);
+                    const key = this.getAttribute('data-key');
+                    confirmarEliminacionMovimiento(key);
                 });
             });
         }
@@ -2806,13 +3138,13 @@
         }
 
         // Ir a sección de asignación con producto seleccionado
-        function irAAsignacion(productoId) {
+        function irAAsignacion(productoKey) {
             mostrarSeccion('asignacion');
             
             // Seleccionar producto en el select
             const selectProducto = document.getElementById('productoAsignar');
             if (selectProducto) {
-                selectProducto.value = productoId;
+                selectProducto.value = productoKey;
                 
                 // Disparar evento change para cargar stock disponible
                 const event = new Event('change');
@@ -2821,9 +3153,9 @@
         }
 
         // Ajustar stock de producto
-        function ajustarStock(productoId) {
-            currentAdjustId = productoId;
-            const producto = productos.find(p => p.id === productoId);
+        function ajustarStock(productoKey) {
+            currentAdjustId = productoKey;
+            const producto = productos.find(p => p.firebaseKey === productoKey);
             
             if (!producto) return;
             
@@ -2848,12 +3180,14 @@
         }
 
         // Aplicar ajuste de stock
-        function aplicarAjusteStock() {
-            const productoIndex = productos.findIndex(p => p.id === currentAdjustId);
+        async function aplicarAjusteStock() {
+            const producto = productos.find(p => p.firebaseKey === currentAdjustId);
             
-            if (productoIndex === -1) return;
+            if (!producto) {
+                cerrarModal();
+                return;
+            }
             
-            const producto = productos[productoIndex];
             const tipo = document.getElementById('adjustType').value;
             const cantidad = parseInt(document.getElementById('adjustQuantity').value);
             const motivo = document.getElementById('adjustReason').value.trim();
@@ -2869,7 +3203,7 @@
             if (tipo === 'entrada' || tipo === 'reposicion') {
                 // Sumar unidades
                 const nuevasUnidadesTotales = unidadesTotalesActuales + cantidad;
-                productos[productoIndex].stock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
+                producto.stock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
             } else {
                 // Restar unidades
                 if (cantidad > unidadesTotalesActuales) {
@@ -2877,45 +3211,49 @@
                     return;
                 }
                 const nuevasUnidadesTotales = unidadesTotalesActuales - cantidad;
-                productos[productoIndex].stock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
+                producto.stock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
             }
             
-            // Registrar movimiento
-            const nuevoMovimiento = {
-                id: nextMovimientoId++,
-                fechaHora: formatearFechaHora(),
-                tipo: tipo === 'reposicion' ? 'reposicion' : 'ajuste',
-                productoId: producto.id,
-                producto: producto.nombre,
-                cantidad: cantidad,
-                departamento: "Almacén",
-                usuario: "N/A",
-                observaciones: motivo,
-                responsable: "Admin Sistema"
-            };
-            
-            movimientos.push(nuevoMovimiento);
-            
-            // Actualizar interfaz
-            actualizarTablaInventario();
-            actualizarTablaMovimientos();
-            cargarProductosAsignacion();
-            actualizarEstadisticas();
-            actualizarDashboard();
-            verificarStockBajo();
-            
-            // Mostrar mensaje
-            const nuevasUnidades = calcularUnidadesTotales(productos[productoIndex]);
-            alert(`Stock ajustado exitosamente. Nuevo stock: ${nuevasUnidades} unidades`);
-            
-            // Cerrar modal
-            cerrarModal();
+            try {
+                showLoading();
+                
+                // Actualizar producto en Firebase
+                await actualizarProductoFirebase(producto.firebaseKey, producto);
+                
+                // Registrar movimiento
+                const nuevoMovimiento = {
+                    fechaHora: formatearFechaHora(),
+                    tipo: tipo === 'reposicion' ? 'reposicion' : 'ajuste',
+                    productoId: producto.firebaseKey,
+                    producto: producto.nombre,
+                    cantidad: cantidad,
+                    departamento: "Almacén",
+                    usuario: "N/A",
+                    observaciones: motivo,
+                    responsable: "Admin Sistema"
+                };
+                
+                await guardarMovimientoFirebase(nuevoMovimiento);
+                
+                // Mostrar mensaje
+                const nuevasUnidades = calcularUnidadesTotales(producto);
+                alert(`Stock ajustado exitosamente. Nuevo stock: ${nuevasUnidades} unidades`);
+                
+                // Cerrar modal
+                cerrarModal();
+                
+            } catch (error) {
+                console.error('Error al aplicar ajuste:', error);
+                alert('Error al aplicar el ajuste. Por favor, intente nuevamente.');
+            } finally {
+                hideLoading();
+            }
         }
 
         // Editar producto
-        function editarProducto(id) {
-            currentEditId = id;
-            const producto = productos.find(p => p.id === id);
+        function editarProducto(key) {
+            currentEditId = key;
+            const producto = productos.find(p => p.firebaseKey === key);
             
             if (!producto) return;
             
@@ -3016,10 +3354,13 @@
         }
 
         // Guardar cambios de edición
-        function guardarCambiosEdicion() {
-            const productoIndex = productos.findIndex(p => p.id === currentEditId);
+        async function guardarCambiosEdicion() {
+            const producto = productos.find(p => p.firebaseKey === currentEditId);
             
-            if (productoIndex === -1) return;
+            if (!producto) {
+                cerrarModal();
+                return;
+            }
             
             // Obtener valores del formulario
             const codigo = document.getElementById('editCodigo').value.trim();
@@ -3043,42 +3384,45 @@
             }
             
             // Verificar si el código ya existe (excluyendo el producto actual)
-            const codigoExiste = productos.some((p, index) => p.codigo === codigo && index !== productoIndex);
+            const codigoExiste = productos.some(p => p.codigo === codigo && p.firebaseKey !== currentEditId);
             if (codigoExiste) {
                 alert('Ya existe otro producto con este código');
                 return;
             }
             
             // Actualizar producto
-            productos[productoIndex] = {
-                ...productos[productoIndex],
-                codigo: codigo,
-                nombre: nombre,
-                categoria: categoria,
-                unidad: unidad,
-                unidadesPorMedida: unidadesPorMedida,
-                stock: stock,
-                stockMinimo: stockMinimo,
-                descripcion: descripcion
-            };
+            producto.codigo = codigo;
+            producto.nombre = nombre;
+            producto.categoria = categoria;
+            producto.unidad = unidad;
+            producto.unidadesPorMedida = unidadesPorMedida;
+            producto.stock = stock;
+            producto.stockMinimo = stockMinimo;
+            producto.descripcion = descripcion;
             
-            // Actualizar interfaz
-            actualizarTablaInventario();
-            cargarProductosAsignacion();
-            actualizarEstadisticas();
-            actualizarDashboard();
-            verificarStockBajo();
-            
-            // Cerrar modal
-            cerrarModal();
-            
-            // Mostrar mensaje
-            alert('Producto actualizado exitosamente');
+            try {
+                showLoading();
+                
+                // Actualizar en Firebase
+                await actualizarProductoFirebase(currentEditId, producto);
+                
+                // Mostrar mensaje
+                alert('Producto actualizado exitosamente');
+                
+                // Cerrar modal
+                cerrarModal();
+                
+            } catch (error) {
+                console.error('Error al actualizar producto:', error);
+                alert('Error al actualizar el producto. Por favor, intente nuevamente.');
+            } finally {
+                hideLoading();
+            }
         }
 
         // Confirmar eliminación de producto
-        function confirmarEliminacion(id) {
-            currentEditId = id;
+        function confirmarEliminacion(key) {
+            currentEditId = key;
             const confirmModal = document.getElementById('confirmModal');
             if (confirmModal) {
                 confirmModal.style.display = 'flex';
@@ -3086,9 +3430,9 @@
         }
 
         // Confirmar eliminación de movimiento
-        function confirmarEliminacionMovimiento(id) {
-            currentMovEditId = id;
-            const movimiento = movimientos.find(m => m.id === id);
+        function confirmarEliminacionMovimiento(key) {
+            currentMovEditId = key;
+            const movimiento = movimientos.find(m => m.firebaseKey === key);
             
             if (!movimiento) return;
             
@@ -3102,73 +3446,88 @@
         }
 
         // Eliminar producto
-        function eliminarProducto() {
-            const productoIndex = productos.findIndex(p => p.id === currentEditId);
+        async function eliminarProducto() {
+            const producto = productos.find(p => p.firebaseKey === currentEditId);
             
-            if (productoIndex !== -1) {
-                // Verificar si hay movimientos asociados
-                const movimientosAsociados = movimientos.filter(m => m.productoId === currentEditId);
-                
-                if (movimientosAsociados.length > 0) {
-                    alert('No se puede eliminar el producto porque tiene movimientos asociados');
-                    cerrarModal();
-                    return;
-                }
-                
-                productos.splice(productoIndex, 1);
-                actualizarTablaInventario();
-                cargarProductosAsignacion();
-                actualizarEstadisticas();
-                actualizarDashboard();
-                verificarStockBajo();
-                
-                alert('Producto eliminado exitosamente');
+            if (!producto) {
+                cerrarModal();
+                return;
             }
             
-            cerrarModal();
+            // Verificar si hay movimientos asociados
+            const movimientosAsociados = movimientos.filter(m => m.productoId === currentEditId);
+            
+            if (movimientosAsociados.length > 0) {
+                alert('No se puede eliminar el producto porque tiene movimientos asociados');
+                cerrarModal();
+                return;
+            }
+            
+            try {
+                showLoading();
+                
+                // Eliminar de Firebase
+                await eliminarProductoFirebase(currentEditId);
+                
+                alert('Producto eliminado exitosamente');
+                
+            } catch (error) {
+                console.error('Error al eliminar producto:', error);
+                alert('Error al eliminar el producto. Por favor, intente nuevamente.');
+            } finally {
+                hideLoading();
+                cerrarModal();
+            }
         }
 
         // Eliminar movimiento
-        function eliminarMovimiento() {
-            const movimientoIndex = movimientos.findIndex(m => m.id === currentMovEditId);
+        async function eliminarMovimiento() {
+            const movimiento = movimientos.find(m => m.firebaseKey === currentMovEditId);
             
-            if (movimientoIndex !== -1) {
-                const movimiento = movimientos[movimientoIndex];
+            if (!movimiento) {
+                cerrarModal();
+                return;
+            }
+            
+            try {
+                showLoading();
                 
                 // Revertir el efecto del movimiento en el stock
-                const productoIndex = productos.findIndex(p => p.id === movimiento.productoId);
+                const producto = productos.find(p => p.firebaseKey === movimiento.productoId);
                 
-                if (productoIndex !== -1) {
-                    const producto = productos[productoIndex];
+                if (producto) {
                     const unidadesTotalesActuales = calcularUnidadesTotales(producto);
                     
                     if (movimiento.tipo === 'entrada' || movimiento.tipo === 'reposicion') {
                         // Restar las unidades que se agregaron
                         const nuevasUnidadesTotales = unidadesTotalesActuales - movimiento.cantidad;
-                        productos[productoIndex].stock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
+                        producto.stock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
+                        
+                        // Actualizar producto en Firebase
+                        await actualizarProductoFirebase(producto.firebaseKey, producto);
                     } else if (movimiento.tipo === 'salida') {
                         // Sumar las unidades que se retiraron
                         const nuevasUnidadesTotales = unidadesTotalesActuales + movimiento.cantidad;
-                        productos[productoIndex].stock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
+                        producto.stock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
+                        
+                        // Actualizar producto en Firebase
+                        await actualizarProductoFirebase(producto.firebaseKey, producto);
                     }
                     // Los ajustes no se pueden revertir automáticamente
                 }
                 
-                // Eliminar el movimiento
-                movimientos.splice(movimientoIndex, 1);
-                
-                // Actualizar interfaz
-                actualizarTablaInventario();
-                actualizarTablaMovimientos();
-                cargarProductosAsignacion();
-                actualizarEstadisticas();
-                actualizarDashboard();
-                verificarStockBajo();
+                // Eliminar el movimiento de Firebase
+                await eliminarMovimientoFirebase(currentMovEditId);
                 
                 alert('Movimiento eliminado exitosamente');
+                
+            } catch (error) {
+                console.error('Error al eliminar movimiento:', error);
+                alert('Error al eliminar el movimiento. Por favor, intente nuevamente.');
+            } finally {
+                hideLoading();
+                cerrarModal();
             }
-            
-            cerrarModal();
         }
 
         // Cerrar modal
@@ -3224,9 +3583,9 @@
         }
 
         // Editar movimiento
-        function editarMovimiento(id) {
-            currentMovEditId = id;
-            const movimiento = movimientos.find(m => m.id === id);
+        function editarMovimiento(key) {
+            currentMovEditId = key;
+            const movimiento = movimientos.find(m => m.firebaseKey === key);
             
             if (!movimiento) return;
             
@@ -3243,10 +3602,10 @@
         }
 
         // Guardar cambios en movimiento
-        function guardarCambiosMovimiento() {
-            const movimientoIndex = movimientos.findIndex(m => m.id === currentMovEditId);
+        async function guardarCambiosMovimiento() {
+            const movimiento = movimientos.find(m => m.firebaseKey === currentMovEditId);
             
-            if (movimientoIndex === -1) {
+            if (!movimiento) {
                 cerrarModal();
                 return;
             }
@@ -3263,16 +3622,26 @@
             }
             
             // Actualizar movimiento
-            movimientos[movimientoIndex].departamento = departamento;
-            movimientos[movimientoIndex].usuario = usuario;
-            movimientos[movimientoIndex].observaciones = observaciones;
+            movimiento.departamento = departamento;
+            movimiento.usuario = usuario;
+            movimiento.observaciones = observaciones;
             
-            // Actualizar tabla
-            actualizarTablaMovimientos();
-            
-            // Cerrar modal y mostrar mensaje
-            cerrarModal();
-            alert('Movimiento actualizado exitosamente');
+            try {
+                showLoading();
+                
+                // Actualizar en Firebase
+                await actualizarMovimientoFirebase(currentMovEditId, movimiento);
+                
+                // Cerrar modal y mostrar mensaje
+                cerrarModal();
+                alert('Movimiento actualizado exitosamente');
+                
+            } catch (error) {
+                console.error('Error al actualizar movimiento:', error);
+                alert('Error al actualizar el movimiento. Por favor, intente nuevamente.');
+            } finally {
+                hideLoading();
+            }
         }
 
         // Generar reporte mensual
@@ -3896,7 +4265,7 @@
             const headers = [['#', 'Código', 'Producto', 'Categoría', 'Stock', 'Unidades Totales', 'Unidad', 'Estado']];
             const data = productos.map(p => {
                 // Obtener número del código
-                const codigoNum = p.codigo.split('-')[1] || p.id;
+                const codigoNum = p.codigo.split('-')[1] || p.firebaseKey.substring(0, 4);
                 
                 const unidadesTotales = calcularUnidadesTotales(p);
                 const stockMinimoUnidades = p.stockMinimo * (p.unidadesPorMedida || 1);
@@ -3952,7 +4321,7 @@
                 }
                 
                 // Obtener número del código
-                const codigoNum = p.codigo.split('-')[1] || p.id;
+                const codigoNum = p.codigo.split('-')[1] || p.firebaseKey.substring(0, 4);
                 
                 return {
                     '#': codigoNum,
