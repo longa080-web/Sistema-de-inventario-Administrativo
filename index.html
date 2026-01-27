@@ -14,7 +14,7 @@
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, Timestamp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, Timestamp, where } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
         
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -43,7 +43,8 @@
             onSnapshot,
             query,
             orderBy,
-            Timestamp
+            Timestamp,
+            where
         };
         
         console.log("Firebase inicializado correctamente");
@@ -1431,7 +1432,7 @@
                     <span class="close-modal">&times;</span>
                 </div>
                 <div class="modal-body">
-                    <p>¿Está seguro de que desea eliminar este producto? Esta acción no se puede deshacer.</p>
+                    <p>¿Está seguro de que desea eliminar este producto? Esta acción eliminará también todos los movimientos asociados.</p>
                 </div>
                 <div class="modal-footer">
                     <button id="confirmDelete" class="btn btn-danger">Eliminar</button>
@@ -1571,6 +1572,9 @@
                     // Configurar listeners en tiempo real
                     setupRealtimeListeners();
                     
+                    // Inicializar sistema
+                    inicializarSistema();
+                    
                     return true;
                 } else {
                     console.log("Esperando inicialización de Firebase...");
@@ -1594,14 +1598,14 @@
                 const productosSnapshot = await getDocs(query(collection(db, "productos"), orderBy("id")));
                 productos = [];
                 productosSnapshot.forEach((doc) => {
-                    productos.push(doc.data());
+                    productos.push({...doc.data(), firebaseId: doc.id});
                 });
                 
                 // Cargar movimientos
                 const movimientosSnapshot = await getDocs(query(collection(db, "movimientos"), orderBy("fechaHora", "desc")));
                 movimientos = [];
                 movimientosSnapshot.forEach((doc) => {
-                    movimientos.push(doc.data());
+                    movimientos.push({...doc.data(), firebaseId: doc.id});
                 });
                 
                 // Actualizar IDs
@@ -1632,7 +1636,7 @@
                     (snapshot) => {
                         productos = [];
                         snapshot.forEach((doc) => {
-                            productos.push(doc.data());
+                            productos.push({...doc.data(), firebaseId: doc.id});
                         });
                         
                         // Actualizar IDs
@@ -1660,7 +1664,7 @@
                     (snapshot) => {
                         movimientos = [];
                         snapshot.forEach((doc) => {
-                            movimientos.push(doc.data());
+                            movimientos.push({...doc.data(), firebaseId: doc.id});
                         });
                         
                         // Actualizar IDs
@@ -1692,34 +1696,24 @@
                 const { addDoc, collection } = window.firebaseFunctions;
                 const db = window.firebaseDB;
                 
-                await addDoc(collection(db, "productos"), producto);
-                console.log("Producto guardado en Firebase:", producto.codigo);
-                return true;
+                const docRef = await addDoc(collection(db, "productos"), producto);
+                console.log("Producto guardado en Firebase:", producto.codigo, "ID:", docRef.id);
+                return docRef.id;
             } catch (error) {
                 console.error("Error guardando producto en Firebase:", error);
-                return false;
+                return null;
             }
         }
 
         // Actualizar producto en Firebase
-        async function updateProductInFirebase(productoId, updates) {
+        async function updateProductInFirebase(firebaseId, updates) {
             try {
-                const { updateDoc, doc, collection, getDocs, query, where } = window.firebaseFunctions;
+                const { updateDoc, doc } = window.firebaseFunctions;
                 const db = window.firebaseDB;
                 
-                // Buscar el documento por ID
-                const productosQuery = query(collection(db, "productos"), where("id", "==", productoId));
-                const querySnapshot = await getDocs(productosQuery);
-                
-                if (!querySnapshot.empty) {
-                    const productDoc = querySnapshot.docs[0];
-                    await updateDoc(doc(db, "productos", productDoc.id), updates);
-                    console.log("Producto actualizado en Firebase:", productoId);
-                    return true;
-                } else {
-                    console.error("Producto no encontrado en Firebase:", productoId);
-                    return false;
-                }
+                await updateDoc(doc(db, "productos", firebaseId), updates);
+                console.log("Producto actualizado en Firebase:", firebaseId);
+                return true;
             } catch (error) {
                 console.error("Error actualizando producto en Firebase:", error);
                 return false;
@@ -1727,26 +1721,39 @@
         }
 
         // Eliminar producto de Firebase
-        async function deleteProductFromFirebase(productoId) {
+        async function deleteProductFromFirebase(firebaseId) {
             try {
-                const { deleteDoc, doc, collection, getDocs, query, where } = window.firebaseFunctions;
+                const { deleteDoc, doc } = window.firebaseFunctions;
                 const db = window.firebaseDB;
                 
-                // Buscar el documento por ID
-                const productosQuery = query(collection(db, "productos"), where("id", "==", productoId));
-                const querySnapshot = await getDocs(productosQuery);
-                
-                if (!querySnapshot.empty) {
-                    const productDoc = querySnapshot.docs[0];
-                    await deleteDoc(doc(db, "productos", productDoc.id));
-                    console.log("Producto eliminado de Firebase:", productoId);
-                    return true;
-                } else {
-                    console.error("Producto no encontrado en Firebase:", productoId);
-                    return false;
-                }
+                await deleteDoc(doc(db, "productos", firebaseId));
+                console.log("Producto eliminado de Firebase:", firebaseId);
+                return true;
             } catch (error) {
                 console.error("Error eliminando producto de Firebase:", error);
+                return false;
+            }
+        }
+
+        // Eliminar movimientos asociados a un producto
+        async function deleteMovementsByProductId(productoId) {
+            try {
+                const { getDocs, collection, query, where, deleteDoc, doc } = window.firebaseFunctions;
+                const db = window.firebaseDB;
+                
+                const movimientosQuery = query(collection(db, "movimientos"), where("productoId", "==", productoId));
+                const querySnapshot = await getDocs(movimientosQuery);
+                
+                const deletePromises = [];
+                querySnapshot.forEach((document) => {
+                    deletePromises.push(deleteDoc(doc(db, "movimientos", document.id)));
+                });
+                
+                await Promise.all(deletePromises);
+                console.log(`Movimientos del producto ${productoId} eliminados: ${deletePromises.length}`);
+                return true;
+            } catch (error) {
+                console.error("Error eliminando movimientos del producto:", error);
                 return false;
             }
         }
@@ -1757,34 +1764,24 @@
                 const { addDoc, collection } = window.firebaseFunctions;
                 const db = window.firebaseDB;
                 
-                await addDoc(collection(db, "movimientos"), movimiento);
-                console.log("Movimiento guardado en Firebase:", movimiento.id);
-                return true;
+                const docRef = await addDoc(collection(db, "movimientos"), movimiento);
+                console.log("Movimiento guardado en Firebase:", movimiento.id, "ID:", docRef.id);
+                return docRef.id;
             } catch (error) {
                 console.error("Error guardando movimiento en Firebase:", error);
-                return false;
+                return null;
             }
         }
 
         // Actualizar movimiento en Firebase
-        async function updateMovementInFirebase(movimientoId, updates) {
+        async function updateMovementInFirebase(firebaseId, updates) {
             try {
-                const { updateDoc, doc, collection, getDocs, query, where } = window.firebaseFunctions;
+                const { updateDoc, doc } = window.firebaseFunctions;
                 const db = window.firebaseDB;
                 
-                // Buscar el documento por ID
-                const movimientosQuery = query(collection(db, "movimientos"), where("id", "==", movimientoId));
-                const querySnapshot = await getDocs(movimientosQuery);
-                
-                if (!querySnapshot.empty) {
-                    const movementDoc = querySnapshot.docs[0];
-                    await updateDoc(doc(db, "movimientos", movementDoc.id), updates);
-                    console.log("Movimiento actualizado en Firebase:", movimientoId);
-                    return true;
-                } else {
-                    console.error("Movimiento no encontrado en Firebase:", movimientoId);
-                    return false;
-                }
+                await updateDoc(doc(db, "movimientos", firebaseId), updates);
+                console.log("Movimiento actualizado en Firebase:", firebaseId);
+                return true;
             } catch (error) {
                 console.error("Error actualizando movimiento en Firebase:", error);
                 return false;
@@ -1792,24 +1789,14 @@
         }
 
         // Eliminar movimiento de Firebase
-        async function deleteMovementFromFirebase(movimientoId) {
+        async function deleteMovementFromFirebase(firebaseId) {
             try {
-                const { deleteDoc, doc, collection, getDocs, query, where } = window.firebaseFunctions;
+                const { deleteDoc, doc } = window.firebaseFunctions;
                 const db = window.firebaseDB;
                 
-                // Buscar el documento por ID
-                const movimientosQuery = query(collection(db, "movimientos"), where("id", "==", movimientoId));
-                const querySnapshot = await getDocs(movimientosQuery);
-                
-                if (!querySnapshot.empty) {
-                    const movementDoc = querySnapshot.docs[0];
-                    await deleteDoc(doc(db, "movimientos", movementDoc.id));
-                    console.log("Movimiento eliminado de Firebase:", movimientoId);
-                    return true;
-                } else {
-                    console.error("Movimiento no encontrado en Firebase:", movimientoId);
-                    return false;
-                }
+                await deleteDoc(doc(db, "movimientos", firebaseId));
+                console.log("Movimiento eliminado de Firebase:", firebaseId);
+                return true;
             } catch (error) {
                 console.error("Error eliminando movimiento de Firebase:", error);
                 return false;
@@ -1876,7 +1863,7 @@
         }
 
         // =============================================
-        // FUNCIONES AUXILIARES (sin cambios)
+        // FUNCIONES AUXILIARES
         // =============================================
 
         function calcularUnidadesTotales(producto) {
@@ -1938,7 +1925,7 @@
         });
 
         // Inicializar el sistema después de Firebase
-        async function inicializarSistema() {
+        function inicializarSistema() {
             // Cargar productos en el select de asignación
             cargarProductosAsignacion();
             
@@ -2165,11 +2152,11 @@
             
             try {
                 // Guardar en Firebase
-                const saved = await saveProductToFirebase(nuevoProducto);
+                const firebaseId = await saveProductToFirebase(nuevoProducto);
                 
-                if (saved) {
+                if (firebaseId) {
                     // Agregar a la lista local
-                    productos.push(nuevoProducto);
+                    productos.push({...nuevoProducto, firebaseId});
                     nextProductId++;
                     
                     // Registrar movimiento de entrada
@@ -2191,7 +2178,6 @@
                     // Guardar movimiento en Firebase
                     await saveMovementToFirebase(nuevoMovimiento);
                     
-                    // Los listeners en tiempo real actualizarán automáticamente la UI
                     alert('Producto registrado exitosamente en Firebase');
                     
                     // Limpiar formulario
@@ -2220,13 +2206,11 @@
                 return;
             }
             
-            const productoIndex = productos.findIndex(p => p.codigo === codigo);
-            if (productoIndex === -1) {
+            const producto = productos.find(p => p.codigo === codigo);
+            if (!producto) {
                 alert('Producto no encontrado');
                 return;
             }
-            
-            const producto = productos[productoIndex];
             
             if (!producto.unidadesPorMedida || producto.unidadesPorMedida <= 0) {
                 alert('Error: El producto tiene una configuración de unidades inválida. Por favor edite el producto primero.');
@@ -2240,7 +2224,7 @@
             
             try {
                 // Actualizar en Firebase
-                const updated = await updateProductInFirebase(producto.id, {
+                const updated = await updateProductInFirebase(producto.firebaseId, {
                     stock: nuevoStock,
                     updatedAt: new Date().toISOString()
                 });
@@ -2298,13 +2282,12 @@
             }
             
             // Buscar producto
-            const productoIndex = productos.findIndex(p => p.id == productoId);
-            if (productoIndex === -1) {
+            const producto = productos.find(p => p.id == productoId);
+            if (!producto) {
                 alert('Producto no encontrado');
                 return;
             }
             
-            const producto = productos[productoIndex];
             const unidadesTotalesActuales = calcularUnidadesTotales(producto);
             
             // Verificar stock disponible
@@ -2319,7 +2302,7 @@
             
             try {
                 // Actualizar producto en Firebase
-                const updated = await updateProductInFirebase(producto.id, {
+                const updated = await updateProductInFirebase(producto.firebaseId, {
                     stock: nuevoStock,
                     updatedAt: new Date().toISOString()
                 });
@@ -2366,34 +2349,28 @@
             }
         }
 
-        // Función para eliminar producto (con Firebase)
+        // Función para eliminar producto (con Firebase) - CORREGIDA
         async function eliminarProducto() {
-            const productoIndex = productos.findIndex(p => p.id === currentEditId);
+            const producto = productos.find(p => p.id === currentEditId);
             
-            if (productoIndex !== -1) {
-                const producto = productos[productoIndex];
+            if (!producto) {
+                cerrarModal();
+                return;
+            }
+            
+            try {
+                // Primero eliminar todos los movimientos asociados al producto
+                await deleteMovementsByProductId(producto.id);
                 
-                // Verificar si hay movimientos asociados
-                const movimientosAsociados = movimientos.filter(m => m.productoId === currentEditId);
+                // Luego eliminar el producto
+                const deleted = await deleteProductFromFirebase(producto.firebaseId);
                 
-                if (movimientosAsociados.length > 0) {
-                    alert('No se puede eliminar el producto porque tiene movimientos asociados');
-                    cerrarModal();
-                    return;
+                if (deleted) {
+                    alert('Producto y sus movimientos asociados eliminados exitosamente de Firebase');
                 }
-                
-                try {
-                    // Eliminar de Firebase
-                    const deleted = await deleteProductFromFirebase(currentEditId);
-                    
-                    if (deleted) {
-                        // Los listeners en tiempo real actualizarán automáticamente la UI
-                        alert('Producto eliminado exitosamente de Firebase');
-                    }
-                } catch (error) {
-                    console.error("Error eliminando producto:", error);
-                    alert('Error al eliminar el producto de Firebase');
-                }
+            } catch (error) {
+                console.error("Error eliminando producto:", error);
+                alert('Error al eliminar el producto de Firebase');
             }
             
             cerrarModal();
@@ -2401,43 +2378,52 @@
 
         // Función para eliminar movimiento (con Firebase)
         async function eliminarMovimiento() {
-            const movimientoIndex = movimientos.findIndex(m => m.id === currentMovEditId);
+            const movimiento = movimientos.find(m => m.id === currentMovEditId);
             
-            if (movimientoIndex !== -1) {
-                const movimiento = movimientos[movimientoIndex];
+            if (!movimiento) {
+                cerrarModal();
+                return;
+            }
+            
+            // Revertir el efecto del movimiento en el stock
+            const producto = productos.find(p => p.id === movimiento.productoId);
+            
+            if (producto) {
+                const unidadesTotalesActuales = calcularUnidadesTotales(producto);
                 
-                // Revertir el efecto del movimiento en el stock
-                const productoIndex = productos.findIndex(p => p.id === movimiento.productoId);
+                let nuevasUnidadesTotales = unidadesTotalesActuales;
                 
-                if (productoIndex !== -1) {
-                    const producto = productos[productoIndex];
-                    const unidadesTotalesActuales = calcularUnidadesTotales(producto);
+                if (movimiento.tipo === 'entrada' || movimiento.tipo === 'reposicion') {
+                    nuevasUnidadesTotales = unidadesTotalesActuales - movimiento.cantidad;
+                } else if (movimiento.tipo === 'salida') {
+                    nuevasUnidadesTotales = unidadesTotalesActuales + movimiento.cantidad;
+                }
+                
+                const nuevoStock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
+                
+                try {
+                    // Actualizar producto en Firebase
+                    await updateProductInFirebase(producto.firebaseId, {
+                        stock: nuevoStock,
+                        updatedAt: new Date().toISOString()
+                    });
                     
-                    let nuevasUnidadesTotales = unidadesTotalesActuales;
+                    // Eliminar movimiento de Firebase
+                    await deleteMovementFromFirebase(movimiento.firebaseId);
                     
-                    if (movimiento.tipo === 'entrada' || movimiento.tipo === 'reposicion') {
-                        nuevasUnidadesTotales = unidadesTotalesActuales - movimiento.cantidad;
-                    } else if (movimiento.tipo === 'salida') {
-                        nuevasUnidadesTotales = unidadesTotalesActuales + movimiento.cantidad;
-                    }
-                    
-                    const nuevoStock = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
-                    
-                    try {
-                        // Actualizar producto en Firebase
-                        await updateProductInFirebase(producto.id, {
-                            stock: nuevoStock,
-                            updatedAt: new Date().toISOString()
-                        });
-                        
-                        // Eliminar movimiento de Firebase
-                        await deleteMovementFromFirebase(movimiento.id);
-                        
-                        alert('Movimiento eliminado exitosamente de Firebase');
-                    } catch (error) {
-                        console.error("Error eliminando movimiento:", error);
-                        alert('Error al eliminar el movimiento de Firebase');
-                    }
+                    alert('Movimiento eliminado exitosamente de Firebase');
+                } catch (error) {
+                    console.error("Error eliminando movimiento:", error);
+                    alert('Error al eliminar el movimiento de Firebase');
+                }
+            } else {
+                // Si el producto ya no existe, solo eliminar el movimiento
+                try {
+                    await deleteMovementFromFirebase(movimiento.firebaseId);
+                    alert('Movimiento eliminado exitosamente de Firebase');
+                } catch (error) {
+                    console.error("Error eliminando movimiento:", error);
+                    alert('Error al eliminar el movimiento de Firebase');
                 }
             }
             
@@ -2446,9 +2432,9 @@
 
         // Función para guardar cambios en movimiento (con Firebase)
         async function guardarCambiosMovimiento() {
-            const movimientoIndex = movimientos.findIndex(m => m.id === currentMovEditId);
+            const movimiento = movimientos.find(m => m.id === currentMovEditId);
             
-            if (movimientoIndex === -1) {
+            if (!movimiento) {
                 cerrarModal();
                 return;
             }
@@ -2466,7 +2452,7 @@
             
             try {
                 // Actualizar en Firebase
-                const updated = await updateMovementInFirebase(currentMovEditId, {
+                const updated = await updateMovementInFirebase(movimiento.firebaseId, {
                     departamento: departamento,
                     usuario: usuario,
                     observaciones: observaciones,
@@ -2484,7 +2470,7 @@
         }
 
         // =============================================
-        // FUNCIONES DE UI (sin cambios, excepto por actualizaciones menores)
+        // FUNCIONES DE UI
         // =============================================
 
         function mostrarSeccion(sectionId) {
@@ -3219,11 +3205,10 @@
         }
 
         async function aplicarAjusteStock() {
-            const productoIndex = productos.findIndex(p => p.id === currentAdjustId);
+            const producto = productos.find(p => p.id === currentAdjustId);
             
-            if (productoIndex === -1) return;
+            if (!producto) return;
             
-            const producto = productos[productoIndex];
             const tipo = document.getElementById('adjustType').value;
             const cantidad = parseInt(document.getElementById('adjustQuantity').value);
             const motivo = document.getElementById('adjustReason').value.trim();
@@ -3250,7 +3235,7 @@
             
             try {
                 // Actualizar producto en Firebase
-                await updateProductInFirebase(producto.id, {
+                await updateProductInFirebase(producto.firebaseId, {
                     stock: nuevoStock,
                     updatedAt: new Date().toISOString()
                 });
@@ -3380,9 +3365,9 @@
         }
 
         async function guardarCambiosEdicion() {
-            const productoIndex = productos.findIndex(p => p.id === currentEditId);
+            const producto = productos.find(p => p.id === currentEditId);
             
-            if (productoIndex === -1) return;
+            if (!producto) return;
             
             const codigo = document.getElementById('editCodigo').value.trim();
             const nombre = document.getElementById('editNombre').value.trim();
@@ -3403,7 +3388,7 @@
                 return;
             }
             
-            const codigoExiste = productos.some((p, index) => p.codigo === codigo && index !== productoIndex);
+            const codigoExiste = productos.some(p => p.codigo === codigo && p.id !== currentEditId);
             if (codigoExiste) {
                 alert('Ya existe otro producto con este código');
                 return;
@@ -3411,7 +3396,7 @@
             
             try {
                 // Actualizar en Firebase
-                await updateProductInFirebase(currentEditId, {
+                await updateProductInFirebase(producto.firebaseId, {
                     codigo: codigo,
                     nombre: nombre,
                     categoria: categoria,
