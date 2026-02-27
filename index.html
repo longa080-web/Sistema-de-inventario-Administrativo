@@ -906,6 +906,34 @@
             background-color: #8e44ad;
         }
         
+        /* Estilos para el tipo de bulto */
+        .bulto-config {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 5px;
+        }
+        
+        .bulto-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background-color: #f8f9fa;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .bulto-option.selected {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .bulto-option input[type="radio"] {
+            width: auto;
+            margin-right: 5px;
+        }
+        
         /* Firebase status indicator */
         .firebase-status {
             position: fixed;
@@ -1135,14 +1163,31 @@
                                     <option value="UND">Unidades</option>
                                     <option value="CAJAS">Cajas</option>
                                     <option value="PAQ">Paquetes</option>
+                                    <option value="BULTO">Bultos</option>
                                     <option value="GALON">Galones</option>
                                     <option value="LT">Litros</option>
                                 </select>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group" id="unidadesPorMedidaGroup">
                                 <label for="unidadesPorMedida">Unidades por Medida *</label>
                                 <input type="number" id="unidadesPorMedida" min="1" value="1" required>
-                                <small class="unit-conversion">Ej: 24 unidades por caja, 100 unidades por paquete</small>
+                                <small class="unit-conversion" id="unidadExplicacion">Ej: 24 unidades por caja, 100 unidades por paquete</small>
+                            </div>
+                        </div>
+
+                        <!-- Configuración específica para bultos -->
+                        <div id="bultoConfig" style="display: none;" class="form-row">
+                            <div class="form-group">
+                                <label>Tipo de Bulto *</label>
+                                <div class="bulto-config">
+                                    <label class="bulto-option">
+                                        <input type="radio" name="tipoBulto" value="4" checked> Bulto de 4 paquetes
+                                    </label>
+                                    <label class="bulto-option">
+                                        <input type="radio" name="tipoBulto" value="6"> Bulto de 6 paquetes
+                                    </label>
+                                </div>
+                                <small class="unit-conversion">Cada paquete contiene las unidades especificadas arriba</small>
                             </div>
                         </div>
 
@@ -1150,12 +1195,12 @@
                             <div class="form-group">
                                 <label for="stockInicial">Stock a Agregar *</label>
                                 <input type="number" id="stockInicial" min="0" required>
-                                <small class="unit-conversion">En la unidad de medida seleccionada</small>
+                                <small class="unit-conversion" id="stockExplicacion">En la unidad de medida seleccionada</small>
                             </div>
                             <div class="form-group">
                                 <label for="stockMinimo">Stock Mínimo (Alerta) *</label>
                                 <input type="number" id="stockMinimo" min="1" value="5" required>
-                                <small class="unit-conversion">En la unidad de medida seleccionada</small>
+                                <small class="unit-conversion" id="stockMinimoExplicacion">En la unidad de medida seleccionada</small>
                             </div>
                         </div>
 
@@ -1867,6 +1912,11 @@
         // =============================================
 
         function calcularUnidadesTotales(producto) {
+            if (producto.unidad === 'BULTO') {
+                // Para bultos: stock * (paquetes por bulto) * (unidades por paquete)
+                const paquetesPorBulto = producto.paquetesPorBulto || 4; // Valor por defecto: 4
+                return producto.stock * paquetesPorBulto * producto.unidadesPorMedida;
+            }
             return producto.stock * producto.unidadesPorMedida;
         }
 
@@ -1875,6 +1925,12 @@
                 console.warn(`Producto ${producto.nombre} tiene unidadesPorMedida = 0, usando 1 como valor por defecto`);
                 return unidadesTotales;
             }
+            
+            if (producto.unidad === 'BULTO') {
+                const paquetesPorBulto = producto.paquetesPorBulto || 4;
+                return unidadesTotales / (producto.unidadesPorMedida * paquetesPorBulto);
+            }
+            
             return unidadesTotales / producto.unidadesPorMedida;
         }
 
@@ -1920,9 +1976,37 @@
                 codigoInput.addEventListener('blur', verificarCodigoExistente);
             }
             
+            // Configurar evento para mostrar configuración de bultos
+            const unidadSelect = document.getElementById('unidadProducto');
+            if (unidadSelect) {
+                unidadSelect.addEventListener('change', mostrarConfiguracionBultos);
+            }
+            
             // Actualizar fecha de última actualización
             document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString();
         });
+
+        // Función para mostrar/ocultar configuración de bultos
+        function mostrarConfiguracionBultos() {
+            const unidad = document.getElementById('unidadProducto').value;
+            const bultoConfig = document.getElementById('bultoConfig');
+            const unidadesPorMedidaGroup = document.getElementById('unidadesPorMedidaGroup');
+            const unidadExplicacion = document.getElementById('unidadExplicacion');
+            
+            if (unidad === 'BULTO') {
+                bultoConfig.style.display = 'flex';
+                unidadExplicacion.textContent = 'Unidades por paquete (ej: 12 unidades por paquete)';
+            } else {
+                bultoConfig.style.display = 'none';
+                if (unidad === 'CAJAS') {
+                    unidadExplicacion.textContent = 'Ej: 24 unidades por caja';
+                } else if (unidad === 'PAQ') {
+                    unidadExplicacion.textContent = 'Ej: 100 unidades por paquete';
+                } else {
+                    unidadExplicacion.textContent = 'Ej: 24 unidades por caja, 100 unidades por paquete';
+                }
+            }
+        }
 
         // Inicializar el sistema después de Firebase
         function inicializarSistema() {
@@ -2135,6 +2219,17 @@
                 return;
             }
             
+            // Obtener configuración de bultos si aplica
+            let paquetesPorBulto = null;
+            if (unidad === 'BULTO') {
+                const tipoBulto = document.querySelector('input[name="tipoBulto"]:checked');
+                if (tipoBulto) {
+                    paquetesPorBulto = parseInt(tipoBulto.value);
+                } else {
+                    paquetesPorBulto = 4; // Valor por defecto
+                }
+            }
+            
             // Crear nuevo producto
             const nuevoProducto = {
                 id: nextProductId,
@@ -2145,6 +2240,7 @@
                 stockMinimo: stockMinimo,
                 unidad: unidad,
                 unidadesPorMedida: unidadesPorMedida,
+                paquetesPorBulto: paquetesPorBulto,
                 descripcion: descripcion,
                 fechaRegistro: new Date().toISOString().split('T')[0],
                 createdAt: new Date().toISOString()
@@ -2217,7 +2313,13 @@
                 return;
             }
             
-            const unidadesAAgregar = cantidad * producto.unidadesPorMedida;
+            let unidadesAAgregar;
+            if (producto.unidad === 'BULTO') {
+                const paquetesPorBulto = producto.paquetesPorBulto || 4;
+                unidadesAAgregar = cantidad * paquetesPorBulto * producto.unidadesPorMedida;
+            } else {
+                unidadesAAgregar = cantidad * producto.unidadesPorMedida;
+            }
             
             // Actualizar stock localmente
             const nuevoStock = producto.stock + cantidad;
@@ -2523,6 +2625,17 @@
                     document.getElementById('stockMinimo').value = productoExistente.stockMinimo;
                     document.getElementById('descripcionProducto').value = `Reposición de stock para ${productoExistente.nombre}`;
                     
+                    // Mostrar configuración de bultos si aplica
+                    if (productoExistente.unidad === 'BULTO') {
+                        document.getElementById('bultoConfig').style.display = 'flex';
+                        const radios = document.querySelectorAll('input[name="tipoBulto"]');
+                        radios.forEach(radio => {
+                            if (parseInt(radio.value) === (productoExistente.paquetesPorBulto || 4)) {
+                                radio.checked = true;
+                            }
+                        });
+                    }
+                    
                     saveBtn.style.display = 'none';
                     repositionBtn.style.display = 'block';
                 } else {
@@ -2547,6 +2660,18 @@
             let equivalencia = '';
             if (producto.unidad === "UND") {
                 equivalencia = `${cantidadUnidades} unidades`;
+            } else if (producto.unidad === "BULTO") {
+                const paquetesPorBulto = producto.paquetesPorBulto || 4;
+                const bultos = Math.floor(cantidadUnidades / (producto.unidadesPorMedida * paquetesPorBulto));
+                const paquetes = Math.floor((cantidadUnidades % (producto.unidadesPorMedida * paquetesPorBulto)) / producto.unidadesPorMedida);
+                const unidadesRestantes = cantidadUnidades % producto.unidadesPorMedida;
+                
+                let equivalenciaPartes = [];
+                if (bultos > 0) equivalenciaPartes.push(`${bultos} bulto(s)`);
+                if (paquetes > 0) equivalenciaPartes.push(`${paquetes} paquete(s)`);
+                if (unidadesRestantes > 0) equivalenciaPartes.push(`${unidadesRestantes} unidad(es)`);
+                
+                equivalencia = equivalenciaPartes.join(' + ') + ` (${cantidadUnidades} unidades)`;
             } else {
                 const equivalenciaMedida = cantidadUnidades / (producto.unidadesPorMedida || 1);
                 equivalencia = `${equivalenciaMedida.toFixed(2)} ${producto.unidad} (${cantidadUnidades} unidades)`;
@@ -2560,6 +2685,18 @@
                 
                 if (producto.unidad === "UND") {
                     nuevoStockMedida = `${nuevoStockUnidades} unidades`;
+                } else if (producto.unidad === "BULTO") {
+                    const paquetesPorBulto = producto.paquetesPorBulto || 4;
+                    const bultos = Math.floor(nuevoStockUnidades / (producto.unidadesPorMedida * paquetesPorBulto));
+                    const paquetes = Math.floor((nuevoStockUnidades % (producto.unidadesPorMedida * paquetesPorBulto)) / producto.unidadesPorMedida);
+                    const unidades = nuevoStockUnidades % producto.unidadesPorMedida;
+                    
+                    let stockPartes = [];
+                    if (bultos > 0) stockPartes.push(`${bultos} bulto(s)`);
+                    if (paquetes > 0) stockPartes.push(`${paquetes} paquete(s)`);
+                    if (unidades > 0) stockPartes.push(`${unidades} unidad(es)`);
+                    
+                    nuevoStockMedida = stockPartes.join(' + ') + ` (${nuevoStockUnidades} unidades)`;
                 } else {
                     const nuevoStock = calcularStockDesdeUnidades(producto, nuevoStockUnidades);
                     nuevoStockMedida = `${nuevoStock.toFixed(2)} ${producto.unidad} (${nuevoStockUnidades} unidades)`;
@@ -2747,6 +2884,8 @@
                 let infoUnidades = '';
                 if (producto.unidad === "UND") {
                     infoUnidades = `${producto.stock} ${producto.unidad}`;
+                } else if (producto.unidad === "BULTO") {
+                    infoUnidades = `${producto.stock} ${producto.unidad} (${producto.paquetesPorBulto || 4} paq/bulto)`;
                 } else {
                     infoUnidades = `${producto.stock} ${producto.unidad}`;
                 }
@@ -2754,6 +2893,8 @@
                 let infoStockMinimo = '';
                 if (producto.unidad === "UND") {
                     infoStockMinimo = `${producto.stockMinimo} ${producto.unidad}`;
+                } else if (producto.unidad === "BULTO") {
+                    infoStockMinimo = `${producto.stockMinimo} ${producto.unidad} (${stockMinimoUnidades} unidades)`;
                 } else {
                     infoStockMinimo = `${producto.stockMinimo} ${producto.unidad} (${stockMinimoUnidades} unidades)`;
                 }
@@ -2772,7 +2913,7 @@
                         </div>
                     </td>
                     <td>${unidadesTotales} unidades</td>
-                    <td>${producto.unidad}</td>
+                    <td>${producto.unidad} ${producto.unidad === 'BULTO' ? `(${producto.paquetesPorBulto || 4} paq)` : ''}</td>
                     <td>${infoStockMinimo}</td>
                     <td class="${estadoClase}">${stockIndicator} ${estadoTexto}</td>
                     <td>
@@ -2853,6 +2994,17 @@
             document.getElementById('unidadesPorMedida').value = producto.unidadesPorMedida || 1;
             document.getElementById('stockMinimo').value = producto.stockMinimo;
             document.getElementById('descripcionProducto').value = `Reposición de stock para ${producto.nombre}`;
+            
+            // Mostrar configuración de bultos si aplica
+            if (producto.unidad === 'BULTO') {
+                document.getElementById('bultoConfig').style.display = 'flex';
+                const radios = document.querySelectorAll('input[name="tipoBulto"]');
+                radios.forEach(radio => {
+                    if (parseInt(radio.value) === (producto.paquetesPorBulto || 4)) {
+                        radio.checked = true;
+                    }
+                });
+            }
             
             document.getElementById('saveProductBtn').style.display = 'none';
             document.getElementById('repositionBtn').style.display = 'block';
@@ -3275,6 +3427,25 @@
             const modalBody = document.querySelector('#editModal .modal-body');
             if (!modalBody) return;
             
+            let bultoConfigHtml = '';
+            if (producto.unidad === 'BULTO') {
+                bultoConfigHtml = `
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tipo de Bulto *</label>
+                            <div class="bulto-config">
+                                <label class="bulto-option">
+                                    <input type="radio" name="editTipoBulto" value="4" ${(producto.paquetesPorBulto || 4) === 4 ? 'checked' : ''}> Bulto de 4 paquetes
+                                </label>
+                                <label class="bulto-option">
+                                    <input type="radio" name="editTipoBulto" value="6" ${(producto.paquetesPorBulto || 4) === 6 ? 'checked' : ''}> Bulto de 6 paquetes
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
             modalBody.innerHTML = `
                 <form id="editForm">
                     <div class="form-row">
@@ -3306,6 +3477,7 @@
                                 <option value="UND" ${producto.unidad === 'UND' ? 'selected' : ''}>Unidades</option>
                                 <option value="CAJAS" ${producto.unidad === 'CAJAS' ? 'selected' : ''}>Cajas</option>
                                 <option value="PAQ" ${producto.unidad === 'PAQ' ? 'selected' : ''}>Paquetes</option>
+                                <option value="BULTO" ${producto.unidad === 'BULTO' ? 'selected' : ''}>Bultos</option>
                                 <option value="GALON" ${producto.unidad === 'GALON' ? 'selected' : ''}>Galones</option>
                                 <option value="LT" ${producto.unidad === 'LT' ? 'selected' : ''}>Litros</option>
                             </select>
@@ -3313,9 +3485,11 @@
                         <div class="form-group">
                             <label for="editUnidadesPorMedida">Unidades por Medida *</label>
                             <input type="number" id="editUnidadesPorMedida" min="1" value="${producto.unidadesPorMedida || 1}" required>
-                            <small class="unit-conversion">Ej: 24 unidades por caja, 100 unidades por paquete</small>
+                            <small class="unit-conversion">${producto.unidad === 'BULTO' ? 'Unidades por paquete' : 'Ej: 24 unidades por caja'}</small>
                         </div>
                     </div>
+                    
+                    ${bultoConfigHtml}
                     
                     <div class="form-row">
                         <div class="form-group">
@@ -3378,6 +3552,15 @@
             const stockMinimo = parseInt(document.getElementById('editStockMinimo').value);
             const descripcion = document.getElementById('editDescripcion').value.trim();
             
+            // Obtener configuración de bultos si aplica
+            let paquetesPorBulto = producto.paquetesPorBulto;
+            if (unidad === 'BULTO') {
+                const tipoBulto = document.querySelector('input[name="editTipoBulto"]:checked');
+                if (tipoBulto) {
+                    paquetesPorBulto = parseInt(tipoBulto.value);
+                }
+            }
+            
             if (!codigo || !nombre || !categoria || !unidad || isNaN(unidadesPorMedida) || isNaN(stock) || isNaN(stockMinimo)) {
                 alert('Por favor complete todos los campos requeridos');
                 return;
@@ -3402,6 +3585,7 @@
                     categoria: categoria,
                     unidad: unidad,
                     unidadesPorMedida: unidadesPorMedida,
+                    paquetesPorBulto: paquetesPorBulto,
                     stock: stock,
                     stockMinimo: stockMinimo,
                     descripcion: descripcion,
@@ -3861,7 +4045,7 @@
                 const ctx = topProductsChartCanvas.getContext('2d');
                 
                 topProductsChartInstance = new Chart(ctx, {
-                    type: 'horizontalBar',
+                    type: 'bar',
                     data: {
                         labels: topProductos.map(p => p[0]),
                         datasets: [{
@@ -4078,12 +4262,21 @@
                     estado = 'Stock Alto';
                 }
                 
+                let stockTexto = '';
+                if (p.unidad === "UND") {
+                    stockTexto = `${p.stock} ${p.unidad}`;
+                } else if (p.unidad === "BULTO") {
+                    stockTexto = `${p.stock} ${p.unidad} (${p.paquetesPorBulto || 4} paq)`;
+                } else {
+                    stockTexto = `${p.stock} ${p.unidad}`;
+                }
+                
                 return [
                     codigoNum,
                     p.codigo,
                     p.nombre,
                     p.categoria.charAt(0).toUpperCase() + p.categoria.slice(1),
-                    p.unidad === "UND" ? `${p.stock} ${p.unidad}` : `${p.stock} ${p.unidad}`,
+                    stockTexto,
                     unidadesTotales.toLocaleString(),
                     p.unidad,
                     estado
@@ -4118,14 +4311,24 @@
                 
                 const codigoNum = p.codigo.split('-')[1] || p.id;
                 
+                let stockTexto = '';
+                if (p.unidad === "UND") {
+                    stockTexto = `${p.stock} ${p.unidad}`;
+                } else if (p.unidad === "BULTO") {
+                    stockTexto = `${p.stock} ${p.unidad} (${p.paquetesPorBulto || 4} paq)`;
+                } else {
+                    stockTexto = `${p.stock} ${p.unidad}`;
+                }
+                
                 return {
                     '#': codigoNum,
                     'Código': p.codigo,
                     'Producto': p.nombre,
                     'Categoría': p.categoria.charAt(0).toUpperCase() + p.categoria.slice(1),
-                    'Stock': p.unidad === "UND" ? `${p.stock} ${p.unidad}` : `${p.stock} ${p.unidad}`,
+                    'Stock': stockTexto,
                     'Unidades Totales': unidadesTotales,
                     'Unidad': p.unidad,
+                    'Paquetes por Bulto': p.paquetesPorBulto || '',
                     'Unidades por Medida': p.unidadesPorMedida || 1,
                     'Stock Mínimo': p.unidad === "UND" ? `${p.stockMinimo} ${p.unidad}` : `${p.stockMinimo} ${p.unidad}`,
                     'Stock Mínimo (Unidades)': stockMinimoUnidades,
@@ -4173,9 +4376,10 @@
                 {wch: 10},
                 {wch: 30},
                 {wch: 12},
-                {wch: 15},
+                {wch: 20},
                 {wch: 15},
                 {wch: 8},
+                {wch: 15},
                 {wch: 15},
                 {wch: 15},
                 {wch: 20},
@@ -4233,6 +4437,7 @@
                     'Categoría': p.categoria.charAt(0).toUpperCase() + p.categoria.slice(1),
                     'Stock Actual': p.stock,
                     'Unidad': p.unidad,
+                    'Paquetes por Bulto': p.paquetesPorBulto || '',
                     'Unidades por Medida': p.unidadesPorMedida || 1,
                     'Unidades Totales': unidadesTotales,
                     'Stock Mínimo': p.stockMinimo,
@@ -4257,6 +4462,7 @@
                 {wch: 12},
                 {wch: 12},
                 {wch: 8},
+                {wch: 15},
                 {wch: 15},
                 {wch: 15},
                 {wch: 12},
@@ -4293,6 +4499,7 @@
                         'Categoría': p.categoria,
                         'Stock Actual': p.stock,
                         'Unidad': p.unidad,
+                        'Paquetes por Bulto': p.paquetesPorBulto || '',
                         'Unidades Totales': unidades,
                         'Stock Mínimo': p.stockMinimo,
                         'Stock Mínimo (Unidades)': minimo,
