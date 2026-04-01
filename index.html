@@ -2044,7 +2044,7 @@
             asignaciones.sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora));
             
             if (asignaciones.length === 0) {
-                tbody.innerHTML = '</table><td colspan="6" style="text-align:center;">No hay asignaciones registradas</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay asignaciones registradas</td></tr>';
                 return;
             }
             
@@ -2087,7 +2087,7 @@
             tableBody.innerHTML = '';
             
             if (productosFiltrados.length === 0) {
-                tableBody.innerHTML = '缘<td colspan="9" style="text-align:center;padding:20px;">No hay productos</td>脉';
+                tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;">No hay productos</td></tr>';
                 return;
             }
             
@@ -2192,7 +2192,7 @@
             tableBody.innerHTML = '';
             
             if (movimientosFiltrados.length === 0) {
-                tableBody.innerHTML = '缘<td colspan="9" style="text-align:center;padding:20px;">No hay movimientos</td>脉';
+                tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;">No hay movimientos</td></tr>';
                 return;
             }
             
@@ -2311,20 +2311,149 @@
             
             const unidadesTotales = calcularUnidadesTotales(producto);
             
+            // Generar el HTML del formulario de edición correctamente
+            let unidadesHtml = '';
+            if (producto.unidad === 'BULTO') {
+                unidadesHtml = `
+                    <div class="form-row" id="editBultoRow">
+                        <div class="form-group">
+                            <label>Unidades por Bulto *</label>
+                            <input type="number" id="editUnidadesPorBulto" min="1" step="1" value="${producto.unidadesPorBulto || 1}" required>
+                            <small class="help-text">Ej: 48 unidades por bulto</small>
+                        </div>
+                    </div>
+                `;
+            } else {
+                unidadesHtml = `
+                    <div class="form-row" id="editUnidadesPorMedidaRow">
+                        <div class="form-group">
+                            <label>Unidades por Medida *</label>
+                            <input type="number" id="editUnidadesPorMedida" min="1" step="1" value="${producto.unidadesPorMedida || 1}" required>
+                            <small class="help-text">Ej: 24 unidades por caja</small>
+                        </div>
+                    </div>
+                `;
+            }
+            
             modalBody.innerHTML = `
                 <form id="editForm">
-                    <div class="form-row"><div class="form-group"><label>Código</label><input type="text" id="editCodigo" value="${producto.codigo}" required></div>
-                    <div class="form-group"><label>Nombre</label><input type="text" id="editNombre" value="${producto.nombre}" required></div></div>
-                    <div class="form-row"><div class="form-group"><label>Categoría</label><select id="editCategoria">${['papeleria','oficina','toner','electronica','limpieza','otros'].map(c => `<option value="${c}" ${producto.categoria === c ? 'selected' : ''}>${c.charAt(0).toUpperCase() + c.slice(1)}</option>`).join('')}</select></div>
-                    <div class="form-group"><label>Unidad</label><select id="editUnidad">${['UND','CAJAS','PAQ','BULTO','GALON','LT'].map(u => `<option value="${u}" ${producto.unidad === u ? 'selected' : ''}>${u === 'UND' ? 'Unidades' : u === 'CAJAS' ? 'Cajas' : u === 'PAQ' ? 'Paquetes' : u === 'BULTO' ? 'Bultos' : u === 'GALON' ? 'Galones' : 'Litros'}</option>`).join('')}</select></div></div>
-                    ${producto.unidad === 'BULTO' ? `<div class="form-row"><div class="form-group"><label>Unidades por Bulto</label><input type="number" id="editUnidadesPorBulto" min="1" step="1" value="${producto.unidadesPorBulto || 1}" required><small class="help-text">Ej: 48 unidades por bulto</small></div></div>` : `<div class="form-row"><div class="form-group"><label>Unidades por Medida</label><input type="number" id="editUnidadesPorMedida" min="1" step="1" value="${producto.unidadesPorMedida || 1}" required><small class="help-text">Ej: 24 unidades por caja</small></div></div>`}
-                    <div class="form-row"><div class="form-group"><label>Stock (en ${producto.unidad})</label><input type="number" id="editStock" value="${Math.floor(producto.stock)}" min="0" step="1" required><small>Stock actual: ${unidadesTotales} unidades totales</small></div>
-                    <div class="form-group"><label>Stock Mínimo (en ${producto.unidad})</label><input type="number" id="editStockMinimo" value="${producto.stockMinimo}" min="1" step="1" required></div></div>
-                    <div class="form-row"><div class="form-group"><label>Descripción</label><textarea id="editDescripcion" rows="2">${producto.descripcion || ''}</textarea></div></div>
-                    <div class="form-buttons"><button type="submit" class="btn btn-primary">Guardar</button><button type="button" id="cancelEdit" class="btn btn-secondary">Cancelar</button></div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Código *</label>
+                            <input type="text" id="editCodigo" value="${producto.codigo}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Nombre *</label>
+                            <input type="text" id="editNombre" value="${producto.nombre}" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Categoría *</label>
+                            <select id="editCategoria" required>
+                                <option value="papeleria" ${producto.categoria === 'papeleria' ? 'selected' : ''}>Papelería</option>
+                                <option value="oficina" ${producto.categoria === 'oficina' ? 'selected' : ''}>Artículos de Oficina</option>
+                                <option value="toner" ${producto.categoria === 'toner' ? 'selected' : ''}>Toner</option>
+                                <option value="electronica" ${producto.categoria === 'electronica' ? 'selected' : ''}>Electrónica</option>
+                                <option value="limpieza" ${producto.categoria === 'limpieza' ? 'selected' : ''}>Limpieza</option>
+                                <option value="otros" ${producto.categoria === 'otros' ? 'selected' : ''}>Otros</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Unidad *</label>
+                            <select id="editUnidad" required>
+                                <option value="UND" ${producto.unidad === 'UND' ? 'selected' : ''}>Unidades</option>
+                                <option value="CAJAS" ${producto.unidad === 'CAJAS' ? 'selected' : ''}>Cajas</option>
+                                <option value="PAQ" ${producto.unidad === 'PAQ' ? 'selected' : ''}>Paquetes</option>
+                                <option value="BULTO" ${producto.unidad === 'BULTO' ? 'selected' : ''}>Bultos</option>
+                                <option value="GALON" ${producto.unidad === 'GALON' ? 'selected' : ''}>Galones</option>
+                                <option value="LT" ${producto.unidad === 'LT' ? 'selected' : ''}>Litros</option>
+                            </select>
+                        </div>
+                    </div>
+                    ${unidadesHtml}
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Stock (en ${producto.unidad}) *</label>
+                            <input type="number" id="editStock" value="${Math.floor(producto.stock)}" min="0" step="1" required>
+                            <small>Stock actual: ${unidadesTotales} unidades totales</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Stock Mínimo (en ${producto.unidad}) *</label>
+                            <input type="number" id="editStockMinimo" value="${producto.stockMinimo}" min="1" step="1" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Descripción</label>
+                            <textarea id="editDescripcion" rows="2">${producto.descripcion || ''}</textarea>
+                        </div>
+                    </div>
+                    <div class="form-buttons">
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                        <button type="button" id="cancelEdit" class="btn btn-secondary">Cancelar</button>
+                    </div>
                 </form>
             `;
+            
             document.getElementById('editModal').style.display = 'flex';
+            
+            // Agregar evento change a la unidad para cambiar dinámicamente los campos
+            const unidadSelect = document.getElementById('editUnidad');
+            if (unidadSelect) {
+                unidadSelect.addEventListener('change', function() {
+                    const selectedUnidad = this.value;
+                    const unidadesContainer = document.querySelector('#editForm .form-row:has(#editUnidadesPorBulto, #editUnidadesPorMedida)');
+                    const editBultoRow = document.getElementById('editBultoRow');
+                    const editUnidadesRow = document.getElementById('editUnidadesPorMedidaRow');
+                    
+                    if (selectedUnidad === 'BULTO') {
+                        // Cambiar a modo bulto
+                        if (editUnidadesRow) editUnidadesRow.remove();
+                        if (!editBultoRow) {
+                            const newBultoRow = document.createElement('div');
+                            newBultoRow.className = 'form-row';
+                            newBultoRow.id = 'editBultoRow';
+                            newBultoRow.innerHTML = `
+                                <div class="form-group">
+                                    <label>Unidades por Bulto *</label>
+                                    <input type="number" id="editUnidadesPorBulto" min="1" step="1" value="1" required>
+                                    <small class="help-text">Ej: 48 unidades por bulto</small>
+                                </div>
+                            `;
+                            // Insertar después del form-row de categoría/unidad
+                            const categoriaRow = document.querySelector('#editForm .form-row:nth-child(2)');
+                            if (categoriaRow && categoriaRow.nextSibling) {
+                                categoriaRow.parentNode.insertBefore(newBultoRow, categoriaRow.nextSibling);
+                            }
+                        } else {
+                            editBultoRow.style.display = 'flex';
+                        }
+                    } else {
+                        // Cambiar a modo normal
+                        if (editBultoRow) editBultoRow.remove();
+                        if (!editUnidadesRow) {
+                            const newUnidadesRow = document.createElement('div');
+                            newUnidadesRow.className = 'form-row';
+                            newUnidadesRow.id = 'editUnidadesPorMedidaRow';
+                            newUnidadesRow.innerHTML = `
+                                <div class="form-group">
+                                    <label>Unidades por Medida *</label>
+                                    <input type="number" id="editUnidadesPorMedida" min="1" step="1" value="1" required>
+                                    <small class="help-text">Ej: 24 unidades por caja</small>
+                                </div>
+                            `;
+                            const categoriaRow = document.querySelector('#editForm .form-row:nth-child(2)');
+                            if (categoriaRow && categoriaRow.nextSibling) {
+                                categoriaRow.parentNode.insertBefore(newUnidadesRow, categoriaRow.nextSibling);
+                            }
+                        } else {
+                            editUnidadesRow.style.display = 'flex';
+                        }
+                    }
+                });
+            }
+            
             document.getElementById('editForm').onsubmit = (e) => { e.preventDefault(); guardarCambiosEdicion(); };
             document.getElementById('cancelEdit').onclick = cerrarModal;
         }
@@ -2332,55 +2461,85 @@
         async function guardarCambiosEdicion() {
             const producto = productos.find(p => p.id === currentEditId);
             if (!producto) return;
-            const codigo = document.getElementById('editCodigo').value.trim();
-            const nombre = document.getElementById('editNombre').value.trim();
-            const categoria = document.getElementById('editCategoria').value;
-            const unidad = document.getElementById('editUnidad').value;
-            const stock = parseFloat(document.getElementById('editStock').value);
-            const stockMinimo = parseInt(document.getElementById('editStockMinimo').value);
-            const descripcion = document.getElementById('editDescripcion').value.trim();
+            
+            const codigo = document.getElementById('editCodigo')?.value.trim();
+            const nombre = document.getElementById('editNombre')?.value.trim();
+            const categoria = document.getElementById('editCategoria')?.value;
+            const unidad = document.getElementById('editUnidad')?.value;
+            const stock = parseFloat(document.getElementById('editStock')?.value);
+            const stockMinimo = parseInt(document.getElementById('editStockMinimo')?.value);
+            const descripcion = document.getElementById('editDescripcion')?.value.trim();
             
             let unidadesPorMedida = 1;
             let unidadesPorBulto = null;
             
+            // Validar campos obligatorios
+            if (!codigo || !nombre || !categoria || !unidad || isNaN(stock) || isNaN(stockMinimo)) {
+                mostrarMensaje('Complete todos los campos obligatorios', 'error');
+                return;
+            }
+            
+            // Validar código único
+            if (productos.some(p => p.codigo === codigo && p.id !== currentEditId)) {
+                mostrarMensaje('El código ya existe en otro producto', 'error');
+                return;
+            }
+            
+            // Obtener valores según la unidad seleccionada
             if (unidad === 'BULTO') {
-                unidadesPorBulto = parseInt(document.getElementById('editUnidadesPorBulto').value);
+                const unidadesPorBultoInput = document.getElementById('editUnidadesPorBulto');
+                if (!unidadesPorBultoInput) {
+                    mostrarMensaje('Complete las unidades por bulto', 'error');
+                    return;
+                }
+                unidadesPorBulto = parseInt(unidadesPorBultoInput.value);
                 if (isNaN(unidadesPorBulto) || unidadesPorBulto <= 0) {
                     mostrarMensaje('Unidades por bulto debe ser mayor a 0', 'error');
                     return;
                 }
+                unidadesPorMedida = 1;
             } else {
-                unidadesPorMedida = parseInt(document.getElementById('editUnidadesPorMedida').value);
+                const unidadesPorMedidaInput = document.getElementById('editUnidadesPorMedida');
+                if (!unidadesPorMedidaInput) {
+                    mostrarMensaje('Complete las unidades por medida', 'error');
+                    return;
+                }
+                unidadesPorMedida = parseInt(unidadesPorMedidaInput.value);
                 if (isNaN(unidadesPorMedida) || unidadesPorMedida <= 0) {
                     mostrarMensaje('Unidades por medida debe ser mayor a 0', 'error');
                     return;
                 }
-            }
-            
-            if (!codigo || !nombre || !categoria || !unidad || isNaN(stock) || isNaN(stockMinimo)) {
-                mostrarMensaje('Complete todos los campos', 'error');
-                return;
-            }
-            
-            if (productos.some(p => p.codigo === codigo && p.id !== currentEditId)) {
-                mostrarMensaje('Código ya existe', 'error');
-                return;
+                unidadesPorBulto = null;
             }
             
             try {
-                const updates = { codigo, nombre, categoria, unidad, stock: Math.floor(stock), stockMinimo, descripcion, updatedAt: new Date().toISOString() };
+                const updates = { 
+                    codigo, 
+                    nombre, 
+                    categoria, 
+                    unidad, 
+                    stock: Math.floor(stock), 
+                    stockMinimo, 
+                    descripcion, 
+                    unidadesPorMedida,
+                    updatedAt: new Date().toISOString() 
+                };
+                
                 if (unidad === 'BULTO') {
                     updates.unidadesPorBulto = unidadesPorBulto;
-                    updates.unidadesPorMedida = 1;
                 } else {
-                    updates.unidadesPorMedida = unidadesPorMedida;
-                    if (updates.unidadesPorBulto) delete updates.unidadesPorBulto;
+                    // Eliminar unidadesPorBulto si existe
+                    if (producto.unidadesPorBulto) {
+                        updates.unidadesPorBulto = null;
+                    }
                 }
+                
                 await updateProductInFirebase(producto.firebaseId, updates);
-                mostrarMensaje('Producto actualizado', 'success');
+                mostrarMensaje('Producto actualizado correctamente', 'success');
                 cerrarModal();
             } catch (error) {
-                mostrarMensaje('Error al actualizar', 'error');
+                console.error('Error al guardar cambios:', error);
+                mostrarMensaje('Error al actualizar el producto', 'error');
             }
         }
 
