@@ -8,7 +8,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Firebase SDK -->
     <script type="module">
@@ -529,270 +528,6 @@
             background-color: #219653;
         }
 
-        .reports-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .report-card {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            padding: 15px;
-            flex: 1;
-            min-width: 300px;
-        }
-
-        @media (max-width: 767px) {
-            .report-card {
-                min-width: 100%;
-            }
-        }
-
-        .report-card.full-width {
-            flex: 100%;
-        }
-
-        .chart-container {
-            height: 250px;
-            margin-top: 15px;
-            position: relative;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .stat-box {
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .stat-box i {
-            font-size: 1.5rem;
-            color: #3498db;
-        }
-
-        .stat-content h4 {
-            font-size: 0.8rem;
-            color: #7f8c8d;
-            margin-bottom: 5px;
-        }
-
-        .stat-content p {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #2c3e50;
-        }
-
-        .report-controls {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .report-controls select {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            min-width: 150px;
-            font-size: 0.85rem;
-        }
-
-        @media (max-width: 480px) {
-            .report-controls select {
-                min-width: 100%;
-            }
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
-        }
-
-        .modal-content {
-            background-color: white;
-            border-radius: 8px;
-            width: 100%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            background-color: #3498db;
-            color: white;
-            border-radius: 8px 8px 0 0;
-        }
-
-        .close-modal {
-            font-size: 1.3rem;
-            cursor: pointer;
-        }
-
-        .modal-body {
-            padding: 15px;
-        }
-
-        .confirm-modal .modal-body {
-            text-align: center;
-            padding: 20px 15px;
-        }
-
-        .modal-footer {
-            padding: 15px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        footer {
-            background-color: #2c3e50;
-            color: #ecf0f1;
-            text-align: center;
-            padding: 1rem;
-            font-size: 0.8rem;
-        }
-
-        .product-card {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            padding: 15px;
-            margin-bottom: 15px;
-            border-left: 5px solid #3498db;
-        }
-
-        .product-card.low-stock {
-            border-left-color: #e74c3c;
-        }
-
-        .product-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-            gap: 5px;
-        }
-
-        .product-name {
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: #2c3e50;
-        }
-
-        .product-category {
-            background-color: #e3f2fd;
-            color: #3498db;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-        }
-
-        .product-stock {
-            font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 10px;
-        }
-
-        .stock-progress {
-            height: 8px;
-            background-color: #ecf0f1;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 15px;
-        }
-
-        .stock-progress-bar {
-            height: 100%;
-            background-color: #27ae60;
-            transition: width 0.3s;
-        }
-
-        .stock-progress-bar.low {
-            background-color: #e74c3c;
-        }
-
-        .stock-progress-bar.medium {
-            background-color: #f39c12;
-        }
-
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
-        }
-        
-        .badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: 600;
-        }
-        
-        .badge-papeleria {
-            background-color: #e3f2fd;
-            color: #3498db;
-        }
-        
-        .badge-toner {
-            background-color: #e8f5e9;
-            color: #27ae60;
-        }
-        
-        .badge-oficina {
-            background-color: #fff3cd;
-            color: #f39c12;
-        }
-        
-        .badge-electronica {
-            background-color: #f3e5f5;
-            color: #9b59b6;
-        }
-        
-        .badge-otros {
-            background-color: #e9ecef;
-            color: #6c757d;
-        }
-        
         .dashboard-cards {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -997,6 +732,261 @@
             opacity: 0.6;
             cursor: not-allowed;
         }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .input-group input {
+            flex: 1;
+        }
+        
+        .help-text {
+            font-size: 0.7rem;
+            color: #7f8c8d;
+            margin-top: 3px;
+        }
+        
+        .history-panel {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .history-panel h3 {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .history-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .history-filters input, .history-filters select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.85rem;
+        }
+        
+        .history-filters button {
+            padding: 8px 15px;
+        }
+        
+        .history-table-container {
+            max-height: 300px;
+            overflow: auto;
+        }
+        
+        .history-table {
+            min-width: 600px;
+        }
+        
+        .history-table th {
+            background-color: #3498db;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        
+        /* Estilos para modales */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .modal-header h3 {
+            color: white;
+            margin: 0;
+        }
+        
+        .close-modal {
+            font-size: 1.3rem;
+            cursor: pointer;
+            color: white;
+        }
+        
+        .close-modal:hover {
+            opacity: 0.8;
+        }
+        
+        .modal-body {
+            padding: 15px;
+        }
+        
+        .confirm-modal .modal-body {
+            text-align: center;
+            padding: 20px 15px;
+        }
+        
+        .modal-footer {
+            padding: 15px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        footer {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.8rem;
+        }
+        
+        .product-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 5px solid #3498db;
+        }
+        
+        .product-card.low-stock {
+            border-left-color: #e74c3c;
+        }
+        
+        .product-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        
+        .product-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #2c3e50;
+        }
+        
+        .product-category {
+            background-color: #e3f2fd;
+            color: #3498db;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+        
+        .product-stock {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .stock-progress {
+            height: 8px;
+            background-color: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        
+        .stock-progress-bar {
+            height: 100%;
+            background-color: #27ae60;
+            transition: width 0.3s;
+        }
+        
+        .stock-progress-bar.low {
+            background-color: #e74c3c;
+        }
+        
+        .stock-progress-bar.medium {
+            background-color: #f39c12;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        
+        .badge-papeleria {
+            background-color: #e3f2fd;
+            color: #3498db;
+        }
+        
+        .badge-toner {
+            background-color: #e8f5e9;
+            color: #27ae60;
+        }
+        
+        .badge-oficina {
+            background-color: #fff3cd;
+            color: #f39c12;
+        }
+        
+        .badge-electronica {
+            background-color: #f3e5f5;
+            color: #9b59b6;
+        }
+        
+        .badge-otros {
+            background-color: #e9ecef;
+            color: #6c757d;
+        }
     </style>
 </head>
 <body>
@@ -1030,9 +1020,6 @@
                     </button>
                     <button class="menu-btn" data-section="movimientos">
                         <i class="fas fa-exchange-alt"></i> Movimientos
-                    </button>
-                    <button class="menu-btn" data-section="reportes">
-                        <i class="fas fa-chart-bar"></i> Reportes
                     </button>
                     <div class="menu-divider"></div>
                     <button class="menu-btn export-btn" id="exportPdf">
@@ -1094,22 +1081,6 @@
                             <i class="fas fa-calculator"></i>
                             <h3 id="dashboardTotalUnits">0</h3>
                             <p>Total Unidades Disponibles</p>
-                        </div>
-                    </div>
-                    
-                    <div class="reports-container">
-                        <div class="report-card">
-                            <h3>Stock por Categoría</h3>
-                            <div class="chart-container">
-                                <canvas id="categoryChart"></canvas>
-                            </div>
-                        </div>
-                        
-                        <div class="report-card">
-                            <h3>Productos con Stock Bajo</h3>
-                            <div id="lowStockList">
-                                <p style="text-align: center; color: #666; padding: 20px;">Cargando datos...</p>
-                            </div>
                         </div>
                     </div>
                 </section>
@@ -1199,38 +1170,37 @@
                                     <option value="LT">Litros</option>
                                 </select>
                             </div>
-                            <div class="form-group" id="unidadesPorMedidaGroup">
-                                <label for="unidadesPorMedida">Unidades por Medida *</label>
-                                <input type="number" id="unidadesPorMedida" min="1" value="1" required>
-                                <small class="unit-conversion" id="unidadExplicacion">Ej: 24 unidades por caja, 100 unidades por paquete</small>
+                        </div>
+
+                        <div id="bultoConfigGroup" class="form-row" style="display: none;">
+                            <div class="form-group">
+                                <label for="unidadesPorBulto">Unidades por Bulto *</label>
+                                <div class="input-group">
+                                    <input type="number" id="unidadesPorBulto" min="1" step="1" value="1" required>
+                                    <span>unidades</span>
+                                </div>
+                                <small class="help-text">Ejemplo: si cada bulto contiene 48 unidades, ingrese 48</small>
                             </div>
                         </div>
 
-                        <div id="bultoConfig" style="display: none;" class="form-row">
+                        <div id="unidadesPorMedidaGroup" class="form-row">
                             <div class="form-group">
-                                <label>Tipo de Bulto *</label>
-                                <div class="bulto-config">
-                                    <label class="bulto-option">
-                                        <input type="radio" name="tipoBulto" value="4" checked> Bulto de 4 paquetes
-                                    </label>
-                                    <label class="bulto-option">
-                                        <input type="radio" name="tipoBulto" value="6"> Bulto de 6 paquetes
-                                    </label>
-                                </div>
-                                <small class="unit-conversion">Cada paquete contiene las unidades especificadas arriba</small>
+                                <label for="unidadesPorMedida">Unidades por Medida *</label>
+                                <input type="number" id="unidadesPorMedida" min="1" step="1" value="1" required>
+                                <small class="unit-conversion" id="unidadExplicacion">Ej: 24 unidades por caja, 100 unidades por paquete</small>
                             </div>
                         </div>
 
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="stockInicial">Stock a Agregar *</label>
-                                <input type="number" id="stockInicial" min="0" required>
-                                <small class="unit-conversion" id="stockExplicacion">En la unidad de medida seleccionada</small>
+                                <input type="number" id="stockInicial" min="0" step="1" required>
+                                <small class="unit-conversion" id="stockExplicacion">En la unidad de medida seleccionada (número entero)</small>
                             </div>
                             <div class="form-group">
                                 <label for="stockMinimo">Stock Mínimo (Alerta) *</label>
-                                <input type="number" id="stockMinimo" min="1" value="5" required>
-                                <small class="unit-conversion" id="stockMinimoExplicacion">En la unidad de medida seleccionada</small>
+                                <input type="number" id="stockMinimo" min="1" step="1" value="5" required>
+                                <small class="unit-conversion" id="stockMinimoExplicacion">En la unidad de medida seleccionada (número entero)</small>
                             </div>
                         </div>
 
@@ -1255,7 +1225,7 @@
                     </form>
                 </section>
 
-                <!-- Sección de Asignación de Material -->
+                <!-- Sección de Asignación de Material con Historial -->
                 <section id="asignacion" class="content-section">
                     <h2><i class="fas fa-hand-holding"></i> Asignar Material a Departamentos</h2>
                     <form id="asignacionForm">
@@ -1310,7 +1280,7 @@
                             <div class="unit-calc">
                                 <div>
                                     <label for="cantidadAsignarUnidades">Cantidad en Unidades *</label>
-                                    <input type="number" id="cantidadAsignarUnidades" min="1" required>
+                                    <input type="number" id="cantidadAsignarUnidades" min="1" step="1" required>
                                 </div>
                                 <div>
                                     <label>Equivalencia:</label>
@@ -1346,6 +1316,38 @@
                             </button>
                         </div>
                     </form>
+
+                    <!-- Historial de Asignaciones -->
+                    <div class="history-panel">
+                        <h3><i class="fas fa-history"></i> Historial de Asignaciones</h3>
+                        <div class="history-filters">
+                            <input type="text" id="searchAsignacion" placeholder="Buscar por producto, usuario o departamento...">
+                            <select id="filterAsignacionDept">
+                                <option value="">Todos los departamentos</option>
+                            </select>
+                            <input type="date" id="filterAsignacionFecha">
+                            <button id="clearAsignacionFilters" class="btn-secondary" style="padding: 8px 15px;">Limpiar filtros</button>
+                            <button id="exportAsignacionesExcel" class="btn-success" style="padding: 8px 15px;"><i class="fas fa-file-excel"></i> Exportar Excel</button>
+                            <button id="exportAsignacionesPdf" class="btn-primary" style="padding: 8px 15px;"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+                        </div>
+                        <div class="history-table-container">
+                            <table class="history-table" id="asignacionesHistoryTable">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Producto</th>
+                                        <th>Cantidad (Und)</th>
+                                        <th>Departamento</th>
+                                        <th>Usuario</th>
+                                        <th>Observaciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="asignacionesHistoryBody">
+                                    <tr><td colspan="6" style="text-align:center;">Cargando historial...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- Sección de Movimientos -->
@@ -1386,60 +1388,132 @@
                         </table>
                     </div>
                 </section>
-
-                <!-- Sección de Reportes -->
-                <section id="reportes" class="content-section">
-                    <h2><i class="fas fa-chart-bar"></i> Reportes y Estadísticas</h2>
-                    
-                    <div class="report-controls">
-                        <select id="reportType">
-                            <option value="mensual">Reporte Mensual</option>
-                            <option value="anual">Reporte Anual</option>
-                            <option value="departamento">Por Departamento</option>
-                            <option value="productos">Por Producto</option>
-                        </select>
-                        <select id="reportMonth"></select>
-                        <select id="reportYear"></select>
-                        <button id="generateReport" class="btn btn-primary">
-                            <i class="fas fa-chart-bar"></i> Generar Reporte
-                        </button>
-                        <button id="exportReportExcel" class="btn btn-success">
-                            <i class="fas fa-file-excel"></i> Exportar Reporte
-                        </button>
-                    </div>
-
-                    <div class="reports-container">
-                        <div class="report-card">
-                            <h3 id="chartTitle1">Consumo por Departamento (Unidades)</h3>
-                            <div class="chart-container">
-                                <canvas id="deptChart"></canvas>
-                            </div>
-                        </div>
-                        
-                        <div class="report-card">
-                            <h3 id="chartTitle2">Top 10 Productos Más Utilizados (Unidades)</h3>
-                            <div class="chart-container">
-                                <canvas id="topProductsChart"></canvas>
-                            </div>
-                        </div>
-                        
-                        <div class="report-card full-width">
-                            <h3>Resumen de Movimientos</h3>
-                            <div id="resumenAsignaciones">
-                                <p style="text-align: center; color: #666; padding: 20px;">Cargando datos...</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
             </div>
         </div>
 
         <!-- Modales -->
-        <div id="editModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Editar Producto</h3><span class="close-modal">&times;</span></div><div class="modal-body"></div></div></div>
-        <div id="adjustModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Ajustar Stock</h3><span class="close-modal">&times;</span></div><div class="modal-body"><form id="adjustStockForm"><div class="form-group"><label>Producto</label><input type="text" id="adjustProductName" readonly></div><div class="form-group"><label>Stock Actual (Unidades)</label><input type="text" id="adjustCurrentStock" readonly></div><div class="form-group"><label>Tipo de Ajuste</label><select id="adjustType"><option value="entrada">Entrada (+)</option><option value="salida">Salida (-)</option></select></div><div class="form-group"><label>Cantidad en Unidades</label><input type="number" id="adjustQuantity" min="1" required></div><div class="form-group"><label>Motivo</label><textarea id="adjustReason" rows="2" required></textarea></div><div class="form-buttons"><button type="submit" class="btn btn-primary">Aplicar</button><button type="button" class="btn btn-secondary close-modal">Cancelar</button></div></form></div></div></div>
-        <div id="confirmModal" class="modal"><div class="modal-content confirm-modal"><div class="modal-header"><h3>Confirmar Eliminación</h3><span class="close-modal">&times;</span></div><div class="modal-body"><p>¿Está seguro de eliminar este producto? También se eliminarán sus movimientos.</p></div><div class="modal-footer"><button id="confirmDelete" class="btn btn-danger">Eliminar</button><button id="cancelDelete" class="btn btn-secondary">Cancelar</button></div></div></div>
-        <div id="confirmMovModal" class="modal"><div class="modal-content confirm-modal"><div class="modal-header"><h3>Confirmar Eliminación</h3><span class="close-modal">&times;</span></div><div class="modal-body"><p id="confirmMovMessage"></p></div><div class="modal-footer"><button id="confirmMovDelete" class="btn btn-danger">Eliminar</button><button id="cancelMovDelete" class="btn btn-secondary">Cancelar</button></div></div></div>
-        <div id="editMovModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Editar Movimiento</h3><span class="close-modal">&times;</span></div><div class="modal-body"><form id="editMovForm"><div class="form-group"><label>Producto</label><input type="text" id="editMovProducto" readonly></div><div class="form-group"><label>Tipo</label><input type="text" id="editMovTipo" readonly></div><div class="form-group"><label>Cantidad</label><input type="text" id="editMovCantidad" readonly></div><div class="form-group"><label>Departamento</label><input type="text" id="editMovDepartamento"></div><div class="form-group"><label>Usuario</label><input type="text" id="editMovUsuario"></div><div class="form-group"><label>Observaciones</label><textarea id="editMovObservaciones" rows="2"></textarea></div><div class="form-buttons"><button type="submit" class="btn btn-primary">Guardar</button><button type="button" class="btn btn-secondary close-modal">Cancelar</button></div></form></div></div></div>
+        <div id="editModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Editar Producto</h3>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body"></div>
+            </div>
+        </div>
+        
+        <div id="adjustModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Ajustar Stock</h3>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="adjustStockForm">
+                        <div class="form-group">
+                            <label>Producto</label>
+                            <input type="text" id="adjustProductName" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Stock Actual (Unidades)</label>
+                            <input type="text" id="adjustCurrentStock" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo de Ajuste</label>
+                            <select id="adjustType">
+                                <option value="entrada">Entrada (+)</option>
+                                <option value="salida">Salida (-)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Cantidad en Unidades</label>
+                            <input type="number" id="adjustQuantity" min="1" step="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Motivo</label>
+                            <textarea id="adjustReason" rows="2" required></textarea>
+                        </div>
+                        <div class="form-buttons">
+                            <button type="submit" class="btn btn-primary">Aplicar</button>
+                            <button type="button" class="btn btn-secondary close-modal">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div id="confirmModal" class="modal">
+            <div class="modal-content confirm-modal">
+                <div class="modal-header">
+                    <h3>Confirmar Eliminación</h3>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro de eliminar este producto? También se eliminarán sus movimientos.</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="confirmDelete" class="btn btn-danger">Eliminar</button>
+                    <button id="cancelDelete" class="btn btn-secondary">Cancelar</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="confirmMovModal" class="modal">
+            <div class="modal-content confirm-modal">
+                <div class="modal-header">
+                    <h3>Confirmar Eliminación</h3>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmMovMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button id="confirmMovDelete" class="btn btn-danger">Eliminar</button>
+                    <button id="cancelMovDelete" class="btn btn-secondary">Cancelar</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="editMovModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Editar Movimiento</h3>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="editMovForm">
+                        <div class="form-group">
+                            <label>Producto</label>
+                            <input type="text" id="editMovProducto" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo</label>
+                            <input type="text" id="editMovTipo" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Cantidad</label>
+                            <input type="text" id="editMovCantidad" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Departamento</label>
+                            <input type="text" id="editMovDepartamento">
+                        </div>
+                        <div class="form-group">
+                            <label>Usuario</label>
+                            <input type="text" id="editMovUsuario">
+                        </div>
+                        <div class="form-group">
+                            <label>Observaciones</label>
+                            <textarea id="editMovObservaciones" rows="2"></textarea>
+                        </div>
+                        <div class="form-buttons">
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                            <button type="button" class="btn btn-secondary close-modal">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
 
         <div class="firebase-status" id="firebaseStatus" style="display: none;">
             <span class="status-dot"></span>
@@ -1466,9 +1540,6 @@
         let currentMovEditId = null;
         let nextProductId = 1;
         let nextMovimientoId = 1;
-        let categoryChartInstance = null;
-        let deptChartInstance = null;
-        let topProductsChartInstance = null;
         let firebaseUnsubscribeProducts = null;
         let firebaseUnsubscribeMovimientos = null;
         let isLoading = false;
@@ -1498,23 +1569,42 @@
         }
 
         function calcularUnidadesTotales(producto) {
-            if (!producto || !producto.unidadesPorMedida || producto.unidadesPorMedida <= 0) return 0;
-            
+            if (!producto) return 0;
+            const unidadesPorMedida = producto.unidadesPorMedida || 1;
             if (producto.unidad === 'BULTO') {
-                const paquetesPorBulto = producto.paquetesPorBulto || 4;
-                return producto.stock * paquetesPorBulto * producto.unidadesPorMedida;
+                const unidadesPorBulto = producto.unidadesPorBulto || 1;
+                return Math.floor(producto.stock) * Math.floor(unidadesPorBulto);
+            } else {
+                return Math.floor(producto.stock) * Math.floor(unidadesPorMedida);
             }
-            return producto.stock * producto.unidadesPorMedida;
         }
 
         function calcularStockDesdeUnidades(producto, unidadesTotales) {
-            if (!producto || producto.unidadesPorMedida <= 0) return unidadesTotales;
-            
+            if (!producto) return 0;
+            const unidadesPorMedida = producto.unidadesPorMedida || 1;
             if (producto.unidad === 'BULTO') {
-                const paquetesPorBulto = producto.paquetesPorBulto || 4;
-                return unidadesTotales / (producto.unidadesPorMedida * paquetesPorBulto);
+                const unidadesPorBulto = producto.unidadesPorBulto || 1;
+                return Math.floor(unidadesTotales / unidadesPorBulto);
+            } else {
+                return Math.floor(unidadesTotales / unidadesPorMedida);
             }
-            return unidadesTotales / producto.unidadesPorMedida;
+        }
+
+        function obtenerEquivalencia(producto, cantidadUnidades) {
+            if (!producto) return `${cantidadUnidades} unidades`;
+            if (producto.unidad === 'BULTO') {
+                const unidadesPorBulto = producto.unidadesPorBulto || 1;
+                const bultos = Math.floor(cantidadUnidades / unidadesPorBulto);
+                const unidadesRestantes = cantidadUnidades % unidadesPorBulto;
+                let partes = [];
+                if (bultos > 0) partes.push(`${bultos} bulto(s)`);
+                if (unidadesRestantes > 0) partes.push(`${unidadesRestantes} unidad(es)`);
+                if (partes.length === 0) return `0 unidades`;
+                return partes.join(' + ') + ` (${cantidadUnidades} unidades)`;
+            } else {
+                const cantidadMedida = cantidadUnidades / (producto.unidadesPorMedida || 1);
+                return `${cantidadMedida.toFixed(2)} ${producto.unidad} (${cantidadUnidades} unidades)`;
+            }
         }
 
         function formatearFechaHora(fechaHoraStr = null) {
@@ -1599,6 +1689,7 @@
                         actualizarEstadisticas();
                         actualizarDashboard();
                         verificarStockBajo();
+                        actualizarHistorialAsignaciones();
                     },
                     (error) => console.error("Error listener productos:", error)
                 );
@@ -1616,6 +1707,7 @@
                         actualizarTablaMovimientos();
                         actualizarEstadisticas();
                         actualizarDashboard();
+                        actualizarHistorialAsignaciones();
                     },
                     (error) => console.error("Error listener movimientos:", error)
                 );
@@ -1641,7 +1733,6 @@
             try {
                 const { updateDoc, doc } = window.firebaseFunctions;
                 const db = window.firebaseDB;
-                // Limpiar campos undefined antes de enviar
                 const cleanUpdates = {};
                 for (const [key, value] of Object.entries(updates)) {
                     if (value !== undefined && value !== null) {
@@ -1745,6 +1836,7 @@
                 actualizarEstadisticas();
                 actualizarDashboard();
                 verificarStockBajo();
+                actualizarHistorialAsignaciones();
                 mostrarMensaje('Datos sincronizados correctamente', 'success');
                 updateFirebaseStatus(true);
             } catch (error) {
@@ -1804,6 +1896,41 @@
             if (dateTimeElement) dateTimeElement.textContent = now.toLocaleDateString('es-ES', options);
         }
 
+        function manejarCambioUnidad() {
+            const unidad = document.getElementById('unidadProducto').value;
+            const bultoConfigGroup = document.getElementById('bultoConfigGroup');
+            const unidadesPorMedidaGroup = document.getElementById('unidadesPorMedidaGroup');
+            const unidadExplicacion = document.getElementById('unidadExplicacion');
+            const stockExplicacion = document.getElementById('stockExplicacion');
+            const stockMinimoExplicacion = document.getElementById('stockMinimoExplicacion');
+            
+            if (unidad === 'BULTO') {
+                bultoConfigGroup.style.display = 'flex';
+                unidadesPorMedidaGroup.style.display = 'none';
+                unidadExplicacion.textContent = 'Ej: 48 unidades por bulto (papel rosal), 20 unidades por bulto (servilletas)';
+                stockExplicacion.textContent = 'En bultos (cantidad de bultos) - Número entero';
+                stockMinimoExplicacion.textContent = 'En bultos (cantidad mínima de bultos) - Número entero';
+            } else if (unidad === 'CAJAS') {
+                bultoConfigGroup.style.display = 'none';
+                unidadesPorMedidaGroup.style.display = 'flex';
+                unidadExplicacion.textContent = 'Ej: 24 unidades por caja, 50 unidades por caja';
+                stockExplicacion.textContent = 'En cajas (cantidad de cajas) - Número entero';
+                stockMinimoExplicacion.textContent = 'En cajas (cantidad mínima de cajas) - Número entero';
+            } else if (unidad === 'PAQ') {
+                bultoConfigGroup.style.display = 'none';
+                unidadesPorMedidaGroup.style.display = 'flex';
+                unidadExplicacion.textContent = 'Ej: 100 unidades por paquete, 50 hojas por paquete';
+                stockExplicacion.textContent = 'En paquetes (cantidad de paquetes) - Número entero';
+                stockMinimoExplicacion.textContent = 'En paquetes (cantidad mínima de paquetes) - Número entero';
+            } else {
+                bultoConfigGroup.style.display = 'none';
+                unidadesPorMedidaGroup.style.display = 'flex';
+                unidadExplicacion.textContent = 'Ej: 1 unidad = 1 artículo';
+                stockExplicacion.textContent = 'En unidades de medida seleccionada - Número entero';
+                stockMinimoExplicacion.textContent = 'En unidades de medida seleccionada - Número entero';
+            }
+        }
+
         function verificarCodigoExistente() {
             const codigo = document.getElementById('codigoProducto').value.trim();
             const saveBtn = document.getElementById('saveProductBtn');
@@ -1820,11 +1947,10 @@
                     document.getElementById('descripcionProducto').value = `Reposición de stock para ${productoExistente.nombre}`;
                     
                     if (productoExistente.unidad === 'BULTO') {
-                        document.getElementById('bultoConfig').style.display = 'flex';
-                        const radios = document.querySelectorAll('input[name="tipoBulto"]');
-                        radios.forEach(radio => {
-                            if (parseInt(radio.value) === (productoExistente.paquetesPorBulto || 4)) radio.checked = true;
-                        });
+                        document.getElementById('unidadesPorBulto').value = productoExistente.unidadesPorBulto || 1;
+                        manejarCambioUnidad();
+                    } else {
+                        manejarCambioUnidad();
                     }
                     saveBtn.style.display = 'none';
                     repositionBtn.style.display = 'block';
@@ -1846,75 +1972,16 @@
             const cantidadUnidades = parseInt(cantidadInput.value) || 0;
             const unidadesTotalesActuales = calcularUnidadesTotales(producto);
             
-            let equivalencia = '';
-            if (producto.unidad === "UND") {
-                equivalencia = `${cantidadUnidades} unidades`;
-            } else if (producto.unidad === "BULTO") {
-                const paquetesPorBulto = producto.paquetesPorBulto || 4;
-                const bultos = Math.floor(cantidadUnidades / (producto.unidadesPorMedida * paquetesPorBulto));
-                const paquetes = Math.floor((cantidadUnidades % (producto.unidadesPorMedida * paquetesPorBulto)) / producto.unidadesPorMedida);
-                const unidadesRestantes = cantidadUnidades % producto.unidadesPorMedida;
-                let partes = [];
-                if (bultos > 0) partes.push(`${bultos} bulto(s)`);
-                if (paquetes > 0) partes.push(`${paquetes} paquete(s)`);
-                if (unidadesRestantes > 0) partes.push(`${unidadesRestantes} unidad(es)`);
-                equivalencia = partes.join(' + ') + ` (${cantidadUnidades} unidades)`;
-            } else {
-                const equivalenciaMedida = cantidadUnidades / (producto.unidadesPorMedida || 1);
-                equivalencia = `${equivalenciaMedida.toFixed(2)} ${producto.unidad} (${cantidadUnidades} unidades)`;
-            }
+            const equivalencia = obtenerEquivalencia(producto, cantidadUnidades);
             document.getElementById('equivalenciaUnidades').textContent = equivalencia;
             
             if (cantidadUnidades > 0) {
                 const nuevoStockUnidades = unidadesTotalesActuales - cantidadUnidades;
-                let nuevoStockMedida = '';
-                if (producto.unidad === "UND") {
-                    nuevoStockMedida = `${nuevoStockUnidades} unidades`;
-                } else if (producto.unidad === "BULTO") {
-                    const paquetesPorBulto = producto.paquetesPorBulto || 4;
-                    const bultos = Math.floor(nuevoStockUnidades / (producto.unidadesPorMedida * paquetesPorBulto));
-                    const paquetes = Math.floor((nuevoStockUnidades % (producto.unidadesPorMedida * paquetesPorBulto)) / producto.unidadesPorMedida);
-                    const unidades = nuevoStockUnidades % producto.unidadesPorMedida;
-                    let partes = [];
-                    if (bultos > 0) partes.push(`${bultos} bulto(s)`);
-                    if (paquetes > 0) partes.push(`${paquetes} paquete(s)`);
-                    if (unidades > 0) partes.push(`${unidades} unidad(es)`);
-                    nuevoStockMedida = partes.join(' + ') + ` (${nuevoStockUnidades} unidades)`;
-                } else {
-                    const nuevoStock = calcularStockDesdeUnidades(producto, nuevoStockUnidades);
-                    nuevoStockMedida = `${nuevoStock.toFixed(2)} ${producto.unidad} (${nuevoStockUnidades} unidades)`;
-                }
-                document.getElementById('nuevoStockUnidades').textContent = nuevoStockMedida;
+                const nuevoStockEquivalencia = obtenerEquivalencia(producto, nuevoStockUnidades);
+                document.getElementById('nuevoStockUnidades').textContent = nuevoStockEquivalencia;
             } else {
-                document.getElementById('nuevoStockUnidades').textContent = `${unidadesTotalesActuales} unidades`;
-            }
-        }
-
-        function generarOpcionesFechaReporte() {
-            const monthSelect = document.getElementById('reportMonth');
-            const yearSelect = document.getElementById('reportYear');
-            if (!monthSelect || !yearSelect) return;
-            
-            const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-            const currentDate = new Date();
-            
-            monthSelect.innerHTML = '';
-            meses.forEach((mes, index) => {
-                const option = document.createElement('option');
-                option.value = index + 1;
-                option.textContent = mes;
-                if (index + 1 === currentDate.getMonth() + 1) option.selected = true;
-                monthSelect.appendChild(option);
-            });
-            
-            yearSelect.innerHTML = '';
-            const currentYearNow = currentDate.getFullYear();
-            for (let year = 2023; year <= currentYearNow + 1; year++) {
-                const option = document.createElement('option');
-                option.value = year;
-                option.textContent = year;
-                if (year === currentYearNow) option.selected = true;
-                yearSelect.appendChild(option);
+                const stockActualEquivalencia = obtenerEquivalencia(producto, unidadesTotalesActuales);
+                document.getElementById('nuevoStockUnidades').textContent = stockActualEquivalencia;
             }
         }
 
@@ -1927,7 +1994,8 @@
                 if (unidadesTotales > 0) {
                     const option = document.createElement('option');
                     option.value = producto.id;
-                    option.textContent = `${producto.nombre} (${unidadesTotales} unidades)`;
+                    const stockTexto = obtenerEquivalencia(producto, unidadesTotales);
+                    option.textContent = `${producto.nombre} (${stockTexto})`;
                     select.appendChild(option);
                 }
             });
@@ -1935,13 +2003,63 @@
 
         function cargarDepartamentosFiltros() {
             const filterDept = document.getElementById('filterMovDept');
+            const filterAsignacionDept = document.getElementById('filterAsignacionDept');
             if (!filterDept) return;
+            
             filterDept.innerHTML = '<option value="">Todos los Departamentos</option>';
+            filterAsignacionDept.innerHTML = '<option value="">Todos los departamentos</option>';
             departamentos.forEach(dept => {
                 const option = document.createElement('option');
                 option.value = dept;
                 option.textContent = dept;
                 filterDept.appendChild(option);
+                
+                const option2 = document.createElement('option');
+                option2.value = dept;
+                option2.textContent = dept;
+                filterAsignacionDept.appendChild(option2);
+            });
+        }
+
+        function actualizarHistorialAsignaciones() {
+            const tbody = document.getElementById('asignacionesHistoryBody');
+            if (!tbody) return;
+            
+            const searchTerm = document.getElementById('searchAsignacion')?.value.toLowerCase() || '';
+            const deptFilter = document.getElementById('filterAsignacionDept')?.value || '';
+            const dateFilter = document.getElementById('filterAsignacionFecha')?.value || '';
+            
+            let asignaciones = movimientos.filter(m => m.tipo === 'salida');
+            
+            asignaciones = asignaciones.filter(asig => {
+                const searchMatch = searchTerm === '' || 
+                    asig.producto?.toLowerCase().includes(searchTerm) ||
+                    asig.usuario?.toLowerCase().includes(searchTerm) ||
+                    asig.departamento?.toLowerCase().includes(searchTerm);
+                const deptMatch = deptFilter === '' || asig.departamento === deptFilter;
+                const dateMatch = dateFilter === '' || asig.fechaHora.startsWith(dateFilter);
+                return searchMatch && deptMatch && dateMatch;
+            });
+            
+            asignaciones.sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora));
+            
+            if (asignaciones.length === 0) {
+                tbody.innerHTML = '</table><td colspan="6" style="text-align:center;">No hay asignaciones registradas</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            asignaciones.forEach(asig => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${asig.fechaHora}</td>
+                    <td>${asig.producto || '-'}</td>
+                    <td>${asig.cantidad || 0}</td>
+                    <td>${asig.departamento || '-'}</td>
+                    <td>${asig.usuario || '-'}</td>
+                    <td>${asig.observaciones || '-'}</td>
+                `;
+                tbody.appendChild(row);
             });
         }
 
@@ -1969,7 +2087,7 @@
             tableBody.innerHTML = '';
             
             if (productosFiltrados.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;">No hay productos</td></tr>';
+                tableBody.innerHTML = '缘<td colspan="9" style="text-align:center;padding:20px;">No hay productos</td>脉';
                 return;
             }
             
@@ -1978,6 +2096,7 @@
                 const codigoNum = producto.codigo.split('-')[1] || producto.id;
                 const unidadesTotales = calcularUnidadesTotales(producto);
                 const stockMinimoUnidades = producto.stockMinimo * (producto.unidadesPorMedida || 1);
+                const stockMinimoTexto = obtenerEquivalencia(producto, stockMinimoUnidades);
                 
                 let estadoClase = '', estadoTexto = '', stockIndicator = '';
                 if (unidadesTotales < stockMinimoUnidades) {
@@ -1998,8 +2117,12 @@
                 const categoriaNombre = categoriaMap[producto.categoria] || producto.categoria;
                 const categoriaClase = `badge-${producto.categoria === 'papeleria' ? 'papeleria' : producto.categoria === 'toner' ? 'toner' : producto.categoria === 'oficina' ? 'oficina' : producto.categoria === 'electronica' ? 'electronica' : 'otros'}`;
                 
-                let infoUnidades = producto.unidad === "UND" ? `${producto.stock} ${producto.unidad}` : producto.unidad === "BULTO" ? `${producto.stock} ${producto.unidad} (${producto.paquetesPorBulto || 4} paq/bulto)` : `${producto.stock} ${producto.unidad}`;
-                let infoStockMinimo = producto.unidad === "UND" ? `${producto.stockMinimo} ${producto.unidad}` : `${producto.stockMinimo} ${producto.unidad} (${stockMinimoUnidades} unidades)`;
+                let infoUnidades = '';
+                if (producto.unidad === 'BULTO') {
+                    infoUnidades = `${Math.floor(producto.stock)} ${producto.unidad} (${producto.unidadesPorBulto || 1} und/bulto)`;
+                } else {
+                    infoUnidades = `${Math.floor(producto.stock)} ${producto.unidad} (${producto.unidadesPorMedida || 1} und/${producto.unidad === 'CAJAS' ? 'caja' : producto.unidad === 'PAQ' ? 'paquete' : producto.unidad})`;
+                }
                 
                 row.innerHTML = `
                     <td><strong>${codigoNum}</strong></td>
@@ -2007,8 +2130,8 @@
                     <td><span class="badge ${categoriaClase}">${categoriaNombre}</span></td>
                     <td><div class="stock-details"><span class="stock-total">${infoUnidades}</span><span class="unit-info">${unidadesTotales} unidades totales</span></div></td>
                     <td>${unidadesTotales} unidades</td>
-                    <td>${producto.unidad} ${producto.unidad === 'BULTO' ? `(${producto.paquetesPorBulto || 4} paq)` : ''}</td>
-                    <td>${infoStockMinimo}</td>
+                    <td>${producto.unidad}</td>
+                    <td>${stockMinimoTexto}</td>
                     <td class="${estadoClase}">${stockIndicator} ${estadoTexto}</td>
                     <td><div class="action-buttons">
                         <button class="btn-action btn-edit" data-id="${producto.id}"><i class="fas fa-edit"></i> Editar</button>
@@ -2041,11 +2164,12 @@
             document.getElementById('unidadesPorMedida').value = producto.unidadesPorMedida || 1;
             document.getElementById('stockMinimo').value = producto.stockMinimo;
             document.getElementById('descripcionProducto').value = `Reposición de stock para ${producto.nombre}`;
+            
             if (producto.unidad === 'BULTO') {
-                document.getElementById('bultoConfig').style.display = 'flex';
-                const radios = document.querySelectorAll('input[name="tipoBulto"]');
-                radios.forEach(radio => { if (parseInt(radio.value) === (producto.paquetesPorBulto || 4)) radio.checked = true; });
+                document.getElementById('unidadesPorBulto').value = producto.unidadesPorBulto || 1;
             }
+            
+            manejarCambioUnidad();
             document.getElementById('saveProductBtn').style.display = 'none';
             document.getElementById('repositionBtn').style.display = 'block';
         }
@@ -2068,7 +2192,7 @@
             tableBody.innerHTML = '';
             
             if (movimientosFiltrados.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;">No hay movimientos</td></tr>';
+                tableBody.innerHTML = '缘<td colspan="9" style="text-align:center;padding:20px;">No hay movimientos</td>脉';
                 return;
             }
             
@@ -2126,41 +2250,6 @@
             const mesActual = hoy.getMonth() + 1;
             const añoActual = hoy.getFullYear();
             document.getElementById('dashboardTotalAssignments').textContent = movimientos.filter(m => m.tipo === 'salida' && new Date(m.fechaHora).getMonth() + 1 === mesActual && new Date(m.fechaHora).getFullYear() === añoActual).length;
-            
-            actualizarGraficoCategorias();
-            actualizarListaStockBajo();
-        }
-
-        function actualizarGraficoCategorias() {
-            if (categoryChartInstance) categoryChartInstance.destroy();
-            const categorias = { papeleria: 0, oficina: 0, toner: 0, electronica: 0, limpieza: 0, otros: 0 };
-            productos.forEach(producto => { if (categorias.hasOwnProperty(producto.categoria)) categorias[producto.categoria] += calcularUnidadesTotales(producto); });
-            
-            const ctx = document.getElementById('categoryChart')?.getContext('2d');
-            if (ctx) {
-                categoryChartInstance = new Chart(ctx, {
-                    type: 'pie',
-                    data: { labels: ['Papelería', 'Oficina', 'Toner', 'Electrónica', 'Limpieza', 'Otros'], datasets: [{ data: [categorias.papeleria, categorias.oficina, categorias.toner, categorias.electronica, categorias.limpieza, categorias.otros], backgroundColor: ['#3498db', '#f39c12', '#27ae60', '#9b59b6', '#e74c3c', '#95a5a6'] }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.raw.toLocaleString()} unidades` } } } }
-                });
-            }
-        }
-
-        function actualizarListaStockBajo() {
-            const container = document.getElementById('lowStockList');
-            if (!container) return;
-            const productosBajos = productos.filter(p => calcularUnidadesTotales(p) < (p.stockMinimo * (p.unidadesPorMedida || 1)));
-            if (productosBajos.length === 0) { container.innerHTML = '<p style="text-align:center;padding:20px;">No hay productos con stock bajo</p>'; return; }
-            
-            let html = '<div style="max-height:200px;overflow-y:auto;">';
-            productosBajos.forEach(p => {
-                const unidades = calcularUnidadesTotales(p);
-                const minimo = p.stockMinimo * (p.unidadesPorMedida || 1);
-                const porcentaje = Math.round((unidades / minimo) * 100);
-                html += `<div class="product-card low-stock"><div class="product-card-header"><div class="product-name">${p.nombre}</div><div class="product-category">${p.codigo}</div></div><div class="product-stock">Stock: ${unidades} unidades (Mínimo: ${minimo} unidades)</div><div class="stock-progress"><div class="stock-progress-bar low" style="width: ${porcentaje > 100 ? 100 : porcentaje}%"></div></div><div style="font-size:0.8rem;color:#e74c3c;"><i class="fas fa-exclamation-triangle"></i> Stock ${porcentaje}% del mínimo</div></div>`;
-            });
-            html += '</div>';
-            container.innerHTML = html;
         }
 
         function verificarStockBajo() {
@@ -2182,8 +2271,9 @@
             currentAdjustId = productoId;
             const producto = productos.find(p => p.id === productoId);
             if (!producto) return;
+            const unidadesTotales = calcularUnidadesTotales(producto);
             document.getElementById('adjustProductName').value = producto.nombre;
-            document.getElementById('adjustCurrentStock').value = `${calcularUnidadesTotales(producto)} unidades`;
+            document.getElementById('adjustCurrentStock').value = obtenerEquivalencia(producto, unidadesTotales);
             document.getElementById('adjustModal').style.display = 'flex';
             document.getElementById('adjustStockForm').onsubmit = (e) => { e.preventDefault(); aplicarAjusteStock(); };
         }
@@ -2203,10 +2293,11 @@
             
             const nuevoStock = calcularStockDesdeUnidades(producto, nuevasUnidades);
             try {
-                await updateProductInFirebase(producto.firebaseId, { stock: nuevoStock, updatedAt: new Date().toISOString() });
+                const updates = { stock: nuevoStock, updatedAt: new Date().toISOString() };
+                await updateProductInFirebase(producto.firebaseId, updates);
                 const nuevoMovimiento = { id: nextMovimientoId++, fechaHora: formatearFechaHora(), tipo: 'ajuste', productoId: producto.id, producto: producto.nombre, cantidad: cantidad, departamento: "Almacén", usuario: "N/A", observaciones: motivo, responsable: "Admin Sistema", createdAt: new Date().toISOString() };
                 await saveMovementToFirebase(nuevoMovimiento);
-                mostrarMensaje(`Ajuste aplicado. Nuevo stock: ${nuevasUnidades} unidades`, 'success');
+                mostrarMensaje(`Ajuste aplicado. Nuevo stock: ${obtenerEquivalencia(producto, nuevasUnidades)}`, 'success');
                 cerrarModal();
             } catch (error) { mostrarMensaje('Error al aplicar ajuste', 'error'); }
         }
@@ -2218,16 +2309,17 @@
             const modalBody = document.querySelector('#editModal .modal-body');
             if (!modalBody) return;
             
+            const unidadesTotales = calcularUnidadesTotales(producto);
+            
             modalBody.innerHTML = `
                 <form id="editForm">
                     <div class="form-row"><div class="form-group"><label>Código</label><input type="text" id="editCodigo" value="${producto.codigo}" required></div>
                     <div class="form-group"><label>Nombre</label><input type="text" id="editNombre" value="${producto.nombre}" required></div></div>
                     <div class="form-row"><div class="form-group"><label>Categoría</label><select id="editCategoria">${['papeleria','oficina','toner','electronica','limpieza','otros'].map(c => `<option value="${c}" ${producto.categoria === c ? 'selected' : ''}>${c.charAt(0).toUpperCase() + c.slice(1)}</option>`).join('')}</select></div>
-                    <div class="form-group"><label>Unidad</label><select id="editUnidad">${['UND','CAJAS','PAQ','BULTO','GALON','LT'].map(u => `<option value="${u}" ${producto.unidad === u ? 'selected' : ''}>${u === 'UND' ? 'Unidades' : u === 'CAJAS' ? 'Cajas' : u === 'PAQ' ? 'Paquetes' : u === 'BULTO' ? 'Bultos' : u === 'GALON' ? 'Galones' : 'Litros'}</option>`).join('')}</select></div>
-                    <div class="form-group"><label>Unidades por Medida</label><input type="number" id="editUnidadesPorMedida" min="1" value="${producto.unidadesPorMedida || 1}" required></div></div>
-                    ${producto.unidad === 'BULTO' ? `<div class="form-row"><div class="form-group"><label>Tipo de Bulto</label><div class="bulto-config"><label class="bulto-option"><input type="radio" name="editTipoBulto" value="4" ${(producto.paquetesPorBulto || 4) === 4 ? 'checked' : ''}> Bulto de 4 paquetes</label><label class="bulto-option"><input type="radio" name="editTipoBulto" value="6" ${(producto.paquetesPorBulto || 4) === 6 ? 'checked' : ''}> Bulto de 6 paquetes</label></div></div></div>` : ''}
-                    <div class="form-row"><div class="form-group"><label>Stock</label><input type="number" id="editStock" value="${producto.stock}" min="0" step="0.01" required></div>
-                    <div class="form-group"><label>Stock Mínimo</label><input type="number" id="editStockMinimo" value="${producto.stockMinimo}" min="1" required></div></div>
+                    <div class="form-group"><label>Unidad</label><select id="editUnidad">${['UND','CAJAS','PAQ','BULTO','GALON','LT'].map(u => `<option value="${u}" ${producto.unidad === u ? 'selected' : ''}>${u === 'UND' ? 'Unidades' : u === 'CAJAS' ? 'Cajas' : u === 'PAQ' ? 'Paquetes' : u === 'BULTO' ? 'Bultos' : u === 'GALON' ? 'Galones' : 'Litros'}</option>`).join('')}</select></div></div>
+                    ${producto.unidad === 'BULTO' ? `<div class="form-row"><div class="form-group"><label>Unidades por Bulto</label><input type="number" id="editUnidadesPorBulto" min="1" step="1" value="${producto.unidadesPorBulto || 1}" required><small class="help-text">Ej: 48 unidades por bulto</small></div></div>` : `<div class="form-row"><div class="form-group"><label>Unidades por Medida</label><input type="number" id="editUnidadesPorMedida" min="1" step="1" value="${producto.unidadesPorMedida || 1}" required><small class="help-text">Ej: 24 unidades por caja</small></div></div>`}
+                    <div class="form-row"><div class="form-group"><label>Stock (en ${producto.unidad})</label><input type="number" id="editStock" value="${Math.floor(producto.stock)}" min="0" step="1" required><small>Stock actual: ${unidadesTotales} unidades totales</small></div>
+                    <div class="form-group"><label>Stock Mínimo (en ${producto.unidad})</label><input type="number" id="editStockMinimo" value="${producto.stockMinimo}" min="1" step="1" required></div></div>
                     <div class="form-row"><div class="form-group"><label>Descripción</label><textarea id="editDescripcion" rows="2">${producto.descripcion || ''}</textarea></div></div>
                     <div class="form-buttons"><button type="submit" class="btn btn-primary">Guardar</button><button type="button" id="cancelEdit" class="btn btn-secondary">Cancelar</button></div>
                 </form>
@@ -2244,31 +2336,52 @@
             const nombre = document.getElementById('editNombre').value.trim();
             const categoria = document.getElementById('editCategoria').value;
             const unidad = document.getElementById('editUnidad').value;
-            const unidadesPorMedida = parseInt(document.getElementById('editUnidadesPorMedida').value);
             const stock = parseFloat(document.getElementById('editStock').value);
             const stockMinimo = parseInt(document.getElementById('editStockMinimo').value);
             const descripcion = document.getElementById('editDescripcion').value.trim();
             
-            let paquetesPorBulto = null;
+            let unidadesPorMedida = 1;
+            let unidadesPorBulto = null;
+            
             if (unidad === 'BULTO') {
-                const tipoBulto = document.querySelector('input[name="editTipoBulto"]:checked');
-                if (tipoBulto) paquetesPorBulto = parseInt(tipoBulto.value);
-                else paquetesPorBulto = 4;
+                unidadesPorBulto = parseInt(document.getElementById('editUnidadesPorBulto').value);
+                if (isNaN(unidadesPorBulto) || unidadesPorBulto <= 0) {
+                    mostrarMensaje('Unidades por bulto debe ser mayor a 0', 'error');
+                    return;
+                }
+            } else {
+                unidadesPorMedida = parseInt(document.getElementById('editUnidadesPorMedida').value);
+                if (isNaN(unidadesPorMedida) || unidadesPorMedida <= 0) {
+                    mostrarMensaje('Unidades por medida debe ser mayor a 0', 'error');
+                    return;
+                }
             }
             
-            if (!codigo || !nombre || !categoria || !unidad || isNaN(unidadesPorMedida) || isNaN(stock) || isNaN(stockMinimo)) {
-                mostrarMensaje('Complete todos los campos', 'error'); return;
+            if (!codigo || !nombre || !categoria || !unidad || isNaN(stock) || isNaN(stockMinimo)) {
+                mostrarMensaje('Complete todos los campos', 'error');
+                return;
             }
-            if (unidadesPorMedida <= 0) { mostrarMensaje('Unidades por medida debe ser mayor a 0', 'error'); return; }
-            if (productos.some(p => p.codigo === codigo && p.id !== currentEditId)) { mostrarMensaje('Código ya existe', 'error'); return; }
+            
+            if (productos.some(p => p.codigo === codigo && p.id !== currentEditId)) {
+                mostrarMensaje('Código ya existe', 'error');
+                return;
+            }
             
             try {
-                const updates = { codigo, nombre, categoria, unidad, unidadesPorMedida, stock, stockMinimo, descripcion, updatedAt: new Date().toISOString() };
-                if (unidad === 'BULTO' && paquetesPorBulto !== null) updates.paquetesPorBulto = paquetesPorBulto;
+                const updates = { codigo, nombre, categoria, unidad, stock: Math.floor(stock), stockMinimo, descripcion, updatedAt: new Date().toISOString() };
+                if (unidad === 'BULTO') {
+                    updates.unidadesPorBulto = unidadesPorBulto;
+                    updates.unidadesPorMedida = 1;
+                } else {
+                    updates.unidadesPorMedida = unidadesPorMedida;
+                    if (updates.unidadesPorBulto) delete updates.unidadesPorBulto;
+                }
                 await updateProductInFirebase(producto.firebaseId, updates);
                 mostrarMensaje('Producto actualizado', 'success');
                 cerrarModal();
-            } catch (error) { mostrarMensaje('Error al actualizar', 'error'); }
+            } catch (error) {
+                mostrarMensaje('Error al actualizar', 'error');
+            }
         }
 
         function confirmarEliminacion(id) { currentEditId = id; document.getElementById('confirmModal').style.display = 'flex'; }
@@ -2291,6 +2404,13 @@
             document.getElementById('filterMovDept').value = '';
             document.getElementById('filterMovFecha').value = '';
             actualizarTablaMovimientos();
+        }
+        
+        function limpiarFiltrosAsignaciones() {
+            document.getElementById('searchAsignacion').value = '';
+            document.getElementById('filterAsignacionDept').value = '';
+            document.getElementById('filterAsignacionFecha').value = '';
+            actualizarHistorialAsignaciones();
         }
 
         function editarMovimiento(id) {
@@ -2326,41 +2446,85 @@
             const nombre = document.getElementById('nombreProducto').value.trim();
             const categoria = document.getElementById('categoriaProducto').value;
             const unidad = document.getElementById('unidadProducto').value;
-            const unidadesPorMedida = parseInt(document.getElementById('unidadesPorMedida').value);
             const stockInicial = parseInt(document.getElementById('stockInicial').value);
             const stockMinimo = parseInt(document.getElementById('stockMinimo').value);
             const descripcion = document.getElementById('descripcionProducto').value.trim();
             
-            if (!codigo || !nombre || !categoria || !unidad || isNaN(unidadesPorMedida) || isNaN(stockInicial) || isNaN(stockMinimo)) {
-                mostrarMensaje('Complete todos los campos', 'error'); return;
-            }
-            if (unidadesPorMedida <= 0) { mostrarMensaje('Unidades por medida debe ser mayor a 0', 'error'); return; }
-            if (productos.some(p => p.codigo === codigo)) { mostrarMensaje('Código ya existe. Use reposición.', 'error'); return; }
+            let unidadesPorMedida = 1;
+            let unidadesPorBulto = null;
             
-            let paquetesPorBulto = null;
             if (unidad === 'BULTO') {
-                const tipoBulto = document.querySelector('input[name="tipoBulto"]:checked');
-                paquetesPorBulto = tipoBulto ? parseInt(tipoBulto.value) : 4;
+                unidadesPorBulto = parseInt(document.getElementById('unidadesPorBulto').value);
+                if (isNaN(unidadesPorBulto) || unidadesPorBulto <= 0) {
+                    mostrarMensaje('Unidades por bulto debe ser mayor a 0', 'error');
+                    return;
+                }
+            } else {
+                unidadesPorMedida = parseInt(document.getElementById('unidadesPorMedida').value);
+                if (isNaN(unidadesPorMedida) || unidadesPorMedida <= 0) {
+                    mostrarMensaje('Unidades por medida debe ser mayor a 0', 'error');
+                    return;
+                }
             }
             
-            const nuevoProducto = { id: nextProductId, codigo, nombre, categoria, stock: stockInicial, stockMinimo, unidad, unidadesPorMedida, descripcion, fechaRegistro: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString() };
-            if (unidad === 'BULTO' && paquetesPorBulto !== null) nuevoProducto.paquetesPorBulto = paquetesPorBulto;
+            if (!codigo || !nombre || !categoria || !unidad || isNaN(stockInicial) || isNaN(stockMinimo)) {
+                mostrarMensaje('Complete todos los campos', 'error');
+                return;
+            }
+            
+            if (productos.some(p => p.codigo === codigo)) {
+                mostrarMensaje('Código ya existe. Use reposición.', 'error');
+                return;
+            }
+            
+            const nuevoProducto = { 
+                id: nextProductId, 
+                codigo, 
+                nombre, 
+                categoria, 
+                stock: stockInicial, 
+                stockMinimo, 
+                unidad, 
+                descripcion, 
+                fechaRegistro: new Date().toISOString().split('T')[0], 
+                createdAt: new Date().toISOString(),
+                unidadesPorMedida: unidadesPorMedida
+            };
+            
+            if (unidad === 'BULTO') {
+                nuevoProducto.unidadesPorBulto = unidadesPorBulto;
+            }
             
             try {
                 const firebaseId = await saveProductToFirebase(nuevoProducto);
                 if (firebaseId) {
                     const unidadesTotales = calcularUnidadesTotales(nuevoProducto);
-                    const nuevoMovimiento = { id: nextMovimientoId++, fechaHora: formatearFechaHora(), tipo: "entrada", productoId: nuevoProducto.id, producto: nuevoProducto.nombre, cantidad: unidadesTotales, departamento: "Almacén", usuario: "N/A", observaciones: "Registro inicial: " + (descripcion || "Sin observaciones"), responsable: "Admin Sistema", createdAt: new Date().toISOString() };
+                    const nuevoMovimiento = { 
+                        id: nextMovimientoId++, 
+                        fechaHora: formatearFechaHora(), 
+                        tipo: "entrada", 
+                        productoId: nuevoProducto.id, 
+                        producto: nuevoProducto.nombre, 
+                        cantidad: unidadesTotales, 
+                        departamento: "Almacén", 
+                        usuario: "N/A", 
+                        observaciones: "Registro inicial: " + (descripcion || "Sin observaciones"), 
+                        responsable: "Admin Sistema", 
+                        createdAt: new Date().toISOString() 
+                    };
                     await saveMovementToFirebase(nuevoMovimiento);
                     mostrarMensaje('Producto registrado', 'success');
                     document.getElementById('nuevoProductoForm').reset();
                     document.getElementById('stockMinimo').value = "5";
                     document.getElementById('unidadesPorMedida').value = "1";
+                    document.getElementById('unidadesPorBulto').value = "1";
                     document.getElementById('saveProductBtn').style.display = 'block';
                     document.getElementById('repositionBtn').style.display = 'none';
-                    document.getElementById('bultoConfig').style.display = 'none';
+                    manejarCambioUnidad();
                 }
-            } catch (error) { mostrarMensaje('Error al guardar', 'error'); }
+            } catch (error) { 
+                mostrarMensaje('Error al guardar', 'error'); 
+            }
         }
 
         async function guardarReposicion() {
@@ -2370,21 +2534,42 @@
             if (!codigo || isNaN(cantidad) || cantidad <= 0) { mostrarMensaje('Complete los campos', 'error'); return; }
             const producto = productos.find(p => p.codigo === codigo);
             if (!producto) { mostrarMensaje('Producto no encontrado', 'error'); return; }
-            if (!producto.unidadesPorMedida || producto.unidadesPorMedida <= 0) { mostrarMensaje('Configuración inválida', 'error'); return; }
             
-            const unidadesAAgregar = producto.unidad === 'BULTO' ? cantidad * (producto.paquetesPorBulto || 4) * producto.unidadesPorMedida : cantidad * producto.unidadesPorMedida;
+            let unidadesAAgregar = 0;
+            if (producto.unidad === 'BULTO') {
+                const unidadesPorBulto = producto.unidadesPorBulto || 1;
+                unidadesAAgregar = cantidad * unidadesPorBulto;
+            } else {
+                const unidadesPorMedida = producto.unidadesPorMedida || 1;
+                unidadesAAgregar = cantidad * unidadesPorMedida;
+            }
+            
             const nuevoStock = producto.stock + cantidad;
             
             try {
                 await updateProductInFirebase(producto.firebaseId, { stock: nuevoStock, updatedAt: new Date().toISOString() });
-                const nuevoMovimiento = { id: nextMovimientoId++, fechaHora: formatearFechaHora(), tipo: "reposicion", productoId: producto.id, producto: producto.nombre, cantidad: unidadesAAgregar, departamento: "Almacén", usuario: "N/A", observaciones: motivo || `Reposición de ${cantidad} ${producto.unidad}`, responsable: "Admin Sistema", createdAt: new Date().toISOString() };
+                const nuevoMovimiento = { 
+                    id: nextMovimientoId++, 
+                    fechaHora: formatearFechaHora(), 
+                    tipo: "reposicion", 
+                    productoId: producto.id, 
+                    producto: producto.nombre, 
+                    cantidad: unidadesAAgregar, 
+                    departamento: "Almacén", 
+                    usuario: "N/A", 
+                    observaciones: motivo || `Reposición de ${cantidad} ${producto.unidad}`, 
+                    responsable: "Admin Sistema", 
+                    createdAt: new Date().toISOString() 
+                };
                 await saveMovementToFirebase(nuevoMovimiento);
                 mostrarMensaje(`Reposición exitosa. +${unidadesAAgregar} unidades`, 'success');
                 document.getElementById('nuevoProductoForm').reset();
                 document.getElementById('saveProductBtn').style.display = 'block';
                 document.getElementById('repositionBtn').style.display = 'none';
-                document.getElementById('bultoConfig').style.display = 'none';
-            } catch (error) { mostrarMensaje('Error en reposición', 'error'); }
+                manejarCambioUnidad();
+            } catch (error) { 
+                mostrarMensaje('Error en reposición', 'error'); 
+            }
         }
 
         async function registrarAsignacion(e) {
@@ -2405,7 +2590,19 @@
             const nuevoStock = calcularStockDesdeUnidades(producto, unidadesTotalesActuales - cantidadUnidades);
             try {
                 await updateProductInFirebase(producto.firebaseId, { stock: nuevoStock, updatedAt: new Date().toISOString() });
-                const nuevoMovimiento = { id: nextMovimientoId++, fechaHora: formatearFechaHora(fechaHora), tipo: "salida", productoId: producto.id, producto: producto.nombre, cantidad: cantidadUnidades, departamento, usuario, observaciones: observaciones || "Asignación de material", responsable: "Admin Sistema", createdAt: new Date().toISOString() };
+                const nuevoMovimiento = { 
+                    id: nextMovimientoId++, 
+                    fechaHora: formatearFechaHora(fechaHora), 
+                    tipo: "salida", 
+                    productoId: producto.id, 
+                    producto: producto.nombre, 
+                    cantidad: cantidadUnidades, 
+                    departamento, 
+                    usuario, 
+                    observaciones: observaciones || "Asignación de material", 
+                    responsable: "Admin Sistema", 
+                    createdAt: new Date().toISOString() 
+                };
                 await saveMovementToFirebase(nuevoMovimiento);
                 mostrarMensaje(`Asignación exitosa. -${cantidadUnidades} unidades`, 'success');
                 document.getElementById('asignacionForm').reset();
@@ -2415,7 +2612,10 @@
                 document.getElementById('stockDisponible').value = '';
                 document.getElementById('equivalenciaUnidades').textContent = '0 unidades';
                 document.getElementById('nuevoStockUnidades').textContent = '0 unidades';
-            } catch (error) { mostrarMensaje('Error en asignación', 'error'); }
+                actualizarHistorialAsignaciones();
+            } catch (error) { 
+                mostrarMensaje('Error en asignación', 'error'); 
+            }
         }
 
         async function eliminarProducto() {
@@ -2426,7 +2626,9 @@
                 await deleteProductFromFirebase(producto.firebaseId);
                 mostrarMensaje('Producto eliminado', 'success');
                 cerrarModal();
-            } catch (error) { mostrarMensaje('Error al eliminar', 'error'); }
+            } catch (error) { 
+                mostrarMensaje('Error al eliminar', 'error'); 
+            }
         }
 
         async function eliminarMovimiento() {
@@ -2441,7 +2643,9 @@
                     await updateProductInFirebase(producto.firebaseId, { stock: nuevoStock, updatedAt: new Date().toISOString() });
                     await deleteMovementFromFirebase(movimiento.firebaseId);
                     mostrarMensaje('Movimiento eliminado y stock revertido', 'success');
-                } catch (error) { mostrarMensaje('Error al eliminar', 'error'); }
+                } catch (error) { 
+                    mostrarMensaje('Error al eliminar', 'error'); 
+                }
             } else {
                 await deleteMovementFromFirebase(movimiento.firebaseId);
                 mostrarMensaje('Movimiento eliminado', 'success');
@@ -2449,78 +2653,53 @@
             cerrarModal();
         }
 
-        // Reportes
-        function generarReporteMensual() {
-            const month = parseInt(document.getElementById('reportMonth').value);
-            const year = parseInt(document.getElementById('reportYear').value);
-            const filtrados = movimientos.filter(m => { const f = new Date(m.fechaHora); return f.getMonth() + 1 === month && f.getFullYear() === year; });
-            actualizarGraficosReporte(filtrados);
-            actualizarResumenAsignaciones(filtrados);
-        }
-        function generarReporteAnual() { actualizarGraficosReporte(movimientos.filter(m => new Date(m.fechaHora).getFullYear() === parseInt(document.getElementById('reportYear').value))); }
-        function generarReporteDepartamento() { actualizarGraficosReporte(movimientos); }
-        function generarReporteProductos() { actualizarGraficoProductosBajos(); actualizarResumenProductos(); }
-
-        function actualizarGraficosReporte(movs) {
-            if (deptChartInstance) deptChartInstance.destroy();
-            if (topProductsChartInstance) topProductsChartInstance.destroy();
-            const salidas = movs.filter(m => m.tipo === 'salida');
-            const deptSalidas = {};
-            salidas.forEach(m => deptSalidas[m.departamento] = (deptSalidas[m.departamento] || 0) + m.cantidad);
-            const deptCtx = document.getElementById('deptChart')?.getContext('2d');
-            if (deptCtx && Object.keys(deptSalidas).length) {
-                const topDepts = Object.entries(deptSalidas).sort((a,b) => b[1]-a[1]).slice(0,10);
-                deptChartInstance = new Chart(deptCtx, { type: 'bar', data: { labels: topDepts.map(d=>d[0]), datasets: [{ label: 'Unidades', data: topDepts.map(d=>d[1]), backgroundColor: '#3498db' }] }, options: { responsive: true, maintainAspectRatio: false } });
-            }
-            const prodUso = {};
-            salidas.forEach(m => prodUso[m.producto] = (prodUso[m.producto] || 0) + m.cantidad);
-            const topProdCtx = document.getElementById('topProductsChart')?.getContext('2d');
-            if (topProdCtx && Object.keys(prodUso).length) {
-                const topProds = Object.entries(prodUso).sort((a,b)=>b[1]-a[1]).slice(0,10);
-                topProductsChartInstance = new Chart(topProdCtx, { type: 'bar', data: { labels: topProds.map(p=>p[0]), datasets: [{ label: 'Unidades', data: topProds.map(p=>p[1]), backgroundColor: '#27ae60' }] }, options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y' } });
-            }
+        // Exportación de asignaciones
+        function exportarAsignacionesExcel() {
+            const asignaciones = movimientos.filter(m => m.tipo === 'salida');
+            const data = asignaciones.map(a => ({
+                Fecha: a.fechaHora,
+                Producto: a.producto,
+                Cantidad_Unidades: a.cantidad,
+                Departamento: a.departamento,
+                Usuario: a.usuario,
+                Observaciones: a.observaciones || ''
+            }));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), 'Asignaciones');
+            XLSX.writeFile(wb, `asignaciones-${new Date().toISOString().slice(0,10)}.xlsx`);
+            mostrarMensaje('Asignaciones exportadas a Excel', 'success');
         }
 
-        function actualizarResumenAsignaciones(movs) {
-            const container = document.getElementById('resumenAsignaciones');
-            if (!container) return;
-            const total = movs.length;
-            const unidades = movs.reduce((s,m)=>s+m.cantidad,0);
-            const porTipo = { entrada:0, salida:0, ajuste:0, reposicion:0 };
-            movs.forEach(m => porTipo[m.tipo]++);
-            let html = `<div class="stats-grid"><div class="stat-box"><i class="fas fa-exchange-alt"></i><div class="stat-content"><h4>Movimientos</h4><p>${total}</p></div></div><div class="stat-box"><i class="fas fa-boxes"></i><div class="stat-content"><h4>Unidades</h4><p>${unidades.toLocaleString()}</p></div></div></div><h4>Por Tipo</h4><div>`;
-            const colores = { entrada:'#27ae60', salida:'#e74c3c', ajuste:'#f39c12', reposicion:'#9b59b6' };
-            Object.entries(porTipo).forEach(([tipo, cant]) => { if(cant) html += `<div style="margin:5px 0;padding:8px;background:#f8f9fa;border-left:4px solid ${colores[tipo]}"><strong>${tipo.toUpperCase()}</strong>: ${cant} movimientos</div>`; });
-            html += '</div>';
-            container.innerHTML = html;
+        function exportarAsignacionesPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape');
+            doc.setFontSize(16);
+            doc.text('Historial de Asignaciones de Material', 14, 15);
+            doc.setFontSize(10);
+            doc.text(`Generado: ${new Date().toLocaleString('es-ES')}`, 14, 23);
+            
+            const asignaciones = movimientos.filter(m => m.tipo === 'salida');
+            const tableData = asignaciones.map(a => [
+                a.fechaHora,
+                a.producto,
+                a.cantidad,
+                a.departamento,
+                a.usuario,
+                a.observaciones || ''
+            ]);
+            
+            doc.autoTable({
+                head: [['Fecha', 'Producto', 'Cantidad', 'Departamento', 'Usuario', 'Observaciones']],
+                body: tableData,
+                startY: 30,
+                headStyles: { fillColor: [52, 152, 219] }
+            });
+            
+            doc.save(`asignaciones-${new Date().toISOString().slice(0,10)}.pdf`);
+            mostrarMensaje('Asignaciones exportadas a PDF', 'success');
         }
 
-        function actualizarGraficoProductosBajos() {
-            if (deptChartInstance) deptChartInstance.destroy();
-            if (topProductsChartInstance) topProductsChartInstance.destroy();
-            const bajos = [...productos].sort((a,b) => (calcularUnidadesTotales(a)/(a.stockMinimo*(a.unidadesPorMedida||1))) - (calcularUnidadesTotales(b)/(b.stockMinimo*(b.unidadesPorMedida||1)))).slice(0,10);
-            const ctx = document.getElementById('deptChart')?.getContext('2d');
-            if(ctx && bajos.length) deptChartInstance = new Chart(ctx, { type: 'bar', data: { labels: bajos.map(p=>p.nombre), datasets: [{ label: '% Stock Mínimo', data: bajos.map(p=>Math.round((calcularUnidadesTotales(p)/(p.stockMinimo*(p.unidadesPorMedida||1)))*100)), backgroundColor: '#e74c3c' }] }, options: { responsive: true, scales: { y: { max: 200 } } } });
-            const catCtx = document.getElementById('topProductsChart')?.getContext('2d');
-            if(catCtx) {
-                const cats = { papeleria:0, oficina:0, toner:0, electronica:0, limpieza:0, otros:0 };
-                productos.forEach(p => cats[p.categoria]++);
-                topProductsChartInstance = new Chart(catCtx, { type: 'pie', data: { labels: ['Papelería','Oficina','Toner','Electrónica','Limpieza','Otros'], datasets: [{ data: Object.values(cats), backgroundColor: ['#3498db','#f39c12','#27ae60','#9b59b6','#e74c3c','#95a5a6'] }] }, options: { responsive: true } });
-            }
-        }
-
-        function actualizarResumenProductos() {
-            const container = document.getElementById('resumenAsignaciones');
-            if (!container) return;
-            let bajos=0, agotados=0, totalUnidades=0;
-            productos.forEach(p => { const u = calcularUnidadesTotales(p); const min = p.stockMinimo*(p.unidadesPorMedida||1); totalUnidades+=u; if(u<min) bajos++; if(u===0) agotados++; });
-            let html = `<div class="stats-grid"><div class="stat-box"><i class="fas fa-boxes"></i><div class="stat-content"><h4>Productos</h4><p>${productos.length}</p></div></div><div class="stat-box"><i class="fas fa-exclamation-triangle"></i><div class="stat-content"><h4>Stock Bajo</h4><p>${bajos}</p></div></div><div class="stat-box"><i class="fas fa-times-circle"></i><div class="stat-content"><h4>Agotados</h4><p>${agotados}</p></div></div><div class="stat-box"><i class="fas fa-calculator"></i><div class="stat-content"><h4>Unidades</h4><p>${totalUnidades.toLocaleString()}</p></div></div></div><h4>Necesitan Reposición</h4><div>`;
-            productos.filter(p => calcularUnidadesTotales(p) < (p.stockMinimo*(p.unidadesPorMedida||1))).sort((a,b)=>calcularUnidadesTotales(a)-calcularUnidadesTotales(b)).forEach(p => { const u=calcularUnidadesTotales(p); const min=p.stockMinimo*(p.unidadesPorMedida||1); html += `<div style="margin:5px 0;padding:8px;background:#f8f9fa;border-left:4px solid #e74c3c"><strong>${p.nombre}</strong>: ${u}/${min} unidades (faltan ${min-u})</div>`; });
-            html += '</div>';
-            container.innerHTML = html;
-        }
-
-        // Exportaciones
+        // Exportaciones generales
         function exportarPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('landscape');
@@ -2529,13 +2708,13 @@
             let totalUnidades=0, bajos=0;
             productos.forEach(p => { const u=calcularUnidadesTotales(p); totalUnidades+=u; if(u<p.stockMinimo*(p.unidadesPorMedida||1)) bajos++; });
             doc.text(`Total productos: ${productos.length} | Stock bajo: ${bajos} | Unidades totales: ${totalUnidades.toLocaleString()}`, 14, 33);
-            doc.autoTable({ head: [['#','Código','Producto','Categoría','Stock','Unidades','Estado']], body: productos.map(p => [p.codigo.split('-')[1]||p.id, p.codigo, p.nombre, p.categoria, `${p.stock} ${p.unidad}`, calcularUnidadesTotales(p), calcularUnidadesTotales(p) < p.stockMinimo*(p.unidadesPorMedida||1) ? 'Bajo' : 'Normal']), startY: 40, headStyles: { fillColor: [52,152,219] } });
+            doc.autoTable({ head: [['#','Código','Producto','Categoría','Stock','Unidades','Estado']], body: productos.map(p => [p.codigo.split('-')[1]||p.id, p.codigo, p.nombre, p.categoria, `${Math.floor(p.stock)} ${p.unidad}`, calcularUnidadesTotales(p), calcularUnidadesTotales(p) < p.stockMinimo*(p.unidadesPorMedida||1) ? 'Bajo' : 'Normal']), startY: 40, headStyles: { fillColor: [52,152,219] } });
             doc.save(`inventario-${new Date().toISOString().slice(0,10)}.pdf`);
         }
 
         function exportarExcel() {
             const wb = XLSX.utils.book_new();
-            const prodData = productos.map(p => ({ Código: p.codigo, Producto: p.nombre, Categoría: p.categoria, Stock: `${p.stock} ${p.unidad}`, UnidadesTotales: calcularUnidadesTotales(p), StockMínimo: `${p.stockMinimo} ${p.unidad}`, Estado: calcularUnidadesTotales(p) < p.stockMinimo*(p.unidadesPorMedida||1) ? 'BAJO' : 'NORMAL' }));
+            const prodData = productos.map(p => ({ Código: p.codigo, Producto: p.nombre, Categoría: p.categoria, Stock: `${Math.floor(p.stock)} ${p.unidad}`, UnidadesTotales: calcularUnidadesTotales(p), StockMínimo: `${p.stockMinimo} ${p.unidad}`, Estado: calcularUnidadesTotales(p) < p.stockMinimo*(p.unidadesPorMedida||1) ? 'BAJO' : 'NORMAL' }));
             const movData = movimientos.map(m => ({ Fecha: m.fechaHora, Tipo: m.tipo, Producto: m.producto, Cantidad: m.cantidad, Departamento: m.departamento, Usuario: m.usuario, Observaciones: m.observaciones }));
             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(prodData), 'Inventario');
             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(movData), 'Movimientos');
@@ -2543,16 +2722,8 @@
         }
 
         function exportarInventarioActualExcel() {
-            const data = productos.map(p => ({ Código: p.codigo, Producto: p.nombre, Categoría: p.categoria, StockActual: p.stock, Unidad: p.unidad, UnidadesTotales: calcularUnidadesTotales(p), StockMínimo: p.stockMinimo, Estado: calcularUnidadesTotales(p) < p.stockMinimo*(p.unidadesPorMedida||1) ? 'URGENTE' : 'OK' }));
+            const data = productos.map(p => ({ Código: p.codigo, Producto: p.nombre, Categoría: p.categoria, StockActual: Math.floor(p.stock), Unidad: p.unidad, UnidadesTotales: calcularUnidadesTotales(p), StockMínimo: p.stockMinimo, Estado: calcularUnidadesTotales(p) < p.stockMinimo*(p.unidadesPorMedida||1) ? 'URGENTE' : 'OK' }));
             XLSX.writeFile(XLSX.utils.book_append_sheet(XLSX.utils.book_new(), XLSX.utils.json_to_sheet(data), 'Inventario'), `inventario-actual-${new Date().toISOString().slice(0,10)}.xlsx`);
-        }
-
-        function exportarReporteExcel() {
-            const tipo = document.getElementById('reportType').value;
-            let datos = [];
-            if(tipo === 'productos') datos = productos.map(p => ({ Producto: p.nombre, Unidades: calcularUnidadesTotales(p), Mínimo: p.stockMinimo, Estado: calcularUnidadesTotales(p) < p.stockMinimo*(p.unidadesPorMedida||1) ? 'Bajo' : 'Normal' }));
-            else datos = movimientos.map(m => ({ Fecha: m.fechaHora, Tipo: m.tipo, Producto: m.producto, Cantidad: m.cantidad, Departamento: m.departamento }));
-            XLSX.writeFile(XLSX.utils.book_append_sheet(XLSX.utils.book_new(), XLSX.utils.json_to_sheet(datos), 'Reporte'), `reporte-${new Date().toISOString().slice(0,10)}.xlsx`);
         }
 
         // Inicialización
@@ -2564,29 +2735,32 @@
             actualizarTablaMovimientos();
             actualizarEstadisticas();
             actualizarDashboard();
-            setTimeout(() => generarReporteMensual(), 500);
+            actualizarHistorialAsignaciones();
         }
 
         function configurarEventos() {
-            document.querySelectorAll('.menu-btn').forEach(btn => btn.addEventListener('click', function() { mostrarSeccion(this.dataset.section); if(this.dataset.section === 'reportes') setTimeout(() => { const t=document.getElementById('reportType').value; if(t==='mensual') generarReporteMensual(); else if(t==='anual') generarReporteAnual(); else if(t==='departamento') generarReporteDepartamento(); else generarReporteProductos(); }, 100); }));
+            document.querySelectorAll('.menu-btn').forEach(btn => btn.addEventListener('click', function() { mostrarSeccion(this.dataset.section); }));
             document.getElementById('nuevoProductoForm').addEventListener('submit', guardarProducto);
             document.getElementById('repositionBtn').addEventListener('click', (e) => { e.preventDefault(); guardarReposicion(); });
             document.getElementById('asignacionForm').addEventListener('submit', registrarAsignacion);
-            document.getElementById('productoAsignar').addEventListener('change', function() { if(this.value) { const p=productos.find(p=>p.id==this.value); if(p) { document.getElementById('stockDisponible').value=`${calcularUnidadesTotales(p)} unidades`; calcularEquivalenciaAsignacion(); } } });
+            document.getElementById('productoAsignar').addEventListener('change', function() { if(this.value) { const p=productos.find(p=>p.id==this.value); if(p) { document.getElementById('stockDisponible').value=obtenerEquivalencia(p, calcularUnidadesTotales(p)); calcularEquivalenciaAsignacion(); } } });
             document.getElementById('cantidadAsignarUnidades')?.addEventListener('input', calcularEquivalenciaAsignacion);
             document.getElementById('codigoProducto')?.addEventListener('blur', verificarCodigoExistente);
-            document.getElementById('unidadProducto')?.addEventListener('change', function() { document.getElementById('bultoConfig').style.display = this.value === 'BULTO' ? 'flex' : 'none'; });
+            document.getElementById('unidadProducto')?.addEventListener('change', manejarCambioUnidad);
             document.getElementById('clearFilters').addEventListener('click', limpiarFiltrosInventario);
             document.getElementById('clearMovFilters').addEventListener('click', limpiarFiltrosMovimientos);
+            document.getElementById('clearAsignacionFilters')?.addEventListener('click', limpiarFiltrosAsignaciones);
+            document.getElementById('searchAsignacion')?.addEventListener('input', actualizarHistorialAsignaciones);
+            document.getElementById('filterAsignacionDept')?.addEventListener('change', actualizarHistorialAsignaciones);
+            document.getElementById('filterAsignacionFecha')?.addEventListener('change', actualizarHistorialAsignaciones);
+            document.getElementById('exportAsignacionesExcel')?.addEventListener('click', exportarAsignacionesExcel);
+            document.getElementById('exportAsignacionesPdf')?.addEventListener('click', exportarAsignacionesPDF);
             document.getElementById('searchProduct').addEventListener('input', actualizarTablaInventario);
             document.getElementById('filterCategory').addEventListener('change', actualizarTablaInventario);
             document.getElementById('filterStock').addEventListener('change', actualizarTablaInventario);
             document.getElementById('filterMovimiento').addEventListener('change', actualizarTablaMovimientos);
             document.getElementById('filterMovDept').addEventListener('change', actualizarTablaMovimientos);
             document.getElementById('filterMovFecha').addEventListener('change', actualizarTablaMovimientos);
-            document.getElementById('reportType').addEventListener('change', function() { document.getElementById('reportMonth').style.display = this.value === 'departamento' || this.value === 'productos' ? 'none' : 'block'; });
-            document.getElementById('generateReport').addEventListener('click', () => { const t=document.getElementById('reportType').value; if(t==='mensual') generarReporteMensual(); else if(t==='anual') generarReporteAnual(); else if(t==='departamento') generarReporteDepartamento(); else generarReporteProductos(); });
-            document.getElementById('exportReportExcel').addEventListener('click', exportarReporteExcel);
             document.getElementById('exportPdf').addEventListener('click', exportarPDF);
             document.getElementById('exportExcel').addEventListener('click', exportarExcel);
             document.getElementById('exportInventoryExcel').addEventListener('click', exportarInventarioActualExcel);
@@ -2604,12 +2778,12 @@
             initializeFirebase();
             actualizarFechaHora();
             setInterval(actualizarFechaHora, 1000);
-            generarOpcionesFechaReporte();
             configurarEventos();
             const ahora = new Date();
             ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
             document.getElementById('fechaAsignacion').value = ahora.toISOString().slice(0, 16);
             document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString();
+            manejarCambioUnidad();
         });
     </script>
 </body>
