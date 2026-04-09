@@ -798,7 +798,6 @@
             top: 0;
         }
         
-        /* Estilos para modales */
         .modal {
             display: none;
             position: fixed;
@@ -987,6 +986,21 @@
             background-color: #e9ecef;
             color: #6c757d;
         }
+        
+        /* Estilo para números decimales en stock */
+        .stock-decimal {
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+        
+        .decimal-warning {
+            background-color: #fff3cd;
+            border-left: 3px solid #f39c12;
+            padding: 8px 12px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body>
@@ -1054,29 +1068,24 @@
             </div>
 
             <div class="content">
-                <!-- Sección Dashboard -->
                 <section id="dashboard" class="content-section active">
                     <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
-                    
                     <div class="dashboard-cards">
                         <div class="dashboard-card">
                             <i class="fas fa-boxes"></i>
                             <h3 id="dashboardTotalProducts">0</h3>
                             <p>Productos en Inventario</p>
                         </div>
-                        
                         <div class="dashboard-card warning" id="lowStockCard">
                             <i class="fas fa-exclamation-triangle"></i>
                             <h3 id="dashboardLowStock">0</h3>
                             <p>Productos con Stock Bajo</p>
                         </div>
-                        
                         <div class="dashboard-card">
                             <i class="fas fa-hand-holding"></i>
                             <h3 id="dashboardTotalAssignments">0</h3>
                             <p>Asignaciones este Mes</p>
                         </div>
-                        
                         <div class="dashboard-card">
                             <i class="fas fa-calculator"></i>
                             <h3 id="dashboardTotalUnits">0</h3>
@@ -1085,7 +1094,6 @@
                     </div>
                 </section>
 
-                <!-- Sección de Inventario -->
                 <section id="inventario" class="content-section">
                     <h2><i class="fas fa-clipboard-list"></i> Inventario de Productos</h2>
                     <div class="filters">
@@ -1129,7 +1137,6 @@
                     </div>
                 </section>
 
-                <!-- Sección de Nuevo Producto -->
                 <section id="nuevo-producto" class="content-section">
                     <h2><i class="fas fa-plus"></i> Registrar/Reponer Producto</h2>
                     <form id="nuevoProductoForm">
@@ -1194,8 +1201,8 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="stockInicial">Stock a Agregar *</label>
-                                <input type="number" id="stockInicial" min="0" step="1" required>
-                                <small class="unit-conversion" id="stockExplicacion">En la unidad de medida seleccionada (número entero)</small>
+                                <input type="number" id="stockInicial" min="0" step="any" required>
+                                <small class="unit-conversion" id="stockExplicacion">En la unidad de medida seleccionada (puede usar decimales, ej: 2.5)</small>
                             </div>
                             <div class="form-group">
                                 <label for="stockMinimo">Stock Mínimo (Alerta) *</label>
@@ -1225,9 +1232,11 @@
                     </form>
                 </section>
 
-                <!-- Sección de Asignación de Material con Historial -->
                 <section id="asignacion" class="content-section">
                     <h2><i class="fas fa-hand-holding"></i> Asignar Material a Departamentos</h2>
+                    <div id="decimalStockWarning" class="decimal-warning" style="display: none;">
+                        <i class="fas fa-info-circle"></i> <strong>Stock fraccionado:</strong> Este producto tiene stock en decimales (fracción de bulto/caja). Puede asignar unidades normalmente.
+                    </div>
                     <form id="asignacionForm">
                         <div class="form-row">
                             <div class="form-group">
@@ -1317,7 +1326,6 @@
                         </div>
                     </form>
 
-                    <!-- Historial de Asignaciones -->
                     <div class="history-panel">
                         <h3><i class="fas fa-history"></i> Historial de Asignaciones</h3>
                         <div class="history-filters">
@@ -1350,7 +1358,6 @@
                     </div>
                 </section>
 
-                <!-- Sección de Movimientos -->
                 <section id="movimientos" class="content-section">
                     <h2><i class="fas fa-exchange-alt"></i> Historial de Movimientos</h2>
                     <div class="filters">
@@ -1552,7 +1559,7 @@
         ];
 
         // =============================================
-        // FUNCIONES AUXILIARES
+        // FUNCIONES AUXILIARES - CORREGIDAS PARA MANEJAR DECIMALES
         // =============================================
         
         function mostrarMensaje(mensaje, tipo) {
@@ -1568,43 +1575,77 @@
             if (overlay) overlay.style.display = mostrar ? 'flex' : 'none';
         }
 
+        /**
+         * Calcula las unidades totales a partir del stock en la unidad base
+         * AHORA SOPORTA DECIMALES (ej: 2.5 bultos = 2.5 * unidadesPorBulto)
+         */
         function calcularUnidadesTotales(producto) {
             if (!producto) return 0;
             const unidadesPorMedida = producto.unidadesPorMedida || 1;
+            const stockValue = parseFloat(producto.stock) || 0;
+            
             if (producto.unidad === 'BULTO') {
                 const unidadesPorBulto = producto.unidadesPorBulto || 1;
-                return Math.floor(producto.stock) * Math.floor(unidadesPorBulto);
+                return stockValue * unidadesPorBulto;
             } else {
-                return Math.floor(producto.stock) * Math.floor(unidadesPorMedida);
+                return stockValue * unidadesPorMedida;
             }
         }
 
+        /**
+         * Calcula el stock en la unidad base a partir de las unidades totales
+         * AHORA RETORNA DECIMALES para permitir fracciones
+         */
         function calcularStockDesdeUnidades(producto, unidadesTotales) {
             if (!producto) return 0;
             const unidadesPorMedida = producto.unidadesPorMedida || 1;
+            
             if (producto.unidad === 'BULTO') {
                 const unidadesPorBulto = producto.unidadesPorBulto || 1;
-                return Math.floor(unidadesTotales / unidadesPorBulto);
+                if (unidadesPorBulto <= 0) return 0;
+                // Retorna número decimal (ej: 2.5 bultos)
+                return unidadesTotales / unidadesPorBulto;
             } else {
-                return Math.floor(unidadesTotales / unidadesPorMedida);
+                if (unidadesPorMedida <= 0) return 0;
+                // Retorna número decimal (ej: 2.5 cajas)
+                return unidadesTotales / unidadesPorMedida;
             }
         }
 
+        /**
+         * Obtiene una representación legible del stock (con decimales si es necesario)
+         */
         function obtenerEquivalencia(producto, cantidadUnidades) {
             if (!producto) return `${cantidadUnidades} unidades`;
+            const unidadesPorMedida = producto.unidadesPorMedida || 1;
+            
             if (producto.unidad === 'BULTO') {
                 const unidadesPorBulto = producto.unidadesPorBulto || 1;
-                const bultos = Math.floor(cantidadUnidades / unidadesPorBulto);
+                const bultos = cantidadUnidades / unidadesPorBulto;
                 const unidadesRestantes = cantidadUnidades % unidadesPorBulto;
-                let partes = [];
-                if (bultos > 0) partes.push(`${bultos} bulto(s)`);
-                if (unidadesRestantes > 0) partes.push(`${unidadesRestantes} unidad(es)`);
-                if (partes.length === 0) return `0 unidades`;
-                return partes.join(' + ') + ` (${cantidadUnidades} unidades)`;
+                
+                if (unidadesRestantes === 0) {
+                    return `${bultos.toFixed(2)} bulto(s) (${cantidadUnidades} unidades)`;
+                } else {
+                    return `${bultos.toFixed(2)} bulto(s) + ${unidadesRestantes} und (${cantidadUnidades} unidades)`;
+                }
             } else {
-                const cantidadMedida = cantidadUnidades / (producto.unidadesPorMedida || 1);
+                const cantidadMedida = cantidadUnidades / unidadesPorMedida;
                 return `${cantidadMedida.toFixed(2)} ${producto.unidad} (${cantidadUnidades} unidades)`;
             }
+        }
+
+        /**
+         * Formatea el stock mostrado con decimales si es necesario
+         */
+        function formatearStockMostrado(producto) {
+            if (!producto) return "0";
+            const stockValue = parseFloat(producto.stock) || 0;
+            // Mostrar con 2 decimales si tiene fracción, sino como entero
+            if (stockValue % 1 !== 0) {
+                return stockValue.toFixed(2);
+            }
+            return stockValue.toString();
         }
 
         function formatearFechaHora(fechaHoraStr = null) {
@@ -1647,7 +1688,12 @@
                 const productosSnapshot = await getDocs(query(collection(db, "productos"), orderBy("id")));
                 productos = [];
                 productosSnapshot.forEach((doc) => {
-                    productos.push({...doc.data(), firebaseId: doc.id});
+                    const data = doc.data();
+                    // Asegurar que stock sea número
+                    if (data.stock !== undefined && typeof data.stock === 'string') {
+                        data.stock = parseFloat(data.stock);
+                    }
+                    productos.push({...data, firebaseId: doc.id});
                 });
                 
                 const movimientosSnapshot = await getDocs(query(collection(db, "movimientos"), orderBy("fechaHora", "desc")));
@@ -1680,7 +1726,11 @@
                         if (isLoading) return;
                         const nuevosProductos = [];
                         snapshot.forEach((doc) => {
-                            nuevosProductos.push({...doc.data(), firebaseId: doc.id});
+                            const data = doc.data();
+                            if (data.stock !== undefined && typeof data.stock === 'string') {
+                                data.stock = parseFloat(data.stock);
+                            }
+                            nuevosProductos.push({...data, firebaseId: doc.id});
                         });
                         if (nuevosProductos.length > 0) nextProductId = Math.max(...nuevosProductos.map(p => p.id)) + 1;
                         productos = nuevosProductos;
@@ -1908,26 +1958,26 @@
                 bultoConfigGroup.style.display = 'flex';
                 unidadesPorMedidaGroup.style.display = 'none';
                 unidadExplicacion.textContent = 'Ej: 48 unidades por bulto (papel rosal), 20 unidades por bulto (servilletas)';
-                stockExplicacion.textContent = 'En bultos (cantidad de bultos) - Número entero';
+                stockExplicacion.textContent = 'En bultos (puede usar decimales, ej: 2.5 bultos)';
                 stockMinimoExplicacion.textContent = 'En bultos (cantidad mínima de bultos) - Número entero';
             } else if (unidad === 'CAJAS') {
                 bultoConfigGroup.style.display = 'none';
                 unidadesPorMedidaGroup.style.display = 'flex';
                 unidadExplicacion.textContent = 'Ej: 24 unidades por caja, 50 unidades por caja';
-                stockExplicacion.textContent = 'En cajas (cantidad de cajas) - Número entero';
+                stockExplicacion.textContent = 'En cajas (puede usar decimales, ej: 2.5 cajas)';
                 stockMinimoExplicacion.textContent = 'En cajas (cantidad mínima de cajas) - Número entero';
             } else if (unidad === 'PAQ') {
                 bultoConfigGroup.style.display = 'none';
                 unidadesPorMedidaGroup.style.display = 'flex';
                 unidadExplicacion.textContent = 'Ej: 100 unidades por paquete, 50 hojas por paquete';
-                stockExplicacion.textContent = 'En paquetes (cantidad de paquetes) - Número entero';
+                stockExplicacion.textContent = 'En paquetes (puede usar decimales, ej: 2.5 paquetes)';
                 stockMinimoExplicacion.textContent = 'En paquetes (cantidad mínima de paquetes) - Número entero';
             } else {
                 bultoConfigGroup.style.display = 'none';
                 unidadesPorMedidaGroup.style.display = 'flex';
                 unidadExplicacion.textContent = 'Ej: 1 unidad = 1 artículo';
-                stockExplicacion.textContent = 'En unidades de medida seleccionada - Número entero';
-                stockMinimoExplicacion.textContent = 'En unidades de medida seleccionada - Número entero';
+                stockExplicacion.textContent = 'En la unidad de medida seleccionada - Número entero';
+                stockMinimoExplicacion.textContent = 'En la unidad de medida seleccionada - Número entero';
             }
         }
 
@@ -2097,6 +2147,7 @@
                 const unidadesTotales = calcularUnidadesTotales(producto);
                 const stockMinimoUnidades = producto.stockMinimo * (producto.unidadesPorMedida || 1);
                 const stockMinimoTexto = obtenerEquivalencia(producto, stockMinimoUnidades);
+                const stockMostrado = formatearStockMostrado(producto);
                 
                 let estadoClase = '', estadoTexto = '', stockIndicator = '';
                 if (unidadesTotales < stockMinimoUnidades) {
@@ -2119,17 +2170,17 @@
                 
                 let infoUnidades = '';
                 if (producto.unidad === 'BULTO') {
-                    infoUnidades = `${Math.floor(producto.stock)} ${producto.unidad} (${producto.unidadesPorBulto || 1} und/bulto)`;
+                    infoUnidades = `${stockMostrado} ${producto.unidad} (${producto.unidadesPorBulto || 1} und/bulto)`;
                 } else {
-                    infoUnidades = `${Math.floor(producto.stock)} ${producto.unidad} (${producto.unidadesPorMedida || 1} und/${producto.unidad === 'CAJAS' ? 'caja' : producto.unidad === 'PAQ' ? 'paquete' : producto.unidad})`;
+                    infoUnidades = `${stockMostrado} ${producto.unidad} (${producto.unidadesPorMedida || 1} und/${producto.unidad === 'CAJAS' ? 'caja' : producto.unidad === 'PAQ' ? 'paquete' : producto.unidad})`;
                 }
                 
                 row.innerHTML = `
                     <td><strong>${codigoNum}</strong></td>
                     <td><div>${producto.nombre}</div><div class="unit-info">Código: ${producto.codigo}</div></td>
                     <td><span class="badge ${categoriaClase}">${categoriaNombre}</span></td>
-                    <td><div class="stock-details"><span class="stock-total">${infoUnidades}</span><span class="unit-info">${unidadesTotales} unidades totales</span></div></td>
-                    <td>${unidadesTotales} unidades</td>
+                    <td><div class="stock-details"><span class="stock-total">${infoUnidades}</span><span class="unit-info">${unidadesTotales.toFixed(0)} unidades totales</span></div></td>
+                    <td>${unidadesTotales.toFixed(0)} unidades</td>
                     <td>${producto.unidad}</td>
                     <td>${stockMinimoTexto}</td>
                     <td class="${estadoClase}">${stockIndicator} ${estadoTexto}</td>
@@ -2264,7 +2315,10 @@
         function irAAsignacion(productoId) {
             mostrarSeccion('asignacion');
             const select = document.getElementById('productoAsignar');
-            if (select) { select.value = productoId; select.dispatchEvent(new Event('change')); }
+            if (select) { 
+                select.value = productoId; 
+                select.dispatchEvent(new Event('change'));
+            }
         }
 
         function ajustarStock(productoId) {
@@ -2310,8 +2364,8 @@
             if (!modalBody) return;
             
             const unidadesTotales = calcularUnidadesTotales(producto);
+            const stockMostrado = formatearStockMostrado(producto);
             
-            // Generar el HTML del formulario de edición correctamente
             let unidadesHtml = '';
             if (producto.unidad === 'BULTO') {
                 unidadesHtml = `
@@ -2375,8 +2429,8 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Stock (en ${producto.unidad}) *</label>
-                            <input type="number" id="editStock" value="${Math.floor(producto.stock)}" min="0" step="1" required>
-                            <small>Stock actual: ${unidadesTotales} unidades totales</small>
+                            <input type="number" id="editStock" value="${stockMostrado}" min="0" step="any" required>
+                            <small>Stock actual: ${unidadesTotales.toFixed(0)} unidades totales</small>
                         </div>
                         <div class="form-group">
                             <label>Stock Mínimo (en ${producto.unidad}) *</label>
@@ -2398,19 +2452,17 @@
             
             document.getElementById('editModal').style.display = 'flex';
             
-            // Agregar evento change a la unidad para cambiar dinámicamente los campos
             const unidadSelect = document.getElementById('editUnidad');
             if (unidadSelect) {
                 unidadSelect.addEventListener('change', function() {
                     const selectedUnidad = this.value;
-                    const unidadesContainer = document.querySelector('#editForm .form-row:has(#editUnidadesPorBulto, #editUnidadesPorMedida)');
                     const editBultoRow = document.getElementById('editBultoRow');
                     const editUnidadesRow = document.getElementById('editUnidadesPorMedidaRow');
                     
                     if (selectedUnidad === 'BULTO') {
-                        // Cambiar a modo bulto
                         if (editUnidadesRow) editUnidadesRow.remove();
                         if (!editBultoRow) {
+                            const categoriaRow = document.querySelector('#editForm .form-row:nth-child(2)');
                             const newBultoRow = document.createElement('div');
                             newBultoRow.className = 'form-row';
                             newBultoRow.id = 'editBultoRow';
@@ -2421,8 +2473,6 @@
                                     <small class="help-text">Ej: 48 unidades por bulto</small>
                                 </div>
                             `;
-                            // Insertar después del form-row de categoría/unidad
-                            const categoriaRow = document.querySelector('#editForm .form-row:nth-child(2)');
                             if (categoriaRow && categoriaRow.nextSibling) {
                                 categoriaRow.parentNode.insertBefore(newBultoRow, categoriaRow.nextSibling);
                             }
@@ -2430,9 +2480,9 @@
                             editBultoRow.style.display = 'flex';
                         }
                     } else {
-                        // Cambiar a modo normal
                         if (editBultoRow) editBultoRow.remove();
                         if (!editUnidadesRow) {
+                            const categoriaRow = document.querySelector('#editForm .form-row:nth-child(2)');
                             const newUnidadesRow = document.createElement('div');
                             newUnidadesRow.className = 'form-row';
                             newUnidadesRow.id = 'editUnidadesPorMedidaRow';
@@ -2443,7 +2493,6 @@
                                     <small class="help-text">Ej: 24 unidades por caja</small>
                                 </div>
                             `;
-                            const categoriaRow = document.querySelector('#editForm .form-row:nth-child(2)');
                             if (categoriaRow && categoriaRow.nextSibling) {
                                 categoriaRow.parentNode.insertBefore(newUnidadesRow, categoriaRow.nextSibling);
                             }
@@ -2473,19 +2522,16 @@
             let unidadesPorMedida = 1;
             let unidadesPorBulto = null;
             
-            // Validar campos obligatorios
             if (!codigo || !nombre || !categoria || !unidad || isNaN(stock) || isNaN(stockMinimo)) {
                 mostrarMensaje('Complete todos los campos obligatorios', 'error');
                 return;
             }
             
-            // Validar código único
             if (productos.some(p => p.codigo === codigo && p.id !== currentEditId)) {
                 mostrarMensaje('El código ya existe en otro producto', 'error');
                 return;
             }
             
-            // Obtener valores según la unidad seleccionada
             if (unidad === 'BULTO') {
                 const unidadesPorBultoInput = document.getElementById('editUnidadesPorBulto');
                 if (!unidadesPorBultoInput) {
@@ -2518,7 +2564,7 @@
                     nombre, 
                     categoria, 
                     unidad, 
-                    stock: Math.floor(stock), 
+                    stock: stock, 
                     stockMinimo, 
                     descripcion, 
                     unidadesPorMedida,
@@ -2528,7 +2574,6 @@
                 if (unidad === 'BULTO') {
                     updates.unidadesPorBulto = unidadesPorBulto;
                 } else {
-                    // Eliminar unidadesPorBulto si existe
                     if (producto.unidadesPorBulto) {
                         updates.unidadesPorBulto = null;
                     }
@@ -2605,7 +2650,7 @@
             const nombre = document.getElementById('nombreProducto').value.trim();
             const categoria = document.getElementById('categoriaProducto').value;
             const unidad = document.getElementById('unidadProducto').value;
-            const stockInicial = parseInt(document.getElementById('stockInicial').value);
+            const stockInicial = parseFloat(document.getElementById('stockInicial').value);
             const stockMinimo = parseInt(document.getElementById('stockMinimo').value);
             const descripcion = document.getElementById('descripcionProducto').value.trim();
             
@@ -2688,7 +2733,7 @@
 
         async function guardarReposicion() {
             const codigo = document.getElementById('codigoProducto').value.trim();
-            const cantidad = parseInt(document.getElementById('stockInicial').value);
+            const cantidad = parseFloat(document.getElementById('stockInicial').value);
             const motivo = document.getElementById('descripcionProducto').value.trim();
             if (!codigo || isNaN(cantidad) || cantidad <= 0) { mostrarMensaje('Complete los campos', 'error'); return; }
             const producto = productos.find(p => p.codigo === codigo);
@@ -2731,6 +2776,10 @@
             }
         }
 
+        // =============================================
+        // FUNCIÓN CORREGIDA: REGISTRAR ASIGNACIÓN
+        // Ahora descuenta las unidades correctamente y mantiene decimales
+        // =============================================
         async function registrarAsignacion(e) {
             e.preventDefault();
             const productoId = document.getElementById('productoAsignar').value;
@@ -2739,16 +2788,37 @@
             const usuario = document.getElementById('usuarioAsignar').value.trim();
             const fechaHora = document.getElementById('fechaAsignacion').value;
             const observaciones = document.getElementById('observacionesAsignacion').value.trim();
-            if (!productoId || !cantidadUnidades || !departamento || !usuario || !fechaHora) { mostrarMensaje('Complete todos los campos', 'error'); return; }
+            
+            if (!productoId || !cantidadUnidades || !departamento || !usuario || !fechaHora) { 
+                mostrarMensaje('Complete todos los campos', 'error'); 
+                return; 
+            }
             
             const producto = productos.find(p => p.id == productoId);
-            if (!producto) { mostrarMensaje('Producto no encontrado', 'error'); return; }
-            const unidadesTotalesActuales = calcularUnidadesTotales(producto);
-            if (cantidadUnidades > unidadesTotalesActuales) { mostrarMensaje(`Stock insuficiente: ${unidadesTotalesActuales} unidades`, 'error'); return; }
+            if (!producto) { 
+                mostrarMensaje('Producto no encontrado', 'error'); 
+                return; 
+            }
             
-            const nuevoStock = calcularStockDesdeUnidades(producto, unidadesTotalesActuales - cantidadUnidades);
+            const unidadesTotalesActuales = calcularUnidadesTotales(producto);
+            
+            if (cantidadUnidades > unidadesTotalesActuales) { 
+                mostrarMensaje(`Stock insuficiente: ${unidadesTotalesActuales} unidades`, 'error'); 
+                return; 
+            }
+            
+            // Calcular el nuevo stock en la unidad base (ej: bultos) restando las unidades
+            // Esto permite tener decimales (ej: 2.5 bultos si se descuentan unidades parciales)
+            const nuevasUnidadesTotales = unidadesTotalesActuales - cantidadUnidades;
+            const nuevoStockEnUnidadBase = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
+            
             try {
-                await updateProductInFirebase(producto.firebaseId, { stock: nuevoStock, updatedAt: new Date().toISOString() });
+                // Actualizar el producto con el nuevo stock (que puede ser decimal)
+                await updateProductInFirebase(producto.firebaseId, { 
+                    stock: nuevoStockEnUnidadBase, 
+                    updatedAt: new Date().toISOString() 
+                });
+                
                 const nuevoMovimiento = { 
                     id: nextMovimientoId++, 
                     fechaHora: formatearFechaHora(fechaHora), 
@@ -2763,7 +2833,12 @@
                     createdAt: new Date().toISOString() 
                 };
                 await saveMovementToFirebase(nuevoMovimiento);
-                mostrarMensaje(`Asignación exitosa. -${cantidadUnidades} unidades`, 'success');
+                
+                // Mostrar mensaje con la equivalencia de lo descontado
+                const equivalenciaDescontada = obtenerEquivalencia(producto, cantidadUnidades);
+                mostrarMensaje(`Asignación exitosa. Se descontaron ${equivalenciaDescontada}`, 'success');
+                
+                // Limpiar formulario
                 document.getElementById('asignacionForm').reset();
                 const ahora = new Date();
                 ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
@@ -2771,9 +2846,12 @@
                 document.getElementById('stockDisponible').value = '';
                 document.getElementById('equivalenciaUnidades').textContent = '0 unidades';
                 document.getElementById('nuevoStockUnidades').textContent = '0 unidades';
+                
                 actualizarHistorialAsignaciones();
+                
             } catch (error) { 
-                mostrarMensaje('Error en asignación', 'error'); 
+                console.error('Error en asignación:', error);
+                mostrarMensaje('Error en asignación: ' + error.message, 'error'); 
             }
         }
 
@@ -2796,7 +2874,9 @@
             const producto = productos.find(p => p.id === movimiento.productoId);
             if (producto) {
                 const unidadesActuales = calcularUnidadesTotales(producto);
-                const nuevasUnidades = movimiento.tipo === 'entrada' || movimiento.tipo === 'reposicion' ? unidadesActuales - movimiento.cantidad : unidadesActuales + movimiento.cantidad;
+                const nuevasUnidades = movimiento.tipo === 'entrada' || movimiento.tipo === 'reposicion' 
+                    ? unidadesActuales - movimiento.cantidad 
+                    : unidadesActuales + movimiento.cantidad;
                 const nuevoStock = calcularStockDesdeUnidades(producto, nuevasUnidades);
                 try {
                     await updateProductInFirebase(producto.firebaseId, { stock: nuevoStock, updatedAt: new Date().toISOString() });
@@ -2812,7 +2892,7 @@
             cerrarModal();
         }
 
-        // Exportación de asignaciones
+        // Exportaciones
         function exportarAsignacionesExcel() {
             const asignaciones = movimientos.filter(m => m.tipo === 'salida');
             const data = asignaciones.map(a => ({
@@ -2858,7 +2938,6 @@
             mostrarMensaje('Asignaciones exportadas a PDF', 'success');
         }
 
-        // Exportaciones generales
         function exportarPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('landscape');
@@ -2867,13 +2946,13 @@
             let totalUnidades=0, bajos=0;
             productos.forEach(p => { const u=calcularUnidadesTotales(p); totalUnidades+=u; if(u<p.stockMinimo*(p.unidadesPorMedida||1)) bajos++; });
             doc.text(`Total productos: ${productos.length} | Stock bajo: ${bajos} | Unidades totales: ${totalUnidades.toLocaleString()}`, 14, 33);
-            doc.autoTable({ head: [['#','Código','Producto','Categoría','Stock','Unidades','Estado']], body: productos.map(p => [p.codigo.split('-')[1]||p.id, p.codigo, p.nombre, p.categoria, `${Math.floor(p.stock)} ${p.unidad}`, calcularUnidadesTotales(p), calcularUnidadesTotales(p) < p.stockMinimo*(p.unidadesPorMedida||1) ? 'Bajo' : 'Normal']), startY: 40, headStyles: { fillColor: [52,152,219] } });
+            doc.autoTable({ head: [['#','Código','Producto','Categoría','Stock','Unidades','Estado']], body: productos.map(p => [p.codigo.split('-')[1]||p.id, p.codigo, p.nombre, p.categoria, `${formatearStockMostrado(p)} ${p.unidad}`, calcularUnidadesTotales(p).toFixed(0), calcularUnidadesTotales(p) < p.stockMinimo*(p.unidadesPorMedida||1) ? 'Bajo' : 'Normal']), startY: 40, headStyles: { fillColor: [52,152,219] } });
             doc.save(`inventario-${new Date().toISOString().slice(0,10)}.pdf`);
         }
 
         function exportarExcel() {
             const wb = XLSX.utils.book_new();
-            const prodData = productos.map(p => ({ Código: p.codigo, Producto: p.nombre, Categoría: p.categoria, Stock: `${Math.floor(p.stock)} ${p.unidad}`, UnidadesTotales: calcularUnidadesTotales(p), StockMínimo: `${p.stockMinimo} ${p.unidad}`, Estado: calcularUnidadesTotales(p) < p.stockMinimo*(p.unidadesPorMedida||1) ? 'BAJO' : 'NORMAL' }));
+            const prodData = productos.map(p => ({ Código: p.codigo, Producto: p.nombre, Categoría: p.categoria, Stock: `${formatearStockMostrado(p)} ${p.unidad}`, UnidadesTotales: calcularUnidadesTotales(p).toFixed(0), StockMínimo: `${p.stockMinimo} ${p.unidad}`, Estado: calcularUnidadesTotales(p) < p.stockMinimo*(p.unidadesPorMedida||1) ? 'BAJO' : 'NORMAL' }));
             const movData = movimientos.map(m => ({ Fecha: m.fechaHora, Tipo: m.tipo, Producto: m.producto, Cantidad: m.cantidad, Departamento: m.departamento, Usuario: m.usuario, Observaciones: m.observaciones }));
             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(prodData), 'Inventario');
             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(movData), 'Movimientos');
@@ -2881,7 +2960,7 @@
         }
 
         function exportarInventarioActualExcel() {
-            const data = productos.map(p => ({ Código: p.codigo, Producto: p.nombre, Categoría: p.categoria, StockActual: Math.floor(p.stock), Unidad: p.unidad, UnidadesTotales: calcularUnidadesTotales(p), StockMínimo: p.stockMinimo, Estado: calcularUnidadesTotales(p) < p.stockMinimo*(p.unidadesPorMedida||1) ? 'URGENTE' : 'OK' }));
+            const data = productos.map(p => ({ Código: p.codigo, Producto: p.nombre, Categoría: p.categoria, StockActual: formatearStockMostrado(p), Unidad: p.unidad, UnidadesTotales: calcularUnidadesTotales(p).toFixed(0), StockMínimo: p.stockMinimo, Estado: calcularUnidadesTotales(p) < p.stockMinimo*(p.unidadesPorMedida||1) ? 'URGENTE' : 'OK' }));
             XLSX.writeFile(XLSX.utils.book_append_sheet(XLSX.utils.book_new(), XLSX.utils.json_to_sheet(data), 'Inventario'), `inventario-actual-${new Date().toISOString().slice(0,10)}.xlsx`);
         }
 
@@ -2902,7 +2981,24 @@
             document.getElementById('nuevoProductoForm').addEventListener('submit', guardarProducto);
             document.getElementById('repositionBtn').addEventListener('click', (e) => { e.preventDefault(); guardarReposicion(); });
             document.getElementById('asignacionForm').addEventListener('submit', registrarAsignacion);
-            document.getElementById('productoAsignar').addEventListener('change', function() { if(this.value) { const p=productos.find(p=>p.id==this.value); if(p) { document.getElementById('stockDisponible').value=obtenerEquivalencia(p, calcularUnidadesTotales(p)); calcularEquivalenciaAsignacion(); } } });
+            document.getElementById('productoAsignar').addEventListener('change', function() { 
+                if(this.value) { 
+                    const p=productos.find(p=>p.id==this.value); 
+                    if(p) { 
+                        const unidadesTotales = calcularUnidadesTotales(p);
+                        document.getElementById('stockDisponible').value=obtenerEquivalencia(p, unidadesTotales);
+                        // Mostrar advertencia si el stock tiene decimales
+                        const decimalWarning = document.getElementById('decimalStockWarning');
+                        if (decimalWarning) {
+                            const stockValue = parseFloat(p.stock) || 0;
+                            decimalWarning.style.display = (stockValue % 1 !== 0) ? 'block' : 'none';
+                        }
+                        calcularEquivalenciaAsignacion(); 
+                    } 
+                } else {
+                    document.getElementById('decimalStockWarning').style.display = 'none';
+                }
+            });
             document.getElementById('cantidadAsignarUnidades')?.addEventListener('input', calcularEquivalenciaAsignacion);
             document.getElementById('codigoProducto')?.addEventListener('blur', verificarCodigoExistente);
             document.getElementById('unidadProducto')?.addEventListener('change', manejarCambioUnidad);
