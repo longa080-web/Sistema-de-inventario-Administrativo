@@ -287,9 +287,58 @@
             border-color: #3498db;
         }
 
-        #searchProduct {
+        /* Estilo para buscador con sugerencias */
+        .search-wrapper {
+            position: relative;
             flex: 2;
             min-width: 150px;
+        }
+        
+        .search-wrapper input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.85rem;
+        }
+        
+        .suggestions-box {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s;
+        }
+        
+        .suggestion-item:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .suggestion-item strong {
+            color: #3498db;
+        }
+        
+        .search-info {
+            font-size: 0.7rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+            display: flex;
+            justify-content: space-between;
         }
 
         #filterCategory, #filterStock {
@@ -1032,6 +1081,17 @@
         .days-medium { background: #3498db; color: white; }
         .days-low { background: #27ae60; color: white; }
         .suggested-qty { font-weight: bold; font-size: 1.1rem; }
+        
+        /* Indicador de búsqueda predictiva */
+        .predictive-badge {
+            display: inline-block;
+            background-color: #e3f2fd;
+            color: #3498db;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+        }
     </style>
 </head>
 <body>
@@ -1132,9 +1192,12 @@
                 </section>
 
                 <section id="inventario" class="content-section">
-                    <h2><i class="fas fa-clipboard-list"></i> Inventario de Productos</h2>
+                    <h2><i class="fas fa-clipboard-list"></i> Inventario de Productos <span class="predictive-badge"><i class="fas fa-magic"></i> Búsqueda predictiva</span></h2>
                     <div class="filters">
-                        <input type="text" id="searchProduct" placeholder="Buscar producto...">
+                        <div class="search-wrapper">
+                            <input type="text" id="searchProduct" placeholder="🔍 Buscar producto (ej: 'L' muestra productos que empiezan con L)..." autocomplete="off">
+                            <div id="productSuggestions" class="suggestions-box"></div>
+                        </div>
                         <select id="filterCategory">
                             <option value="">Todas las Categorías</option>
                             <option value="papeleria">Papelería</option>
@@ -1151,6 +1214,10 @@
                             <option value="alto">Stock Alto</option>
                         </select>
                         <button id="clearFilters"><i class="fas fa-times"></i> Limpiar filtros</button>
+                    </div>
+                    <div class="search-info">
+                        <span><i class="fas fa-info-circle"></i> La búsqueda muestra productos que <strong>empiezan con</strong> el texto ingresado</span>
+                        <span id="searchResultCount"></span>
                     </div>
                     <div class="table-container">
                         <table id="inventarioTable">
@@ -1587,143 +1654,17 @@
             </div>
         </div>
 
-        <!-- Modales -->
-        <div id="editModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Editar Producto</h3>
-                    <span class="close-modal">&times;</span>
-                </div>
-                <div class="modal-body"></div>
-            </div>
-        </div>
-        
-        <div id="adjustModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Ajustar Stock</h3>
-                    <span class="close-modal">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <form id="adjustStockForm">
-                        <div class="form-group">
-                            <label>Producto</label>
-                            <input type="text" id="adjustProductName" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label>Stock Actual (Unidades)</label>
-                            <input type="text" id="adjustCurrentStock" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label>Tipo de Ajuste</label>
-                            <select id="adjustType">
-                                <option value="entrada">Entrada (+)</option>
-                                <option value="salida">Salida (-)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Cantidad en Unidades</label>
-                            <input type="number" id="adjustQuantity" min="0" step="any" required>
-                            <small class="help-text">Puede usar decimales (ej: 0.5, 1.25)</small>
-                        </div>
-                        <div class="form-group">
-                            <label>Motivo</label>
-                            <textarea id="adjustReason" rows="2" required></textarea>
-                        </div>
-                        <div class="form-buttons">
-                            <button type="submit" class="btn btn-primary">Aplicar</button>
-                            <button type="button" class="btn btn-secondary close-modal">Cancelar</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        
-        <div id="confirmModal" class="modal">
-            <div class="modal-content confirm-modal">
-                <div class="modal-header">
-                    <h3>Confirmar Eliminación</h3>
-                    <span class="close-modal">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <p>¿Está seguro de eliminar este producto? También se eliminarán sus movimientos.</p>
-                </div>
-                <div class="modal-footer">
-                    <button id="confirmDelete" class="btn btn-danger">Eliminar</button>
-                    <button id="cancelDelete" class="btn btn-secondary">Cancelar</button>
-                </div>
-            </div>
-        </div>
-        
-        <div id="confirmMovModal" class="modal">
-            <div class="modal-content confirm-modal">
-                <div class="modal-header">
-                    <h3>Confirmar Eliminación</h3>
-                    <span class="close-modal">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <p id="confirmMovMessage"></p>
-                </div>
-                <div class="modal-footer">
-                    <button id="confirmMovDelete" class="btn btn-danger">Eliminar</button>
-                    <button id="cancelMovDelete" class="btn btn-secondary">Cancelar</button>
-                </div>
-            </div>
-        </div>
-        
-        <div id="editMovModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Editar Movimiento</h3>
-                    <span class="close-modal">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <form id="editMovForm">
-                        <div class="form-group">
-                            <label>Producto</label>
-                            <input type="text" id="editMovProducto" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label>Tipo</label>
-                            <input type="text" id="editMovTipo" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label>Cantidad</label>
-                            <input type="text" id="editMovCantidad" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label>Departamento</label>
-                            <input type="text" id="editMovDepartamento">
-                        </div>
-                        <div class="form-group">
-                            <label>Usuario</label>
-                            <input type="text" id="editMovUsuario">
-                        </div>
-                        <div class="form-group">
-                            <label>Observaciones</label>
-                            <textarea id="editMovObservaciones" rows="2"></textarea>
-                        </div>
-                        <div class="form-buttons">
-                            <button type="submit" class="btn btn-primary">Guardar</button>
-                            <button type="button" class="btn btn-secondary close-modal">Cancelar</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+        <!-- Modales (igual que antes) -->
+        <div id="editModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Editar Producto</h3><span class="close-modal">&times;</span></div><div class="modal-body"></div></div></div>
+        <div id="adjustModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Ajustar Stock</h3><span class="close-modal">&times;</span></div><div class="modal-body"><form id="adjustStockForm"><div class="form-group"><label>Producto</label><input type="text" id="adjustProductName" readonly></div><div class="form-group"><label>Stock Actual (Unidades)</label><input type="text" id="adjustCurrentStock" readonly></div><div class="form-group"><label>Tipo de Ajuste</label><select id="adjustType"><option value="entrada">Entrada (+)</option><option value="salida">Salida (-)</option></select></div><div class="form-group"><label>Cantidad en Unidades</label><input type="number" id="adjustQuantity" min="0" step="any" required><small class="help-text">Puede usar decimales (ej: 0.5, 1.25)</small></div><div class="form-group"><label>Motivo</label><textarea id="adjustReason" rows="2" required></textarea></div><div class="form-buttons"><button type="submit" class="btn btn-primary">Aplicar</button><button type="button" class="btn btn-secondary close-modal">Cancelar</button></div></form></div></div></div>
+        <div id="confirmModal" class="modal"><div class="modal-content confirm-modal"><div class="modal-header"><h3>Confirmar Eliminación</h3><span class="close-modal">&times;</span></div><div class="modal-body"><p>¿Está seguro de eliminar este producto? También se eliminarán sus movimientos.</p></div><div class="modal-footer"><button id="confirmDelete" class="btn btn-danger">Eliminar</button><button id="cancelDelete" class="btn btn-secondary">Cancelar</button></div></div></div>
+        <div id="confirmMovModal" class="modal"><div class="modal-content confirm-modal"><div class="modal-header"><h3>Confirmar Eliminación</h3><span class="close-modal">&times;</span></div><div class="modal-body"><p id="confirmMovMessage"></p></div><div class="modal-footer"><button id="confirmMovDelete" class="btn btn-danger">Eliminar</button><button id="cancelMovDelete" class="btn btn-secondary">Cancelar</button></div></div></div>
+        <div id="editMovModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Editar Movimiento</h3><span class="close-modal">&times;</span></div><div class="modal-body"><form id="editMovForm"><div class="form-group"><label>Producto</label><input type="text" id="editMovProducto" readonly></div><div class="form-group"><label>Tipo</label><input type="text" id="editMovTipo" readonly></div><div class="form-group"><label>Cantidad</label><input type="text" id="editMovCantidad" readonly></div><div class="form-group"><label>Departamento</label><input type="text" id="editMovDepartamento"></div><div class="form-group"><label>Usuario</label><input type="text" id="editMovUsuario"></div><div class="form-group"><label>Observaciones</label><textarea id="editMovObservaciones" rows="2"></textarea></div><div class="form-buttons"><button type="submit" class="btn btn-primary">Guardar</button><button type="button" class="btn btn-secondary close-modal">Cancelar</button></div></form></div></div></div>
 
-        <div class="firebase-status" id="firebaseStatus" style="display: none;">
-            <span class="status-dot"></span>
-            <span>Conectado a Firebase</span>
-        </div>
-        
-        <div class="loading-overlay" id="loadingOverlay">
-            <div class="loading-spinner"></div>
-        </div>
+        <div class="firebase-status" id="firebaseStatus" style="display: none;"><span class="status-dot"></span><span>Conectado a Firebase</span></div>
+        <div class="loading-overlay" id="loadingOverlay"><div class="loading-spinner"></div></div>
 
-        <footer>
-            <p>Sistema de Inventario - Artículos de Oficina &copy; 2025 | <span id="lastUpdate"></span> | Firebase: <span id="firebaseConnectionStatus">Conectando...</span></p>
-        </footer>
+        <footer><p>Sistema de Inventario - Artículos de Oficina &copy; 2025 | <span id="lastUpdate"></span> | Firebase: <span id="firebaseConnectionStatus">Conectando...</span></p></footer>
     </div>
 
     <script>
@@ -1827,6 +1768,73 @@
             const hora = ahora.toTimeString().split(' ')[0].substring(0, 8);
             return `${fecha} ${hora}`;
         }
+
+        // =============================================
+        // FUNCIONES DE BÚSQUEDA PREDICTIVA
+        // =============================================
+        
+        // Obtener productos que EMPIEZAN con el texto (no solo que contienen)
+        function filtrarProductosPorInicio(texto, productosLista) {
+            if (!texto || texto.trim() === '') return productosLista;
+            const termino = texto.toLowerCase().trim();
+            return productosLista.filter(p => 
+                p.nombre.toLowerCase().startsWith(termino) || 
+                p.codigo.toLowerCase().startsWith(termino)
+            );
+        }
+        
+        // Mostrar sugerencias mientras escribe
+        function mostrarSugerencias(inputElement, suggestionsBoxId, productosLista) {
+            const texto = inputElement.value;
+            const suggestionsBox = document.getElementById(suggestionsBoxId);
+            
+            if (!texto || texto.trim() === '') {
+                suggestionsBox.style.display = 'none';
+                return;
+            }
+            
+            const productosFiltrados = filtrarProductosPorInicio(texto, productosLista);
+            
+            if (productosFiltrados.length === 0) {
+                suggestionsBox.style.display = 'none';
+                return;
+            }
+            
+            // Limitar a 10 sugerencias
+            const sugerencias = productosFiltrados.slice(0, 10);
+            
+            suggestionsBox.innerHTML = '';
+            sugerencias.forEach(p => {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                // Resaltar la parte que coincide
+                const nombreLower = p.nombre.toLowerCase();
+                const termino = texto.toLowerCase();
+                const index = nombreLower.indexOf(termino);
+                let nombreResaltado = p.nombre;
+                if (index === 0) { // Solo resaltar si empieza con el término
+                    nombreResaltado = `<strong>${p.nombre.substring(0, termino.length)}</strong>${p.nombre.substring(termino.length)}`;
+                }
+                item.innerHTML = `<i class="fas fa-box"></i> ${nombreResaltado} <small style="color:#666;">(${p.codigo})</small>`;
+                item.onclick = () => {
+                    inputElement.value = p.nombre;
+                    suggestionsBox.style.display = 'none';
+                    // Disparar el evento de búsqueda
+                    actualizarTablaInventario();
+                };
+                suggestionsBox.appendChild(item);
+            });
+            
+            suggestionsBox.style.display = 'block';
+        }
+
+        // Cerrar sugerencias al hacer clic fuera
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-wrapper')) {
+                const suggestionsBox = document.getElementById('productSuggestions');
+                if (suggestionsBox) suggestionsBox.style.display = 'none';
+            }
+        });
 
         // =============================================
         // FUNCIONES DE FIREBASE
@@ -2297,6 +2305,7 @@
             });
         }
 
+        // VERSIÓN CORREGIDA: Búsqueda por COMIENZO DE PALABRA (startsWith)
         function actualizarTablaInventario() {
             const tableBody = document.getElementById('inventarioTableBody');
             if (!tableBody) return;
@@ -2306,7 +2315,12 @@
             const filterStock = document.getElementById('filterStock')?.value || '';
             
             let productosFiltrados = productos.filter(producto => {
-                const searchMatch = searchProduct === '' || producto.nombre.toLowerCase().includes(searchProduct) || producto.codigo.toLowerCase().includes(searchProduct);
+                // BÚSQUEDA PREDICTIVA: solo productos que EMPIEZAN con el texto
+                let searchMatch = true;
+                if (searchProduct !== '') {
+                    searchMatch = producto.nombre.toLowerCase().startsWith(searchProduct) || 
+                                 producto.codigo.toLowerCase().startsWith(searchProduct);
+                }
                 const categoryMatch = filterCategory === '' || producto.categoria === filterCategory;
                 let stockMatch = true;
                 const unidadesTotales = calcularUnidadesTotales(producto);
@@ -2317,11 +2331,21 @@
                 return searchMatch && categoryMatch && stockMatch;
             });
             
+            // Mostrar contador de resultados
+            const resultCountSpan = document.getElementById('searchResultCount');
+            if (resultCountSpan) {
+                if (searchProduct) {
+                    resultCountSpan.innerHTML = `<i class="fas fa-check-circle"></i> ${productosFiltrados.length} producto(s) que empiezan con "${searchProduct}"`;
+                } else {
+                    resultCountSpan.innerHTML = `<i class="fas fa-boxes"></i> Mostrando ${productos.length} productos`;
+                }
+            }
+            
             productosFiltrados.sort((a, b) => a.categoria === b.categoria ? a.nombre.localeCompare(b.nombre) : a.categoria.localeCompare(b.categoria));
             tableBody.innerHTML = '';
             
             if (productosFiltrados.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;">No hay productos</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;">No hay productos que empiecen con ese término<br><small>Prueba con otra letra o palabra</small></td></tr>';
                 return;
             }
             
@@ -2960,9 +2984,6 @@
             }
         }
 
-        // =============================================
-        // REGISTRAR ASIGNACIÓN
-        // =============================================
         async function registrarAsignacion(e) {
             e.preventDefault();
             const productoId = document.getElementById('productoAsignar').value;
@@ -3072,7 +3093,7 @@
         }
 
         // =============================================
-        // CONSOLIDADO DE SALIDAS (CORREGIDO)
+        // CONSOLIDADO DE SALIDAS
         // =============================================
         function cargarConsolidado() {
             const periodo = document.getElementById('consPeriodo').value;
@@ -3169,12 +3190,10 @@
             });
         }
         
-        // CORREGIDA: Exporta SOLO los datos filtrados
         function exportarConsolidadoPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('landscape');
             
-            // Aplicar los mismos filtros que en cargarConsolidado
             const periodo = document.getElementById('consPeriodo').value;
             let fechaInicio = null;
             let fechaFin = null;
@@ -3543,7 +3562,22 @@
             document.getElementById('filterAsignacionFecha')?.addEventListener('change', actualizarHistorialAsignaciones);
             document.getElementById('exportAsignacionesExcel')?.addEventListener('click', exportarAsignacionesExcel);
             document.getElementById('exportAsignacionesPdf')?.addEventListener('click', exportarAsignacionesPDF);
-            document.getElementById('searchProduct').addEventListener('input', actualizarTablaInventario);
+            
+            // BÚSQUEDA PREDICTIVA EN TIEMPO REAL
+            const searchInput = document.getElementById('searchProduct');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    mostrarSugerencias(searchInput, 'productSuggestions', productos);
+                    actualizarTablaInventario();
+                });
+                searchInput.addEventListener('blur', function() {
+                    setTimeout(() => {
+                        const suggestionsBox = document.getElementById('productSuggestions');
+                        if (suggestionsBox) suggestionsBox.style.display = 'none';
+                    }, 200);
+                });
+            }
+            
             document.getElementById('filterCategory').addEventListener('change', actualizarTablaInventario);
             document.getElementById('filterStock').addEventListener('change', actualizarTablaInventario);
             document.getElementById('filterMovimiento').addEventListener('change', actualizarTablaMovimientos);
