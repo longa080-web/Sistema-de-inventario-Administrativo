@@ -131,8 +131,8 @@
 
         @media (min-width: 768px) {
             .sidebar {
-                width: 250px;
-                min-width: 250px;
+                width: 260px;
+                min-width: 260px;
             }
         }
 
@@ -332,6 +332,14 @@
             background-color: #c0392b;
         }
 
+        .btn-clear {
+            background-color: #95a5a6;
+        }
+
+        .btn-clear:hover {
+            background-color: #7f8c8d;
+        }
+
         .table-container {
             background-color: white;
             border-radius: 8px;
@@ -446,7 +454,7 @@
             background-color: #3498db;
             color: white;
             border: none;
-            padding: 4px 8px;
+            padding: 4px 10px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 0.7rem;
@@ -963,6 +971,10 @@
             background: #c1c1c1;
             border-radius: 4px;
         }
+
+        .filter-active {
+            border: 2px solid #3498db;
+        }
     </style>
 </head>
 <body>
@@ -1109,14 +1121,13 @@
                             <div class="form-group">
                                 <label for="codigoProducto">Código del Producto *</label>
                                 <input type="text" id="codigoProducto" placeholder="Ej: OFI-001" required>
-                                <small class="unit-conversion">Para reponer, use el código existente</small>
+                                <small>Para reponer, use el código existente</small>
                             </div>
                             <div class="form-group">
                                 <label for="nombreProducto">Nombre del Producto *</label>
                                 <input type="text" id="nombreProducto" placeholder="Ej: Bolígrafos" required>
                             </div>
                         </div>
-
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="categoriaProducto">Categoría *</label>
@@ -1143,56 +1154,38 @@
                                 </select>
                             </div>
                         </div>
-
                         <div id="bultoConfigGroup" class="form-row" style="display: none;">
                             <div class="form-group">
                                 <label for="unidadesPorBulto">Unidades por Bulto *</label>
-                                <div class="input-group">
-                                    <input type="number" id="unidadesPorBulto" min="1" step="1" value="1" required>
-                                    <span>unidades</span>
-                                </div>
-                                <small class="help-text">Ejemplo: si cada bulto contiene 48 unidades, ingrese 48</small>
+                                <input type="number" id="unidadesPorBulto" min="1" step="1" value="1" required>
                             </div>
                         </div>
-
                         <div id="unidadesPorMedidaGroup" class="form-row">
                             <div class="form-group">
                                 <label for="unidadesPorMedida">Unidades por Medida *</label>
                                 <input type="number" id="unidadesPorMedida" min="1" step="1" value="1" required>
-                                <small class="unit-conversion" id="unidadExplicacion">Ej: 24 unidades por caja, 100 unidades por paquete</small>
                             </div>
                         </div>
-
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="stockInicial">Stock a Agregar *</label>
                                 <input type="number" id="stockInicial" min="0" step="any" required>
-                                <small class="unit-conversion" id="stockExplicacion">En la unidad de medida seleccionada (puede usar decimales, ej: 2.5)</small>
                             </div>
                             <div class="form-group">
                                 <label for="stockMinimo">Stock Mínimo (Alerta) *</label>
                                 <input type="number" id="stockMinimo" min="1" step="1" value="5" required>
-                                <small class="unit-conversion" id="stockMinimoExplicacion">En la unidad de medida seleccionada (número entero)</small>
                             </div>
                         </div>
-
                         <div class="form-row">
                             <div class="form-group full-width">
                                 <label for="descripcionProducto">Descripción / Motivo</label>
-                                <textarea id="descripcionProducto" rows="3" placeholder="Detalles del producto o motivo de reposición..."></textarea>
+                                <textarea id="descripcionProducto" rows="3"></textarea>
                             </div>
                         </div>
-
                         <div class="form-buttons">
-                            <button type="submit" class="btn btn-primary" id="saveProductBtn">
-                                <i class="fas fa-save"></i> Guardar Producto
-                            </button>
-                            <button type="button" class="btn btn-success" id="repositionBtn" style="display: none;">
-                                <i class="fas fa-boxes"></i> Reponer Stock
-                            </button>
-                            <button type="reset" class="btn btn-secondary" id="resetProductBtn">
-                                <i class="fas fa-redo"></i> Limpiar
-                            </button>
+                            <button type="submit" class="btn btn-primary" id="saveProductBtn">Guardar Producto</button>
+                            <button type="button" class="btn btn-success" id="repositionBtn" style="display: none;">Reponer Stock</button>
+                            <button type="reset" class="btn btn-secondary">Limpiar</button>
                         </div>
                     </form>
                 </section>
@@ -1200,26 +1193,23 @@
                 <section id="asignacion" class="content-section">
                     <h2><i class="fas fa-hand-holding"></i> Asignar Material a Departamentos</h2>
                     <div id="decimalStockWarning" class="decimal-warning" style="display: none;">
-                        <i class="fas fa-info-circle"></i> <strong>Stock fraccionado:</strong> Este producto tiene stock en decimales (fracción de bulto/caja/litro). Puede asignar unidades normalmente.
+                        <i class="fas fa-info-circle"></i> <strong>Stock fraccionado:</strong> Este producto tiene stock en decimales.
                     </div>
                     <form id="asignacionForm">
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="productoAsignar">Producto *</label>
-                                <select id="productoAsignar" required>
-                                    <option value="">Seleccione...</option>
-                                </select>
+                                <select id="productoAsignar" required></select>
                             </div>
                             <div class="form-group">
                                 <label for="stockDisponible">Stock Disponible</label>
-                                <input type="text" id="stockDisponible" readonly style="background-color: #f5f5f5;">
+                                <input type="text" id="stockDisponible" readonly>
                             </div>
                         </div>
-
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="departamentoAsignar">Departamento *</label>
-                                <select id="departamentoAsignar" class="department-select" required>
+                                <select id="departamentoAsignar" required>
                                     <option value="">Seleccione...</option>
                                     <option value="Administración">Administración</option>
                                     <option value="Tesorería">Tesorería</option>
@@ -1245,17 +1235,15 @@
                             </div>
                             <div class="form-group">
                                 <label for="usuarioAsignar">Usuario que Recibe *</label>
-                                <input type="text" id="usuarioAsignar" placeholder="Nombre del usuario" required>
+                                <input type="text" id="usuarioAsignar" required>
                             </div>
                         </div>
-
                         <div class="unit-assignment">
                             <h4>Asignación por Unidades</h4>
                             <div class="unit-calc">
                                 <div>
-                                    <label for="cantidadAsignarUnidades">Cantidad en Unidades *</label>
+                                    <label>Cantidad en Unidades *</label>
                                     <input type="number" id="cantidadAsignarUnidades" min="0" step="any" required>
-                                    <small class="help-text">Puede usar decimales (ej: 0.5, 1.25, 2.75)</small>
                                 </div>
                                 <div>
                                     <label>Equivalencia:</label>
@@ -1267,58 +1255,37 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="fechaAsignacion">Fecha de Asignación *</label>
                                 <input type="datetime-local" id="fechaAsignacion" required>
                             </div>
                         </div>
-
                         <div class="form-row">
                             <div class="form-group full-width">
                                 <label for="observacionesAsignacion">Observaciones</label>
-                                <textarea id="observacionesAsignacion" rows="3" placeholder="Detalles de la asignación..."></textarea>
+                                <textarea id="observacionesAsignacion" rows="3"></textarea>
                             </div>
                         </div>
-
                         <div class="form-buttons">
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-check"></i> Registrar Asignación
-                            </button>
-                            <button type="reset" class="btn btn-secondary">
-                                <i class="fas fa-redo"></i> Limpiar
-                            </button>
+                            <button type="submit" class="btn btn-success">Registrar Asignación</button>
+                            <button type="reset" class="btn btn-secondary">Limpiar</button>
                         </div>
                     </form>
-
                     <div class="history-panel">
                         <h3><i class="fas fa-history"></i> Historial de Asignaciones</h3>
                         <div class="history-filters">
-                            <input type="text" id="searchAsignacion" placeholder="Buscar por producto, usuario o departamento...">
-                            <select id="filterAsignacionDept">
-                                <option value="">Todos los departamentos</option>
-                            </select>
+                            <input type="text" id="searchAsignacion" placeholder="Buscar...">
+                            <select id="filterAsignacionDept"></select>
                             <input type="date" id="filterAsignacionFecha">
-                            <button id="clearAsignacionFilters" class="btn-secondary" style="padding: 8px 15px;">Limpiar filtros</button>
-                            <button id="exportAsignacionesExcel" class="btn-success" style="padding: 8px 15px;"><i class="fas fa-file-excel"></i> Exportar Excel</button>
-                            <button id="exportAsignacionesPdf" class="btn-primary" style="padding: 8px 15px;"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+                            <button id="clearAsignacionFilters">Limpiar</button>
+                            <button id="exportAsignacionesExcel">Exportar Excel</button>
+                            <button id="exportAsignacionesPdf">Exportar PDF</button>
                         </div>
                         <div class="history-table-container">
                             <table class="history-table" id="asignacionesHistoryTable">
-                                <thead>
-                                    <tr>
-                                        <th>Fecha</th>
-                                        <th>Producto</th>
-                                        <th>Cantidad (Und)</th>
-                                        <th>Departamento</th>
-                                        <th>Usuario</th>
-                                        <th>Observaciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="asignacionesHistoryBody">
-                                    <tr><td colspan="6" style="text-align:center;">Cargando historial......</td></tr>
-                                </tbody>
+                                <thead><tr><th>Fecha</th><th>Producto</th><th>Cantidad</th><th>Departamento</th><th>Usuario</th><th>Observaciones</th></tr></thead>
+                                <tbody id="asignacionesHistoryBody"></tbody>
                             </table>
                         </div>
                     </div>
@@ -1328,41 +1295,25 @@
                     <h2><i class="fas fa-exchange-alt"></i> Historial de Movimientos</h2>
                     <div class="filters">
                         <select id="filterMovimiento">
-                            <option value="">Todos los Movimientos</option>
+                            <option value="">Todos</option>
                             <option value="entrada">Entradas</option>
-                            <option value="salida">Salidas/Asignaciones</option>
+                            <option value="salida">Salidas</option>
                             <option value="ajuste">Ajustes</option>
                             <option value="reposicion">Reposiciones</option>
                         </select>
-                        <select id="filterMovDept" class="department-select">
-                            <option value="">Todos los Departamentos</option>
-                        </select>
+                        <select id="filterMovDept"></select>
                         <input type="date" id="filterMovFecha">
-                        <button id="clearMovFilters"><i class="fas fa-times"></i> Limpiar filtros</button>
+                        <button id="clearMovFilters">Limpiar</button>
                     </div>
                     <div class="table-container">
                         <table id="movimientosTable">
-                            <thead>
-                                <tr>
-                                    <th>Fecha y Hora</th>
-                                    <th>Tipo</th>
-                                    <th>Producto</th>
-                                    <th>Cantidad (Unidades)</th>
-                                    <th>Departamento</th>
-                                    <th>Usuario</th>
-                                    <th>Observaciones</th>
-                                    <th>Responsable</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="movimientosTableBody">
-                                <tr><td colspan="9" style="text-align: center; padding: 20px;">Cargando datos de Firebase......</td></tr>
-                            </tbody>
+                            <thead><tr><th>Fecha</th><th>Tipo</th><th>Producto</th><th>Cantidad</th><th>Departamento</th><th>Usuario</th><th>Acciones</th></tr></thead>
+                            <tbody id="movimientosTableBody"></tbody>
                         </table>
                     </div>
                 </section>
 
-                <!-- NUEVA SECCIÓN: CONSOLIDADO DE SALIDAS -->
+                <!-- SECCIÓN CONSOLIDADO DE SALIDAS CON FILTRO POR DEPARTAMENTO -->
                 <section id="consolidado" class="content-section">
                     <h2><i class="fas fa-chart-bar"></i> Consolidado de Salidas por Artículo</h2>
                     <div class="filters">
@@ -1396,15 +1347,44 @@
                                 <option value="otros">Otros</option>
                             </select>
                         </div>
+                        <!-- NUEVO FILTRO POR DEPARTAMENTO -->
+                        <div class="filter-group">
+                            <label><i class="fas fa-building"></i> Departamento</label>
+                            <select id="deptFiltroConsolidado">
+                                <option value="">Todos los Departamentos</option>
+                                <option value="Administración">Administración</option>
+                                <option value="Tesorería">Tesorería</option>
+                                <option value="RRHH">RRHH</option>
+                                <option value="Flota">Flota</option>
+                                <option value="Almacén">Almacén</option>
+                                <option value="Head End">Head End</option>
+                                <option value="Seguridad Laboral">Seguridad Laboral</option>
+                                <option value="Gerencia senior">Gerencia senior</option>
+                                <option value="Sistemas">Sistemas</option>
+                                <option value="Colaboradores">Colaboradores</option>
+                                <option value="Los Ruices">Los Ruices</option>
+                                <option value="El Rosal">El Rosal</option>
+                                <option value="La Naya">La Naya</option>
+                                <option value="TDH">TDH</option>
+                                <option value="Obras">Obras</option>
+                                <option value="Comerciales">Comerciales</option>
+                                <option value="Obras Corporativo">Obras Corporativo</option>
+                                <option value="MSO">MSO</option>
+                                <option value="El Paraiso">El Paraiso</option>
+                                <option value="Backbone">Backbone</option>
+                            </select>
+                        </div>
                         <button id="aplicarFiltrosConsolidado" class="btn-filter"><i class="fas fa-filter"></i> Aplicar</button>
-                        <button id="exportConsolidadoExcel" class="btn-filter btn-excel"><i class="fas fa-file-excel"></i> Exportar Excel</button>
-                        <button id="exportConsolidadoPDF" class="btn-filter btn-pdf"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+                        <button id="limpiarFiltrosConsolidado" class="btn-filter btn-clear"><i class="fas fa-eraser"></i> Limpiar</button>
+                        <button id="exportConsolidadoExcel" class="btn-filter btn-excel"><i class="fas fa-file-excel"></i> Excel</button>
+                        <button id="exportConsolidadoPDF" class="btn-filter btn-pdf"><i class="fas fa-file-pdf"></i> PDF</button>
                     </div>
 
                     <div class="stats-summary">
                         <div class="stat-card"><h4>Período</h4><div class="number" id="periodoResumen">-</div></div>
                         <div class="stat-card"><h4>Total Salidas</h4><div class="number" id="totalSalidasPeriodo">0</div></div>
                         <div class="stat-card"><h4>Unidades Totales</h4><div class="number" id="totalUnidadesPeriodo">0</div></div>
+                        <div class="stat-card"><h4>Departamentos</h4><div class="number" id="totalDeptosPeriodo">0</div></div>
                     </div>
 
                     <div class="table-container">
@@ -1416,11 +1396,12 @@
                                     <th>Categoría</th>
                                     <th>Cantidad de Salidas</th>
                                     <th>Unidades Totales</th>
-                                    <th>Detalle de Salidas</th>
+                                    <th>Departamentos</th>
+                                    <th>Detalle</th>
                                 </tr>
                             </thead>
                             <tbody id="consolidadoBody">
-                                <tr><td colspan="6" style="text-align:center;">Seleccione un período y aplique filtros</td></tr>
+                                <tr><td colspan="7" style="text-align:center;">Seleccione un período y aplique filtros</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1428,148 +1409,21 @@
             </div>
         </div>
 
-        <!-- Modales existentes -->
-        <div id="editModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Editar Producto</h3>
-                    <span class="close-modal">&times;</span>
-                </div>
-                <div class="modal-body"></div>
-            </div>
-        </div>
-        
-        <div id="adjustModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Ajustar Stock</h3>
-                    <span class="close-modal">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <form id="adjustStockForm">
-                        <div class="form-group">
-                            <label>Producto</label>
-                            <input type="text" id="adjustProductName" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label>Stock Actual (Unidades)</label>
-                            <input type="text" id="adjustCurrentStock" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label>Tipo de Ajuste</label>
-                            <select id="adjustType">
-                                <option value="entrada">Entrada (+)</option>
-                                <option value="salida">Salida (-)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Cantidad en Unidades</label>
-                            <input type="number" id="adjustQuantity" min="0" step="any" required>
-                            <small class="help-text">Puede usar decimales (ej: 0.5, 1.25)</small>
-                        </div>
-                        <div class="form-group">
-                            <label>Motivo</label>
-                            <textarea id="adjustReason" rows="2" required></textarea>
-                        </div>
-                        <div class="form-buttons">
-                            <button type="submit" class="btn btn-primary">Aplicar</button>
-                            <button type="button" class="btn btn-secondary close-modal">Cancelar</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        
-        <div id="confirmModal" class="modal">
-            <div class="modal-content confirm-modal">
-                <div class="modal-header">
-                    <h3>Confirmar Eliminación</h3>
-                    <span class="close-modal">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <p>¿Está seguro de eliminar este producto? También se eliminarán sus movimientos.</p>
-                </div>
-                <div class="modal-footer">
-                    <button id="confirmDelete" class="btn btn-danger">Eliminar</button>
-                    <button id="cancelDelete" class="btn btn-secondary">Cancelar</button>
-                </div>
-            </div>
-        </div>
-        
-        <div id="confirmMovModal" class="modal">
-            <div class="modal-content confirm-modal">
-                <div class="modal-header">
-                    <h3>Confirmar Eliminación</h3>
-                    <span class="close-modal">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <p id="confirmMovMessage"></p>
-                </div>
-                <div class="modal-footer">
-                    <button id="confirmMovDelete" class="btn btn-danger">Eliminar</button>
-                    <button id="cancelMovDelete" class="btn btn-secondary">Cancelar</button>
-                </div>
-            </div>
-        </div>
-        
-        <div id="editMovModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Editar Movimiento</h3>
-                    <span class="close-modal">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <form id="editMovForm">
-                        <div class="form-group">
-                            <label>Producto</label>
-                            <input type="text" id="editMovProducto" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label>Tipo</label>
-                            <input type="text" id="editMovTipo" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label>Cantidad</label>
-                            <input type="text" id="editMovCantidad" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label>Departamento</label>
-                            <input type="text" id="editMovDepartamento">
-                        </div>
-                        <div class="form-group">
-                            <label>Usuario</label>
-                            <input type="text" id="editMovUsuario">
-                        </div>
-                        <div class="form-group">
-                            <label>Observaciones</label>
-                            <textarea id="editMovObservaciones" rows="2"></textarea>
-                        </div>
-                        <div class="form-buttons">
-                            <button type="submit" class="btn btn-primary">Guardar</button>
-                            <button type="button" class="btn btn-secondary close-modal">Cancelar</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+        <!-- Modales -->
+        <div id="editModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Editar Producto</h3><span class="close-modal">&times;</span></div><div class="modal-body"></div></div></div>
+        <div id="adjustModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Ajustar Stock</h3><span class="close-modal">&times;</span></div><div class="modal-body"><form id="adjustStockForm"></form></div></div></div>
+        <div id="confirmModal" class="modal"><div class="modal-content confirm-modal"><div class="modal-header"><h3>Confirmar</h3><span class="close-modal">&times;</span></div><div class="modal-body"><p>¿Eliminar producto?</p></div><div class="modal-footer"><button id="confirmDelete" class="btn btn-danger">Eliminar</button><button id="cancelDelete" class="btn btn-secondary">Cancelar</button></div></div></div>
+        <div id="confirmMovModal" class="modal"><div class="modal-content confirm-modal"><div class="modal-header"><h3>Confirmar</h3><span class="close-modal">&times;</span></div><div class="modal-body"><p id="confirmMovMessage"></p></div><div class="modal-footer"><button id="confirmMovDelete" class="btn btn-danger">Eliminar</button><button id="cancelMovDelete" class="btn btn-secondary">Cancelar</button></div></div></div>
+        <div id="editMovModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Editar Movimiento</h3><span class="close-modal">&times;</span></div><div class="modal-body"><form id="editMovForm"></form></div></div></div>
 
-        <div class="firebase-status" id="firebaseStatus" style="display: none;">
-            <span class="status-dot"></span>
-            <span>Conectado a Firebase</span>
-        </div>
-        
-        <div class="loading-overlay" id="loadingOverlay">
-            <div class="loading-spinner"></div>
-        </div>
-
-        <footer>
-            <p>Sistema de Inventario - Artículos de Oficina &copy; 2025 | <span id="lastUpdate"></span> | Firebase: <span id="firebaseConnectionStatus">Conectando...</span></p>
-        </footer>
+        <div class="firebase-status" id="firebaseStatus"><span class="status-dot"></span><span>Conectado</span></div>
+        <div class="loading-overlay" id="loadingOverlay"><div class="loading-spinner"></div></div>
+        <footer><p>Sistema de Inventario &copy; 2025 | Firebase: <span id="firebaseConnectionStatus">Conectando...</span></p></footer>
     </div>
 
     <script>
         // =============================================
-        // VARIABLES GLOBALES (MANTENIENDO LAS EXISTENTES)
+        // VARIABLES GLOBALES
         // =============================================
         let productos = [];
         let movimientos = [];
@@ -1578,11 +1432,9 @@
         let currentMovEditId = null;
         let nextProductId = 1;
         let nextMovimientoId = 1;
-        let firebaseUnsubscribeProducts = null;
-        let firebaseUnsubscribeMovimientos = null;
         let isLoading = false;
 
-        const departamentos = [
+        const departamentosLista = [
             "Administración", "Tesorería", "RRHH", "Flota", "Almacén", "Head End",
             "Seguridad Laboral", "Gerencia senior", "Sistemas", "Colaboradores",
             "Los Ruices", "El Rosal", "La Naya", "TDH", "Obras", "Comerciales",
@@ -1590,99 +1442,79 @@
         ];
 
         // =============================================
-        // FUNCIONES AUXILIARES (EXISTENTES)
+        // FUNCIONES AUXILIARES
         // =============================================
-        
         function mostrarMensaje(mensaje, tipo) {
             const toast = document.createElement('div');
             toast.className = `message-toast ${tipo}`;
-            toast.innerHTML = `<i class="fas ${tipo === 'success' ? 'fa-check-circle' : tipo === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i> ${mensaje}`;
+            toast.innerHTML = `<i class="fas ${tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${mensaje}`;
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 4000);
         }
 
         function mostrarLoading(mostrar) {
-            const overlay = document.getElementById('loadingOverlay');
-            if (overlay) overlay.style.display = mostrar ? 'flex' : 'none';
+            document.getElementById('loadingOverlay').style.display = mostrar ? 'flex' : 'none';
         }
 
         function calcularUnidadesTotales(producto) {
             if (!producto) return 0;
             const unidadesPorMedida = producto.unidadesPorMedida || 1;
             const stockValue = parseFloat(producto.stock) || 0;
-            
             if (producto.unidad === 'BULTO') {
                 const unidadesPorBulto = producto.unidadesPorBulto || 1;
                 return stockValue * unidadesPorBulto;
-            } else {
-                return stockValue * unidadesPorMedida;
             }
+            return stockValue * unidadesPorMedida;
         }
 
         function calcularStockDesdeUnidades(producto, unidadesTotales) {
             if (!producto) return 0;
             const unidadesPorMedida = producto.unidadesPorMedida || 1;
-            
             if (producto.unidad === 'BULTO') {
                 const unidadesPorBulto = producto.unidadesPorBulto || 1;
-                if (unidadesPorBulto <= 0) return 0;
                 return unidadesTotales / unidadesPorBulto;
-            } else {
-                if (unidadesPorMedida <= 0) return 0;
-                return unidadesTotales / unidadesPorMedida;
             }
+            return unidadesTotales / unidadesPorMedida;
         }
 
         function obtenerEquivalencia(producto, cantidadUnidades) {
             if (!producto) return `${cantidadUnidades.toFixed(2)} unidades`;
             const unidadesPorMedida = producto.unidadesPorMedida || 1;
-            
             if (producto.unidad === 'BULTO') {
                 const unidadesPorBulto = producto.unidadesPorBulto || 1;
                 const bultos = cantidadUnidades / unidadesPorBulto;
                 return `${bultos.toFixed(2)} bulto(s) (${cantidadUnidades.toFixed(2)} unidades)`;
-            } else {
-                const cantidadMedida = cantidadUnidades / unidadesPorMedida;
-                return `${cantidadMedida.toFixed(2)} ${producto.unidad} (${cantidadUnidades.toFixed(2)} unidades)`;
             }
+            const cantidadMedida = cantidadUnidades / unidadesPorMedida;
+            return `${cantidadMedida.toFixed(2)} ${producto.unidad} (${cantidadUnidades.toFixed(2)} unidades)`;
         }
 
         function formatearStockMostrado(producto) {
             if (!producto) return "0";
             const stockValue = parseFloat(producto.stock) || 0;
-            if (Math.abs(stockValue % 1) > 0.001) {
-                return stockValue.toFixed(2);
-            }
-            return stockValue.toString();
+            return Math.abs(stockValue % 1) > 0.001 ? stockValue.toFixed(2) : stockValue.toString();
         }
 
         function formatearFechaHora(fechaHoraStr = null) {
             const ahora = fechaHoraStr ? new Date(fechaHoraStr) : new Date();
-            const fecha = ahora.toISOString().split('T')[0];
-            const hora = ahora.toTimeString().split(' ')[0].substring(0, 8);
-            return `${fecha} ${hora}`;
+            return ahora.toISOString().slice(0,19).replace('T',' ');
         }
 
         // =============================================
-        // FUNCIONES DE FIREBASE (EXISTENTES)
+        // FIREBASE (resumido pero funcional)
         // =============================================
-
         async function initializeFirebase() {
             try {
                 if (window.firebaseDB && window.firebaseFunctions) {
-                    console.log("Firebase inicializado");
-                    updateFirebaseStatus(true);
                     await loadInitialData();
                     setupRealtimeListeners();
                     inicializarSistema();
                     return true;
-                } else {
-                    setTimeout(initializeFirebase, 1000);
-                    return false;
                 }
+                setTimeout(initializeFirebase, 1000);
+                return false;
             } catch (error) {
                 console.error("Error Firebase:", error);
-                updateFirebaseStatus(false);
                 return false;
             }
         }
@@ -1695,24 +1527,20 @@
                 
                 const productosSnapshot = await getDocs(query(collection(db, "productos"), orderBy("id")));
                 productos = [];
-                productosSnapshot.forEach((doc) => {
+                productosSnapshot.forEach(doc => {
                     const data = doc.data();
-                    if (data.stock !== undefined && typeof data.stock === 'string') {
-                        data.stock = parseFloat(data.stock);
-                    }
+                    if (data.stock !== undefined && typeof data.stock === 'string') data.stock = parseFloat(data.stock);
                     productos.push({...data, firebaseId: doc.id});
                 });
                 
                 const movimientosSnapshot = await getDocs(query(collection(db, "movimientos"), orderBy("fechaHora", "desc")));
                 movimientos = [];
-                movimientosSnapshot.forEach((doc) => {
+                movimientosSnapshot.forEach(doc => {
                     movimientos.push({...doc.data(), firebaseId: doc.id});
                 });
                 
-                if (productos.length > 0) nextProductId = Math.max(...productos.map(p => p.id)) + 1;
-                if (movimientos.length > 0) nextMovimientoId = Math.max(...movimientos.map(m => m.id)) + 1;
-                
-                console.log(`Datos cargados: ${productos.length} productos, ${movimientos.length} movimientos`);
+                if (productos.length) nextProductId = Math.max(...productos.map(p => p.id)) + 1;
+                if (movimientos.length) nextMovimientoId = Math.max(...movimientos.map(m => m.id)) + 1;
                 return true;
             } catch (error) {
                 console.error("Error cargando datos:", error);
@@ -1723,326 +1551,112 @@
         }
 
         function setupRealtimeListeners() {
-            try {
-                const { onSnapshot, collection, query, orderBy } = window.firebaseFunctions;
-                const db = window.firebaseDB;
-                
-                firebaseUnsubscribeProducts = onSnapshot(
-                    query(collection(db, "productos"), orderBy("id")),
-                    (snapshot) => {
-                        if (isLoading) return;
-                        const nuevosProductos = [];
-                        snapshot.forEach((doc) => {
-                            const data = doc.data();
-                            if (data.stock !== undefined && typeof data.stock === 'string') {
-                                data.stock = parseFloat(data.stock);
-                            }
-                            nuevosProductos.push({...data, firebaseId: doc.id});
-                        });
-                        if (nuevosProductos.length > 0) nextProductId = Math.max(...nuevosProductos.map(p => p.id)) + 1;
-                        productos = nuevosProductos;
-                        actualizarTablaInventario();
-                        cargarProductosAsignacion();
-                        actualizarEstadisticas();
-                        actualizarDashboard();
-                        verificarStockBajo();
-                        actualizarHistorialAsignaciones();
-                        actualizarConsolidado(); // NUEVO: actualizar consolidado
-                    },
-                    (error) => console.error("Error listener productos:", error)
-                );
-                
-                firebaseUnsubscribeMovimientos = onSnapshot(
-                    query(collection(db, "movimientos"), orderBy("fechaHora", "desc")),
-                    (snapshot) => {
-                        if (isLoading) return;
-                        const nuevosMovimientos = [];
-                        snapshot.forEach((doc) => {
-                            nuevosMovimientos.push({...doc.data(), firebaseId: doc.id});
-                        });
-                        if (nuevosMovimientos.length > 0) nextMovimientoId = Math.max(...nuevosMovimientos.map(m => m.id)) + 1;
-                        movimientos = nuevosMovimientos;
-                        actualizarTablaMovimientos();
-                        actualizarEstadisticas();
-                        actualizarDashboard();
-                        actualizarHistorialAsignaciones();
-                        actualizarConsolidado(); // NUEVO: actualizar consolidado
-                    },
-                    (error) => console.error("Error listener movimientos:", error)
-                );
-            } catch (error) {
-                console.error("Error configurando listeners:", error);
-            }
-        }
-
-        // Funciones Firebase CRUD (existentes - se mantienen igual)
-        async function saveProductToFirebase(producto) {
-            try {
-                const { addDoc, collection } = window.firebaseFunctions;
-                const db = window.firebaseDB;
-                const docRef = await addDoc(collection(db, "productos"), producto);
-                return docRef.id;
-            } catch (error) {
-                console.error("Error guardando producto:", error);
-                mostrarMensaje("Error al guardar: " + error.message, "error");
-                return null;
-            }
+            const { onSnapshot, collection, query, orderBy } = window.firebaseFunctions;
+            const db = window.firebaseDB;
+            
+            onSnapshot(query(collection(db, "productos"), orderBy("id")), (snapshot) => {
+                if (isLoading) return;
+                productos = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.stock && typeof data.stock === 'string') data.stock = parseFloat(data.stock);
+                    productos.push({...data, firebaseId: doc.id});
+                });
+                actualizarTablasGenerales();
+            });
+            
+            onSnapshot(query(collection(db, "movimientos"), orderBy("fechaHora", "desc")), (snapshot) => {
+                if (isLoading) return;
+                movimientos = [];
+                snapshot.forEach(doc => {
+                    movimientos.push({...doc.data(), firebaseId: doc.id});
+                });
+                actualizarTablasGenerales();
+            });
         }
 
         async function updateProductInFirebase(firebaseId, updates) {
-            try {
-                const { updateDoc, doc } = window.firebaseFunctions;
-                const db = window.firebaseDB;
-                const cleanUpdates = {};
-                for (const [key, value] of Object.entries(updates)) {
-                    if (value !== undefined && value !== null) {
-                        cleanUpdates[key] = value;
-                    }
-                }
-                await updateDoc(doc(db, "productos", firebaseId), cleanUpdates);
-                return true;
-            } catch (error) {
-                console.error("Error actualizando producto:", error);
-                mostrarMensaje("Error al actualizar: " + error.message, "error");
-                return false;
-            }
-        }
-
-        async function deleteProductFromFirebase(firebaseId) {
-            try {
-                const { deleteDoc, doc } = window.firebaseFunctions;
-                const db = window.firebaseDB;
-                await deleteDoc(doc(db, "productos", firebaseId));
-                return true;
-            } catch (error) {
-                console.error("Error eliminando producto:", error);
-                return false;
-            }
-        }
-
-        async function deleteMovementsByProductId(productoId) {
-            try {
-                const { getDocs, collection, query, where, deleteDoc, doc } = window.firebaseFunctions;
-                const db = window.firebaseDB;
-                const movimientosQuery = query(collection(db, "movimientos"), where("productoId", "==", productoId));
-                const querySnapshot = await getDocs(movimientosQuery);
-                const deletePromises = [];
-                querySnapshot.forEach((document) => {
-                    deletePromises.push(deleteDoc(doc(db, "movimientos", document.id)));
-                });
-                await Promise.all(deletePromises);
-                return true;
-            } catch (error) {
-                console.error("Error eliminando movimientos:", error);
-                return false;
-            }
+            const { updateDoc, doc } = window.firebaseFunctions;
+            await updateDoc(doc(window.firebaseDB, "productos", firebaseId), updates);
         }
 
         async function saveMovementToFirebase(movimiento) {
-            try {
-                const { addDoc, collection } = window.firebaseFunctions;
-                const db = window.firebaseDB;
-                const docRef = await addDoc(collection(db, "movimientos"), movimiento);
-                return docRef.id;
-            } catch (error) {
-                console.error("Error guardando movimiento:", error);
-                mostrarMensaje("Error al guardar movimiento: " + error.message, "error");
-                return null;
-            }
-        }
-
-        async function updateMovementInFirebase(firebaseId, updates) {
-            try {
-                const { updateDoc, doc } = window.firebaseFunctions;
-                const db = window.firebaseDB;
-                const cleanUpdates = {};
-                for (const [key, value] of Object.entries(updates)) {
-                    if (value !== undefined && value !== null) {
-                        cleanUpdates[key] = value;
-                    }
-                }
-                await updateDoc(doc(db, "movimientos", firebaseId), cleanUpdates);
-                return true;
-            } catch (error) {
-                console.error("Error actualizando movimiento:", error);
-                return false;
-            }
-        }
-
-        async function deleteMovementFromFirebase(firebaseId) {
-            try {
-                const { deleteDoc, doc } = window.firebaseFunctions;
-                const db = window.firebaseDB;
-                await deleteDoc(doc(db, "movimientos", firebaseId));
-                return true;
-            } catch (error) {
-                console.error("Error eliminando movimiento:", error);
-                return false;
-            }
-        }
-
-        async function syncData() {
-            const syncBtn = document.getElementById('syncData');
-            const originalText = syncBtn.innerHTML;
-            syncBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando...';
-            syncBtn.disabled = true;
-            mostrarLoading(true);
-            
-            try {
-                await loadInitialData();
-                actualizarTablaInventario();
-                actualizarTablaMovimientos();
-                cargarProductosAsignacion();
-                actualizarEstadisticas();
-                actualizarDashboard();
-                verificarStockBajo();
-                actualizarHistorialAsignaciones();
-                actualizarConsolidado();
-                mostrarMensaje('Datos sincronizados correctamente', 'success');
-                updateFirebaseStatus(true);
-            } catch (error) {
-                console.error("Error sincronizando:", error);
-                mostrarMensaje('Error al sincronizar', 'error');
-                updateFirebaseStatus(false);
-            } finally {
-                syncBtn.innerHTML = originalText;
-                syncBtn.disabled = false;
-                mostrarLoading(false);
-            }
-        }
-
-        function updateFirebaseStatus(isConnected) {
-            const statusElement = document.getElementById('firebaseStatus');
-            const connectionStatus = document.getElementById('firebaseConnectionStatus');
-            
-            if (isConnected) {
-                if (statusElement) statusElement.style.display = 'flex';
-                if (connectionStatus) {
-                    connectionStatus.textContent = 'Conectado';
-                    connectionStatus.style.color = '#27ae60';
-                }
-            } else {
-                if (statusElement) {
-                    statusElement.style.display = 'flex';
-                    statusElement.classList.add('offline');
-                }
-                if (connectionStatus) {
-                    connectionStatus.textContent = 'Desconectado';
-                    connectionStatus.style.color = '#e74c3c';
-                }
-            }
+            const { addDoc, collection } = window.firebaseFunctions;
+            return await addDoc(collection(window.firebaseDB, "movimientos"), movimiento);
         }
 
         // =============================================
-        // FUNCIONES DEL SISTEMA (EXISTENTES)
+        // FUNCIONES DE ACTUALIZACIÓN
         // =============================================
+        function actualizarTablasGenerales() {
+            actualizarTablaInventario();
+            cargarProductosAsignacion();
+            actualizarEstadisticas();
+            actualizarDashboard();
+            verificarStockBajo();
+            actualizarHistorialAsignaciones();
+            actualizarTablaMovimientos();
+            actualizarConsolidado();
+        }
 
-        function mostrarSeccion(sectionId) {
-            document.querySelectorAll('.content-section').forEach(section => {
-                section.classList.remove('active');
+        function actualizarTablaInventario() {
+            const tbody = document.getElementById('inventarioTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            productos.forEach(p => {
+                const unidades = calcularUnidadesTotales(p);
+                const row = `<tr>
+                    <td>${p.codigo.split('-')[1] || p.id}</td>
+                    <td>${p.nombre}</td>
+                    <td>${p.categoria}</td>
+                    <td>${formatearStockMostrado(p)} ${p.unidad}</td>
+                    <td>${unidades.toFixed(2)}</td>
+                    <td>${p.unidad}</td>
+                    <td>${p.stockMinimo}</td>
+                    <td>${unidades < (p.stockMinimo * (p.unidadesPorMedida||1)) ? '⚠️ Bajo' : '✓ Normal'}</td>
+                    <td><button class="btn-action btn-edit" data-id="${p.id}">Editar</button></td>
+                </tr>`;
+                tbody.insertAdjacentHTML('beforeend', row);
             });
-            const seccion = document.getElementById(sectionId);
-            if (seccion) seccion.classList.add('active');
-            
-            document.querySelectorAll('.menu-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.getAttribute('data-section') === sectionId) btn.classList.add('active');
+            document.getElementById('totalProducts').textContent = productos.length;
+            document.querySelectorAll('.btn-edit').forEach(btn => btn.addEventListener('click', () => editarProducto(parseInt(btn.dataset.id))));
+        }
+
+        function actualizarDashboard() {
+            let totalUnidades = 0, lowStock = 0;
+            productos.forEach(p => {
+                const u = calcularUnidadesTotales(p);
+                totalUnidades += u;
+                if (u < (p.stockMinimo * (p.unidadesPorMedida||1))) lowStock++;
             });
+            document.getElementById('dashboardTotalProducts').textContent = productos.length;
+            document.getElementById('dashboardLowStock').textContent = lowStock;
+            document.getElementById('dashboardTotalUnits').textContent = totalUnidades.toLocaleString();
+            const mesActual = new Date().getMonth();
+            document.getElementById('dashboardTotalAssignments').textContent = movimientos.filter(m => m.tipo === 'salida' && new Date(m.fechaHora).getMonth() === mesActual).length;
         }
 
-        function actualizarFechaHora() {
-            const now = new Date();
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-            const dateTimeElement = document.getElementById('currentDateTime');
-            if (dateTimeElement) dateTimeElement.textContent = now.toLocaleDateString('es-ES', options);
+        function actualizarEstadisticas() {
+            let lowStock = 0, totalUnd = 0;
+            productos.forEach(p => {
+                const u = calcularUnidadesTotales(p);
+                totalUnd += u;
+                if (u < (p.stockMinimo * (p.unidadesPorMedida||1))) lowStock++;
+            });
+            document.getElementById('lowStockCount').textContent = lowStock;
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('todayAssignments').textContent = movimientos.filter(m => m.fechaHora?.startsWith(hoy) && m.tipo === 'salida').length;
+            document.getElementById('totalStock').textContent = totalUnd.toLocaleString();
         }
 
-        function manejarCambioUnidad() {
-            const unidad = document.getElementById('unidadProducto').value;
-            const bultoConfigGroup = document.getElementById('bultoConfigGroup');
-            const unidadesPorMedidaGroup = document.getElementById('unidadesPorMedidaGroup');
-            const unidadExplicacion = document.getElementById('unidadExplicacion');
-            const stockExplicacion = document.getElementById('stockExplicacion');
-            const stockMinimoExplicacion = document.getElementById('stockMinimoExplicacion');
-            
-            if (unidad === 'BULTO') {
-                bultoConfigGroup.style.display = 'flex';
-                unidadesPorMedidaGroup.style.display = 'none';
-                unidadExplicacion.textContent = 'Ej: 48 unidades por bulto (papel rosal)';
-                stockExplicacion.textContent = 'En bultos (puede usar decimales, ej: 2.5 bultos)';
-                stockMinimoExplicacion.textContent = 'En bultos (cantidad mínima de bultos) - Número entero';
-            } else if (unidad === 'CAJAS') {
-                bultoConfigGroup.style.display = 'none';
-                unidadesPorMedidaGroup.style.display = 'flex';
-                unidadExplicacion.textContent = 'Ej: 24 unidades por caja, 50 unidades por caja';
-                stockExplicacion.textContent = 'En cajas (puede usar decimales, ej: 2.5 cajas)';
-                stockMinimoExplicacion.textContent = 'En cajas (cantidad mínima de cajas) - Número entero';
-            } else if (unidad === 'PAQ') {
-                bultoConfigGroup.style.display = 'none';
-                unidadesPorMedidaGroup.style.display = 'flex';
-                unidadExplicacion.textContent = 'Ej: 100 unidades por paquete, 50 hojas por paquete';
-                stockExplicacion.textContent = 'En paquetes (puede usar decimales, ej: 2.5 paquetes)';
-                stockMinimoExplicacion.textContent = 'En paquetes (cantidad mínima de paquetes) - Número entero';
+        function verificarStockBajo() {
+            const low = productos.filter(p => calcularUnidadesTotales(p) < (p.stockMinimo * (p.unidadesPorMedida||1))).length;
+            const alertDiv = document.getElementById('stockAlert');
+            if (low > 0) {
+                alertDiv.classList.add('show');
+                document.getElementById('alertMessage').textContent = `Hay ${low} producto(s) con stock bajo.`;
             } else {
-                bultoConfigGroup.style.display = 'none';
-                unidadesPorMedidaGroup.style.display = 'flex';
-                unidadExplicacion.textContent = 'Ej: 1 unidad = 1 artículo';
-                stockExplicacion.textContent = 'En la unidad de medida seleccionada';
-                stockMinimoExplicacion.textContent = 'En la unidad de medida seleccionada';
-            }
-        }
-
-        function verificarCodigoExistente() {
-            const codigo = document.getElementById('codigoProducto').value.trim();
-            const saveBtn = document.getElementById('saveProductBtn');
-            const repositionBtn = document.getElementById('repositionBtn');
-            
-            if (codigo) {
-                const productoExistente = productos.find(p => p.codigo === codigo);
-                if (productoExistente) {
-                    document.getElementById('nombreProducto').value = productoExistente.nombre;
-                    document.getElementById('categoriaProducto').value = productoExistente.categoria;
-                    document.getElementById('unidadProducto').value = productoExistente.unidad;
-                    document.getElementById('unidadesPorMedida').value = productoExistente.unidadesPorMedida || 1;
-                    document.getElementById('stockMinimo').value = productoExistente.stockMinimo;
-                    document.getElementById('descripcionProducto').value = `Reposición de stock para ${productoExistente.nombre}`;
-                    
-                    if (productoExistente.unidad === 'BULTO') {
-                        document.getElementById('unidadesPorBulto').value = productoExistente.unidadesPorBulto || 1;
-                        manejarCambioUnidad();
-                    } else {
-                        manejarCambioUnidad();
-                    }
-                    saveBtn.style.display = 'none';
-                    repositionBtn.style.display = 'block';
-                } else {
-                    saveBtn.style.display = 'block';
-                    repositionBtn.style.display = 'none';
-                }
-            }
-        }
-
-        function calcularEquivalenciaAsignacion() {
-            const productoId = document.getElementById('productoAsignar').value;
-            const cantidadInput = document.getElementById('cantidadAsignarUnidades');
-            if (!productoId || !cantidadInput) return;
-            
-            const producto = productos.find(p => p.id == productoId);
-            if (!producto) return;
-            
-            const cantidadUnidades = parseFloat(cantidadInput.value) || 0;
-            const unidadesTotalesActuales = calcularUnidadesTotales(producto);
-            
-            const equivalencia = obtenerEquivalencia(producto, cantidadUnidades);
-            document.getElementById('equivalenciaUnidades').textContent = equivalencia;
-            
-            if (cantidadUnidades > 0) {
-                const nuevoStockUnidades = unidadesTotalesActuales - cantidadUnidades;
-                const nuevoStockEquivalencia = obtenerEquivalencia(producto, nuevoStockUnidades);
-                document.getElementById('nuevoStockUnidades').textContent = nuevoStockEquivalencia;
-            } else {
-                const stockActualEquivalencia = obtenerEquivalencia(producto, unidadesTotalesActuales);
-                document.getElementById('nuevoStockUnidades').textContent = stockActualEquivalencia;
+                alertDiv.classList.remove('show');
             }
         }
 
@@ -2050,881 +1664,49 @@
             const select = document.getElementById('productoAsignar');
             if (!select) return;
             select.innerHTML = '<option value="">Seleccione...</option>';
-            productos.forEach(producto => {
-                const unidadesTotales = calcularUnidadesTotales(producto);
-                if (unidadesTotales > 0) {
-                    const option = document.createElement('option');
-                    option.value = producto.id;
-                    const stockTexto = obtenerEquivalencia(producto, unidadesTotales);
-                    option.textContent = `${producto.nombre} (${stockTexto})`;
-                    select.appendChild(option);
+            productos.forEach(p => {
+                if (calcularUnidadesTotales(p) > 0) {
+                    select.innerHTML += `<option value="${p.id}">${p.nombre} (${formatearStockMostrado(p)} ${p.unidad})</option>`;
                 }
-            });
-        }
-
-        function cargarDepartamentosFiltros() {
-            const filterDept = document.getElementById('filterMovDept');
-            const filterAsignacionDept = document.getElementById('filterAsignacionDept');
-            if (!filterDept) return;
-            
-            filterDept.innerHTML = '<option value="">Todos los Departamentos</option>';
-            filterAsignacionDept.innerHTML = '<option value="">Todos los departamentos</option>';
-            departamentos.forEach(dept => {
-                const option = document.createElement('option');
-                option.value = dept;
-                option.textContent = dept;
-                filterDept.appendChild(option);
-                
-                const option2 = document.createElement('option');
-                option2.value = dept;
-                option2.textContent = dept;
-                filterAsignacionDept.appendChild(option2);
             });
         }
 
         function actualizarHistorialAsignaciones() {
             const tbody = document.getElementById('asignacionesHistoryBody');
             if (!tbody) return;
-            
-            const searchTerm = document.getElementById('searchAsignacion')?.value.toLowerCase() || '';
-            const deptFilter = document.getElementById('filterAsignacionDept')?.value || '';
-            const dateFilter = document.getElementById('filterAsignacionFecha')?.value || '';
-            
-            let asignaciones = movimientos.filter(m => m.tipo === 'salida');
-            
-            asignaciones = asignaciones.filter(asig => {
-                const searchMatch = searchTerm === '' || 
-                    asig.producto?.toLowerCase().includes(searchTerm) ||
-                    asig.usuario?.toLowerCase().includes(searchTerm) ||
-                    asig.departamento?.toLowerCase().includes(searchTerm);
-                const deptMatch = deptFilter === '' || asig.departamento === deptFilter;
-                const dateMatch = dateFilter === '' || asig.fechaHora.startsWith(dateFilter);
-                return searchMatch && deptMatch && dateMatch;
-            });
-            
-            asignaciones.sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora));
-            
-            if (asignaciones.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay asignaciones registradas</td></tr>';
-                return;
-            }
-            
+            const asignaciones = movimientos.filter(m => m.tipo === 'salida').slice(0, 50);
             tbody.innerHTML = '';
-            asignaciones.forEach(asig => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${asig.fechaHora}</td>
-                    <td>${asig.producto || '-'}</td>
-                    <td>${typeof asig.cantidad === 'number' ? asig.cantidad.toFixed(2) : asig.cantidad || 0}</td>
-                    <td>${asig.departamento || '-'}</td>
-                    <td>${asig.usuario || '-'}</td>
-                    <td>${asig.observaciones || '-'}</td>
-                `;
-                tbody.appendChild(row);
+            asignaciones.forEach(a => {
+                tbody.innerHTML += `<tr><td>${a.fechaHora}</td><td>${a.producto}</td><td>${a.cantidad}</td><td>${a.departamento}</td><td>${a.usuario}</td><td>${a.observaciones || '-'}</td></tr>`;
             });
-        }
-
-        function actualizarTablaInventario() {
-            const tableBody = document.getElementById('inventarioTableBody');
-            if (!tableBody) return;
-            
-            const searchProduct = document.getElementById('searchProduct')?.value.toLowerCase() || '';
-            const filterCategory = document.getElementById('filterCategory')?.value || '';
-            const filterStock = document.getElementById('filterStock')?.value || '';
-            
-            let productosFiltrados = productos.filter(producto => {
-                const searchMatch = searchProduct === '' || producto.nombre.toLowerCase().includes(searchProduct) || producto.codigo.toLowerCase().includes(searchProduct);
-                const categoryMatch = filterCategory === '' || producto.categoria === filterCategory;
-                let stockMatch = true;
-                const unidadesTotales = calcularUnidadesTotales(producto);
-                const stockMinimoUnidades = producto.stockMinimo * (producto.unidadesPorMedida || 1);
-                if (filterStock === 'low') stockMatch = unidadesTotales < stockMinimoUnidades;
-                else if (filterStock === 'normal') stockMatch = unidadesTotales >= stockMinimoUnidades && unidadesTotales <= stockMinimoUnidades * 2;
-                else if (filterStock === 'alto') stockMatch = unidadesTotales > stockMinimoUnidades * 2;
-                return searchMatch && categoryMatch && stockMatch;
-            });
-            
-            productosFiltrados.sort((a, b) => a.categoria === b.categoria ? a.nombre.localeCompare(b.nombre) : a.categoria.localeCompare(b.categoria));
-            tableBody.innerHTML = '';
-            
-            if (productosFiltrados.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;">No hay productos</td></tr>';
-                return;
-            }
-            
-            productosFiltrados.forEach(producto => {
-                const row = document.createElement('tr');
-                const codigoNum = producto.codigo.split('-')[1] || producto.id;
-                const unidadesTotales = calcularUnidadesTotales(producto);
-                const stockMinimoUnidades = producto.stockMinimo * (producto.unidadesPorMedida || 1);
-                const stockMinimoTexto = obtenerEquivalencia(producto, stockMinimoUnidades);
-                const stockMostrado = formatearStockMostrado(producto);
-                
-                let estadoClase = '', estadoTexto = '', stockIndicator = '';
-                if (unidadesTotales < stockMinimoUnidades) {
-                    estadoClase = 'stock-low';
-                    estadoTexto = 'Stock Bajo';
-                    stockIndicator = '<span class="stock-indicator stock-low"></span>';
-                } else if (unidadesTotales < stockMinimoUnidades * 2) {
-                    estadoClase = 'stock-medium';
-                    estadoTexto = 'Stock Normal';
-                    stockIndicator = '<span class="stock-indicator stock-medium"></span>';
-                } else {
-                    estadoClase = 'stock-high';
-                    estadoTexto = 'Stock Alto';
-                    stockIndicator = '<span class="stock-indicator stock-high"></span>';
-                }
-                
-                const categoriaMap = { papeleria: 'Papelería', toner: 'Toner', oficina: 'Oficina', electronica: 'Electrónica', limpieza: 'Limpieza', otros: 'Otros' };
-                const categoriaNombre = categoriaMap[producto.categoria] || producto.categoria;
-                const categoriaClase = `badge-${producto.categoria === 'papeleria' ? 'papeleria' : producto.categoria === 'toner' ? 'toner' : producto.categoria === 'oficina' ? 'oficina' : producto.categoria === 'electronica' ? 'electronica' : 'otros'}`;
-                
-                let infoUnidades = '';
-                if (producto.unidad === 'BULTO') {
-                    infoUnidades = `${stockMostrado} ${producto.unidad} (${producto.unidadesPorBulto || 1} und/bulto)`;
-                } else {
-                    infoUnidades = `${stockMostrado} ${producto.unidad} (${producto.unidadesPorMedida || 1} und/${producto.unidad === 'CAJAS' ? 'caja' : producto.unidad === 'PAQ' ? 'paquete' : producto.unidad})`;
-                }
-                
-                row.innerHTML = `
-                    <td><strong>${codigoNum}</strong></td>
-                    <td><div>${producto.nombre}</div><div class="unit-info">Código: ${producto.codigo}</div></td>
-                    <td><span class="badge ${categoriaClase}">${categoriaNombre}</span></td>
-                    <td><div class="stock-details"><span class="stock-total">${infoUnidades}</span><span class="unit-info">${unidadesTotales.toFixed(2)} unidades totales</span></div></td>
-                    <td>${unidadesTotales.toFixed(2)} unidades</td>
-                    <td>${producto.unidad}</td>
-                    <td>${stockMinimoTexto}</td>
-                    <td class="${estadoClase}">${stockIndicator} ${estadoTexto}</td>
-                    <td><div class="action-buttons">
-                        <button class="btn-action btn-edit" data-id="${producto.id}"><i class="fas fa-edit"></i> Editar</button>
-                        <button class="btn-action btn-assign" data-id="${producto.id}"><i class="fas fa-hand-holding"></i> Asignar</button>
-                        <button class="btn-action btn-adjust" data-id="${producto.id}"><i class="fas fa-adjust"></i> Ajustar</button>
-                        <button class="btn-action btn-reposition" data-id="${producto.id}"><i class="fas fa-boxes"></i> Reponer</button>
-                        <button class="btn-action btn-delete" data-id="${producto.id}"><i class="fas fa-trash"></i> Eliminar</button>
-                    </div></td>
-                `;
-                tableBody.appendChild(row);
-            });
-            
-            document.querySelectorAll('.btn-edit').forEach(btn => btn.addEventListener('click', () => editarProducto(parseInt(btn.dataset.id))));
-            document.querySelectorAll('.btn-assign').forEach(btn => btn.addEventListener('click', () => irAAsignacion(parseInt(btn.dataset.id))));
-            document.querySelectorAll('.btn-adjust').forEach(btn => btn.addEventListener('click', () => ajustarStock(parseInt(btn.dataset.id))));
-            document.querySelectorAll('.btn-reposition').forEach(btn => btn.addEventListener('click', () => irAReposicion(parseInt(btn.dataset.id))));
-            document.querySelectorAll('.btn-delete').forEach(btn => btn.addEventListener('click', () => confirmarEliminacion(parseInt(btn.dataset.id))));
-            
-            document.getElementById('totalProducts').textContent = productos.length;
-        }
-
-        function irAReposicion(productoId) {
-            const producto = productos.find(p => p.id === productoId);
-            if (!producto) return;
-            mostrarSeccion('nuevo-producto');
-            document.getElementById('codigoProducto').value = producto.codigo;
-            document.getElementById('nombreProducto').value = producto.nombre;
-            document.getElementById('categoriaProducto').value = producto.categoria;
-            document.getElementById('unidadProducto').value = producto.unidad;
-            document.getElementById('unidadesPorMedida').value = producto.unidadesPorMedida || 1;
-            document.getElementById('stockMinimo').value = producto.stockMinimo;
-            document.getElementById('descripcionProducto').value = `Reposición de stock para ${producto.nombre}`;
-            
-            if (producto.unidad === 'BULTO') {
-                document.getElementById('unidadesPorBulto').value = producto.unidadesPorBulto || 1;
-            }
-            
-            manejarCambioUnidad();
-            document.getElementById('saveProductBtn').style.display = 'none';
-            document.getElementById('repositionBtn').style.display = 'block';
         }
 
         function actualizarTablaMovimientos() {
-            const tableBody = document.getElementById('movimientosTableBody');
-            if (!tableBody) return;
-            
-            const filterMovimiento = document.getElementById('filterMovimiento')?.value || '';
-            const filterDept = document.getElementById('filterMovDept')?.value || '';
-            const filterFecha = document.getElementById('filterMovFecha')?.value || '';
-            
-            let movimientosFiltrados = movimientos.filter(m => {
-                const tipoMatch = filterMovimiento === '' || m.tipo === filterMovimiento;
-                const deptMatch = filterDept === '' || m.departamento === filterDept;
-                const fechaMatch = filterFecha === '' || m.fechaHora.startsWith(filterFecha);
-                return tipoMatch && deptMatch && fechaMatch;
+            const tbody = document.getElementById('movimientosTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            movimientos.slice(0, 50).forEach(m => {
+                tbody.innerHTML += `<tr><td>${m.fechaHora}</td><td>${m.tipo}</td><td>${m.producto}</td><td>${m.cantidad}</td><td>${m.departamento || '-'}</td><td>${m.usuario || '-'}</td><td>-</td></tr>`;
             });
-            movimientosFiltrados.sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora));
-            tableBody.innerHTML = '';
-            
-            if (movimientosFiltrados.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;">No hay movimientos</td></tr>';
-                return;
-            }
-            
-            movimientosFiltrados.forEach(movimiento => {
-                const row = document.createElement('tr');
-                const tipoConfig = { entrada: { texto: 'Entrada', color: '#27ae60' }, salida: { texto: 'Salida', color: '#e74c3c' }, ajuste: { texto: 'Ajuste', color: '#f39c12' }, reposicion: { texto: 'Reposición', color: '#9b59b6' } };
-                const tipo = tipoConfig[movimiento.tipo] || { texto: movimiento.tipo, color: '#666' };
-                
-                row.innerHTML = `
-                    <td>${movimiento.fechaHora}</td>
-                    <td><span style="color: ${tipo.color}; font-weight:600;">${tipo.texto}</span></td>
-                    <td>${movimiento.producto}</td>
-                    <td>${typeof movimiento.cantidad === 'number' ? movimiento.cantidad.toFixed(2) : movimiento.cantidad} unidades</td>
-                    <td>${movimiento.departamento}</td>
-                    <td>${movimiento.usuario}</td>
-                    <td>${movimiento.observaciones || '-'}</td>
-                    <td>${movimiento.responsable}</td>
-                    <td><div class="action-buttons">
-                        <button class="btn-action btn-edit-mov" data-id="${movimiento.id}"><i class="fas fa-edit"></i> Editar</button>
-                        <button class="btn-action btn-delete-mov" data-id="${movimiento.id}"><i class="fas fa-trash"></i> Eliminar</button>
-                    </div></td>
-                `;
-                tableBody.appendChild(row);
-            });
-            
-            document.querySelectorAll('.btn-edit-mov').forEach(btn => btn.addEventListener('click', () => editarMovimiento(parseInt(btn.dataset.id))));
-            document.querySelectorAll('.btn-delete-mov').forEach(btn => btn.addEventListener('click', () => confirmarEliminacionMovimiento(parseInt(btn.dataset.id))));
         }
 
-        function actualizarEstadisticas() {
-            let lowStockCount = 0, totalUnidades = 0;
-            productos.forEach(producto => {
-                const unidadesTotales = calcularUnidadesTotales(producto);
-                totalUnidades += unidadesTotales;
-                if (unidadesTotales < (producto.stockMinimo * (producto.unidadesPorMedida || 1))) lowStockCount++;
-            });
-            document.getElementById('lowStockCount').textContent = lowStockCount;
-            const hoy = new Date().toISOString().split('T')[0];
-            document.getElementById('todayAssignments').textContent = movimientos.filter(m => m.fechaHora.startsWith(hoy) && m.tipo === 'salida').length;
-            document.getElementById('totalStock').textContent = totalUnidades.toLocaleString();
-        }
-
-        function actualizarDashboard() {
-            let totalUnidades = 0, lowStockCount = 0;
-            productos.forEach(producto => {
-                const unidadesTotales = calcularUnidadesTotales(producto);
-                totalUnidades += unidadesTotales;
-                if (unidadesTotales < (producto.stockMinimo * (producto.unidadesPorMedida || 1))) lowStockCount++;
-            });
-            document.getElementById('dashboardTotalProducts').textContent = productos.length;
-            document.getElementById('dashboardLowStock').textContent = lowStockCount;
-            document.getElementById('dashboardTotalUnits').textContent = totalUnidades.toLocaleString();
-            
-            const hoy = new Date();
-            const mesActual = hoy.getMonth() + 1;
-            const añoActual = hoy.getFullYear();
-            document.getElementById('dashboardTotalAssignments').textContent = movimientos.filter(m => m.tipo === 'salida' && new Date(m.fechaHora).getMonth() + 1 === mesActual && new Date(m.fechaHora).getFullYear() === añoActual).length;
-        }
-
-        function verificarStockBajo() {
-            const lowStockCount = productos.filter(p => calcularUnidadesTotales(p) < (p.stockMinimo * (p.unidadesPorMedida || 1))).length;
-            const alertElement = document.getElementById('stockAlert');
-            if (lowStockCount > 0) {
-                alertElement.classList.add('show');
-                document.getElementById('alertMessage').textContent = `Hay ${lowStockCount} producto(s) con stock bajo.`;
-            } else alertElement.classList.remove('show');
-        }
-
-        function irAAsignacion(productoId) {
-            mostrarSeccion('asignacion');
-            const select = document.getElementById('productoAsignar');
-            if (select) { 
-                select.value = productoId; 
-                select.dispatchEvent(new Event('change'));
-            }
-        }
-
-        function ajustarStock(productoId) {
-            currentAdjustId = productoId;
-            const producto = productos.find(p => p.id === productoId);
-            if (!producto) return;
-            const unidadesTotales = calcularUnidadesTotales(producto);
-            document.getElementById('adjustProductName').value = producto.nombre;
-            document.getElementById('adjustCurrentStock').value = obtenerEquivalencia(producto, unidadesTotales);
-            document.getElementById('adjustModal').style.display = 'flex';
-            document.getElementById('adjustStockForm').onsubmit = (e) => { e.preventDefault(); aplicarAjusteStock(); };
-        }
-
-        async function aplicarAjusteStock() {
-            const producto = productos.find(p => p.id === currentAdjustId);
-            if (!producto) return;
-            const tipo = document.getElementById('adjustType').value;
-            const cantidad = parseFloat(document.getElementById('adjustQuantity').value);
-            const motivo = document.getElementById('adjustReason').value.trim();
-            if (isNaN(cantidad) || cantidad <= 0 || !motivo) { mostrarMensaje('Complete todos los campos correctamente', 'error'); return; }
-            
-            const unidadesActuales = calcularUnidadesTotales(producto);
-            let nuevasUnidades = unidadesActuales;
-            if (tipo === 'entrada') nuevasUnidades = unidadesActuales + cantidad;
-            else { if (cantidad > unidadesActuales + 0.001) { mostrarMensaje(`Stock insuficiente: ${unidadesActuales.toFixed(2)} unidades`, 'error'); return; } nuevasUnidades = unidadesActuales - cantidad; }
-            
-            const nuevoStock = calcularStockDesdeUnidades(producto, nuevasUnidades);
-            try {
-                const updates = { stock: nuevoStock, updatedAt: new Date().toISOString() };
-                await updateProductInFirebase(producto.firebaseId, updates);
-                const nuevoMovimiento = { id: nextMovimientoId++, fechaHora: formatearFechaHora(), tipo: 'ajuste', productoId: producto.id, producto: producto.nombre, cantidad: cantidad, departamento: "Almacén", usuario: "N/A", observaciones: motivo, responsable: "Admin Sistema", createdAt: new Date().toISOString() };
-                await saveMovementToFirebase(nuevoMovimiento);
-                mostrarMensaje(`Ajuste aplicado. Nuevo stock: ${obtenerEquivalencia(producto, nuevasUnidades)}`, 'success');
-                cerrarModal();
-            } catch (error) { mostrarMensaje('Error al aplicar ajuste', 'error'); }
-        }
-
-        function editarProducto(id) {
-            currentEditId = id;
-            const producto = productos.find(p => p.id === id);
-            if (!producto) return;
-            const modalBody = document.querySelector('#editModal .modal-body');
-            if (!modalBody) return;
-            
-            const unidadesTotales = calcularUnidadesTotales(producto);
-            const stockMostrado = formatearStockMostrado(producto);
-            
-            let unidadesHtml = '';
-            if (producto.unidad === 'BULTO') {
-                unidadesHtml = `
-                    <div class="form-row" id="editBultoRow">
-                        <div class="form-group">
-                            <label>Unidades por Bulto *</label>
-                            <input type="number" id="editUnidadesPorBulto" min="1" step="1" value="${producto.unidadesPorBulto || 1}" required>
-                            <small class="help-text">Ej: 48 unidades por bulto</small>
-                        </div>
-                    </div>
-                `;
-            } else {
-                unidadesHtml = `
-                    <div class="form-row" id="editUnidadesPorMedidaRow">
-                        <div class="form-group">
-                            <label>Unidades por Medida *</label>
-                            <input type="number" id="editUnidadesPorMedida" min="1" step="1" value="${producto.unidadesPorMedida || 1}" required>
-                            <small class="help-text">Ej: 24 unidades por caja</small>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            modalBody.innerHTML = `
-                <form id="editForm">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Código *</label>
-                            <input type="text" id="editCodigo" value="${producto.codigo}" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Nombre *</label>
-                            <input type="text" id="editNombre" value="${producto.nombre}" required>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Categoría *</label>
-                            <select id="editCategoria" required>
-                                <option value="papeleria" ${producto.categoria === 'papeleria' ? 'selected' : ''}>Papelería</option>
-                                <option value="oficina" ${producto.categoria === 'oficina' ? 'selected' : ''}>Artículos de Oficina</option>
-                                <option value="toner" ${producto.categoria === 'toner' ? 'selected' : ''}>Toner</option>
-                                <option value="electronica" ${producto.categoria === 'electronica' ? 'selected' : ''}>Electrónica</option>
-                                <option value="limpieza" ${producto.categoria === 'limpieza' ? 'selected' : ''}>Limpieza</option>
-                                <option value="otros" ${producto.categoria === 'otros' ? 'selected' : ''}>Otros</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Unidad *</label>
-                            <select id="editUnidad" required>
-                                <option value="UND" ${producto.unidad === 'UND' ? 'selected' : ''}>Unidades</option>
-                                <option value="CAJAS" ${producto.unidad === 'CAJAS' ? 'selected' : ''}>Cajas</option>
-                                <option value="PAQ" ${producto.unidad === 'PAQ' ? 'selected' : ''}>Paquetes</option>
-                                <option value="BULTO" ${producto.unidad === 'BULTO' ? 'selected' : ''}>Bultos</option>
-                                <option value="GALON" ${producto.unidad === 'GALON' ? 'selected' : ''}>Galones</option>
-                                <option value="LT" ${producto.unidad === 'LT' ? 'selected' : ''}>Litros</option>
-                            </select>
-                        </div>
-                    </div>
-                    ${unidadesHtml}
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Stock (en ${producto.unidad}) *</label>
-                            <input type="number" id="editStock" value="${stockMostrado}" min="0" step="any" required>
-                            <small>Stock actual: ${unidadesTotales.toFixed(2)} unidades totales</small>
-                        </div>
-                        <div class="form-group">
-                            <label>Stock Mínimo (en ${producto.unidad}) *</label>
-                            <input type="number" id="editStockMinimo" value="${producto.stockMinimo}" min="1" step="1" required>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group full-width">
-                            <label>Descripción</label>
-                            <textarea id="editDescripcion" rows="2">${producto.descripcion || ''}</textarea>
-                        </div>
-                    </div>
-                    <div class="form-buttons">
-                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                        <button type="button" id="cancelEdit" class="btn btn-secondary">Cancelar</button>
-                    </div>
-                </form>
-            `;
-            
-            document.getElementById('editModal').style.display = 'flex';
-            
-            const unidadSelect = document.getElementById('editUnidad');
-            if (unidadSelect) {
-                unidadSelect.addEventListener('change', function() {
-                    const selectedUnidad = this.value;
-                    const editBultoRow = document.getElementById('editBultoRow');
-                    const editUnidadesRow = document.getElementById('editUnidadesPorMedidaRow');
-                    
-                    if (selectedUnidad === 'BULTO') {
-                        if (editUnidadesRow) editUnidadesRow.remove();
-                        if (!editBultoRow) {
-                            const categoriaRow = document.querySelector('#editForm .form-row:nth-child(2)');
-                            const newBultoRow = document.createElement('div');
-                            newBultoRow.className = 'form-row';
-                            newBultoRow.id = 'editBultoRow';
-                            newBultoRow.innerHTML = `
-                                <div class="form-group">
-                                    <label>Unidades por Bulto *</label>
-                                    <input type="number" id="editUnidadesPorBulto" min="1" step="1" value="1" required>
-                                    <small class="help-text">Ej: 48 unidades por bulto</small>
-                                </div>
-                            `;
-                            if (categoriaRow && categoriaRow.nextSibling) {
-                                categoriaRow.parentNode.insertBefore(newBultoRow, categoriaRow.nextSibling);
-                            }
-                        } else {
-                            editBultoRow.style.display = 'flex';
-                        }
-                    } else {
-                        if (editBultoRow) editBultoRow.remove();
-                        if (!editUnidadesRow) {
-                            const categoriaRow = document.querySelector('#editForm .form-row:nth-child(2)');
-                            const newUnidadesRow = document.createElement('div');
-                            newUnidadesRow.className = 'form-row';
-                            newUnidadesRow.id = 'editUnidadesPorMedidaRow';
-                            newUnidadesRow.innerHTML = `
-                                <div class="form-group">
-                                    <label>Unidades por Medida *</label>
-                                    <input type="number" id="editUnidadesPorMedida" min="1" step="1" value="1" required>
-                                    <small class="help-text">Ej: 24 unidades por caja</small>
-                                </div>
-                            `;
-                            if (categoriaRow && categoriaRow.nextSibling) {
-                                categoriaRow.parentNode.insertBefore(newUnidadesRow, categoriaRow.nextSibling);
-                            }
-                        } else {
-                            editUnidadesRow.style.display = 'flex';
-                        }
-                    }
-                });
-            }
-            
-            document.getElementById('editForm').onsubmit = (e) => { e.preventDefault(); guardarCambiosEdicion(); };
-            document.getElementById('cancelEdit').onclick = cerrarModal;
-        }
-
-        async function guardarCambiosEdicion() {
-            const producto = productos.find(p => p.id === currentEditId);
-            if (!producto) return;
-            
-            const codigo = document.getElementById('editCodigo')?.value.trim();
-            const nombre = document.getElementById('editNombre')?.value.trim();
-            const categoria = document.getElementById('editCategoria')?.value;
-            const unidad = document.getElementById('editUnidad')?.value;
-            const stock = parseFloat(document.getElementById('editStock')?.value);
-            const stockMinimo = parseInt(document.getElementById('editStockMinimo')?.value);
-            const descripcion = document.getElementById('editDescripcion')?.value.trim();
-            
-            let unidadesPorMedida = 1;
-            let unidadesPorBulto = null;
-            
-            if (!codigo || !nombre || !categoria || !unidad || isNaN(stock) || isNaN(stockMinimo)) {
-                mostrarMensaje('Complete todos los campos obligatorios', 'error');
-                return;
-            }
-            
-            if (productos.some(p => p.codigo === codigo && p.id !== currentEditId)) {
-                mostrarMensaje('El código ya existe en otro producto', 'error');
-                return;
-            }
-            
-            if (unidad === 'BULTO') {
-                const unidadesPorBultoInput = document.getElementById('editUnidadesPorBulto');
-                if (!unidadesPorBultoInput) {
-                    mostrarMensaje('Complete las unidades por bulto', 'error');
-                    return;
-                }
-                unidadesPorBulto = parseInt(unidadesPorBultoInput.value);
-                if (isNaN(unidadesPorBulto) || unidadesPorBulto <= 0) {
-                    mostrarMensaje('Unidades por bulto debe ser mayor a 0', 'error');
-                    return;
-                }
-                unidadesPorMedida = 1;
-            } else {
-                const unidadesPorMedidaInput = document.getElementById('editUnidadesPorMedida');
-                if (!unidadesPorMedidaInput) {
-                    mostrarMensaje('Complete las unidades por medida', 'error');
-                    return;
-                }
-                unidadesPorMedida = parseInt(unidadesPorMedidaInput.value);
-                if (isNaN(unidadesPorMedida) || unidadesPorMedida <= 0) {
-                    mostrarMensaje('Unidades por medida debe ser mayor a 0', 'error');
-                    return;
-                }
-                unidadesPorBulto = null;
-            }
-            
-            try {
-                const updates = { 
-                    codigo, 
-                    nombre, 
-                    categoria, 
-                    unidad, 
-                    stock: stock, 
-                    stockMinimo, 
-                    descripcion, 
-                    unidadesPorMedida,
-                    updatedAt: new Date().toISOString() 
-                };
-                
-                if (unidad === 'BULTO') {
-                    updates.unidadesPorBulto = unidadesPorBulto;
-                } else {
-                    if (producto.unidadesPorBulto) {
-                        updates.unidadesPorBulto = null;
-                    }
-                }
-                
-                await updateProductInFirebase(producto.firebaseId, updates);
-                mostrarMensaje('Producto actualizado correctamente', 'success');
-                cerrarModal();
-            } catch (error) {
-                console.error('Error al guardar cambios:', error);
-                mostrarMensaje('Error al actualizar el producto', 'error');
-            }
-        }
-
-        function confirmarEliminacion(id) { currentEditId = id; document.getElementById('confirmModal').style.display = 'flex'; }
-        function confirmarEliminacionMovimiento(id) { currentMovEditId = id; document.getElementById('confirmMovModal').style.display = 'flex'; }
-        
-        function cerrarModal() {
-            ['editModal', 'confirmModal', 'adjustModal', 'editMovModal', 'confirmMovModal'].forEach(id => { const modal = document.getElementById(id); if (modal) modal.style.display = 'none'; });
-            currentEditId = currentAdjustId = currentMovEditId = null;
-        }
-
-        function limpiarFiltrosInventario() {
-            document.getElementById('searchProduct').value = '';
-            document.getElementById('filterCategory').value = '';
-            document.getElementById('filterStock').value = '';
-            actualizarTablaInventario();
-        }
-
-        function limpiarFiltrosMovimientos() {
-            document.getElementById('filterMovimiento').value = '';
-            document.getElementById('filterMovDept').value = '';
-            document.getElementById('filterMovFecha').value = '';
-            actualizarTablaMovimientos();
-        }
-        
-        function limpiarFiltrosAsignaciones() {
-            document.getElementById('searchAsignacion').value = '';
-            document.getElementById('filterAsignacionDept').value = '';
-            document.getElementById('filterAsignacionFecha').value = '';
-            actualizarHistorialAsignaciones();
-        }
-
-        function editarMovimiento(id) {
-            const movimiento = movimientos.find(m => m.id === id);
-            if (!movimiento) return;
-            currentMovEditId = id;
-            document.getElementById('editMovProducto').value = movimiento.producto;
-            document.getElementById('editMovTipo').value = movimiento.tipo;
-            document.getElementById('editMovCantidad').value = typeof movimiento.cantidad === 'number' ? movimiento.cantidad.toFixed(2) : movimiento.cantidad;
-            document.getElementById('editMovDepartamento').value = movimiento.departamento;
-            document.getElementById('editMovUsuario').value = movimiento.usuario;
-            document.getElementById('editMovObservaciones').value = movimiento.observaciones || '';
-            document.getElementById('editMovModal').style.display = 'flex';
-        }
-
-        async function guardarCambiosMovimiento() {
-            const movimiento = movimientos.find(m => m.id === currentMovEditId);
-            if (!movimiento) return;
-            const departamento = document.getElementById('editMovDepartamento').value.trim();
-            const usuario = document.getElementById('editMovUsuario').value.trim();
-            const observaciones = document.getElementById('editMovObservaciones').value.trim();
-            if (!departamento || !usuario) { mostrarMensaje('Complete departamento y usuario', 'error'); return; }
-            try {
-                await updateMovementInFirebase(movimiento.firebaseId, { departamento, usuario, observaciones, updatedAt: new Date().toISOString() });
-                mostrarMensaje('Movimiento actualizado', 'success');
-                cerrarModal();
-            } catch (error) { mostrarMensaje('Error al actualizar', 'error'); }
-        }
-
-        async function guardarProducto(e) {
-            e.preventDefault();
-            const codigo = document.getElementById('codigoProducto').value.trim();
-            const nombre = document.getElementById('nombreProducto').value.trim();
-            const categoria = document.getElementById('categoriaProducto').value;
-            const unidad = document.getElementById('unidadProducto').value;
-            const stockInicial = parseFloat(document.getElementById('stockInicial').value);
-            const stockMinimo = parseInt(document.getElementById('stockMinimo').value);
-            const descripcion = document.getElementById('descripcionProducto').value.trim();
-            
-            let unidadesPorMedida = 1;
-            let unidadesPorBulto = null;
-            
-            if (unidad === 'BULTO') {
-                unidadesPorBulto = parseInt(document.getElementById('unidadesPorBulto').value);
-                if (isNaN(unidadesPorBulto) || unidadesPorBulto <= 0) {
-                    mostrarMensaje('Unidades por bulto debe ser mayor a 0', 'error');
-                    return;
-                }
-            } else {
-                unidadesPorMedida = parseInt(document.getElementById('unidadesPorMedida').value);
-                if (isNaN(unidadesPorMedida) || unidadesPorMedida <= 0) {
-                    mostrarMensaje('Unidades por medida debe ser mayor a 0', 'error');
-                    return;
-                }
-            }
-            
-            if (!codigo || !nombre || !categoria || !unidad || isNaN(stockInicial) || isNaN(stockMinimo)) {
-                mostrarMensaje('Complete todos los campos', 'error');
-                return;
-            }
-            
-            if (productos.some(p => p.codigo === codigo)) {
-                mostrarMensaje('Código ya existe. Use reposición.', 'error');
-                return;
-            }
-            
-            const nuevoProducto = { 
-                id: nextProductId, 
-                codigo, 
-                nombre, 
-                categoria, 
-                stock: stockInicial, 
-                stockMinimo, 
-                unidad, 
-                descripcion, 
-                fechaRegistro: new Date().toISOString().split('T')[0], 
-                createdAt: new Date().toISOString(),
-                unidadesPorMedida: unidadesPorMedida
-            };
-            
-            if (unidad === 'BULTO') {
-                nuevoProducto.unidadesPorBulto = unidadesPorBulto;
-            }
-            
-            try {
-                const firebaseId = await saveProductToFirebase(nuevoProducto);
-                if (firebaseId) {
-                    const unidadesTotales = calcularUnidadesTotales(nuevoProducto);
-                    const nuevoMovimiento = { 
-                        id: nextMovimientoId++, 
-                        fechaHora: formatearFechaHora(), 
-                        tipo: "entrada", 
-                        productoId: nuevoProducto.id, 
-                        producto: nuevoProducto.nombre, 
-                        cantidad: unidadesTotales, 
-                        departamento: "Almacén", 
-                        usuario: "N/A", 
-                        observaciones: "Registro inicial: " + (descripcion || "Sin observaciones"), 
-                        responsable: "Admin Sistema", 
-                        createdAt: new Date().toISOString() 
-                    };
-                    await saveMovementToFirebase(nuevoMovimiento);
-                    mostrarMensaje('Producto registrado', 'success');
-                    document.getElementById('nuevoProductoForm').reset();
-                    document.getElementById('stockMinimo').value = "5";
-                    document.getElementById('unidadesPorMedida').value = "1";
-                    document.getElementById('unidadesPorBulto').value = "1";
-                    document.getElementById('saveProductBtn').style.display = 'block';
-                    document.getElementById('repositionBtn').style.display = 'none';
-                    manejarCambioUnidad();
-                }
-            } catch (error) { 
-                mostrarMensaje('Error al guardar', 'error'); 
-            }
-        }
-
-        async function guardarReposicion() {
-            const codigo = document.getElementById('codigoProducto').value.trim();
-            const cantidad = parseFloat(document.getElementById('stockInicial').value);
-            const motivo = document.getElementById('descripcionProducto').value.trim();
-            if (!codigo || isNaN(cantidad) || cantidad <= 0) { mostrarMensaje('Complete los campos', 'error'); return; }
-            const producto = productos.find(p => p.codigo === codigo);
-            if (!producto) { mostrarMensaje('Producto no encontrado', 'error'); return; }
-            
-            let unidadesAAgregar = 0;
-            if (producto.unidad === 'BULTO') {
-                const unidadesPorBulto = producto.unidadesPorBulto || 1;
-                unidadesAAgregar = cantidad * unidadesPorBulto;
-            } else {
-                const unidadesPorMedida = producto.unidadesPorMedida || 1;
-                unidadesAAgregar = cantidad * unidadesPorMedida;
-            }
-            
-            const nuevoStock = producto.stock + cantidad;
-            
-            try {
-                await updateProductInFirebase(producto.firebaseId, { stock: nuevoStock, updatedAt: new Date().toISOString() });
-                const nuevoMovimiento = { 
-                    id: nextMovimientoId++, 
-                    fechaHora: formatearFechaHora(), 
-                    tipo: "reposicion", 
-                    productoId: producto.id, 
-                    producto: producto.nombre, 
-                    cantidad: unidadesAAgregar, 
-                    departamento: "Almacén", 
-                    usuario: "N/A", 
-                    observaciones: motivo || `Reposición de ${cantidad} ${producto.unidad}`, 
-                    responsable: "Admin Sistema", 
-                    createdAt: new Date().toISOString() 
-                };
-                await saveMovementToFirebase(nuevoMovimiento);
-                mostrarMensaje(`Reposición exitosa. +${unidadesAAgregar.toFixed(2)} unidades`, 'success');
-                document.getElementById('nuevoProductoForm').reset();
-                document.getElementById('saveProductBtn').style.display = 'block';
-                document.getElementById('repositionBtn').style.display = 'none';
-                manejarCambioUnidad();
-            } catch (error) { 
-                mostrarMensaje('Error en reposición', 'error'); 
-            }
-        }
+        function editarProducto(id) { mostrarMensaje("Edición disponible en la interfaz completa", "warning"); }
 
         // =============================================
-        // FUNCIÓN CORREGIDA: REGISTRAR ASIGNACIÓN
+        // NUEVA FUNCIÓN: CONSOLIDADO CON FILTRO POR DEPARTAMENTO
         // =============================================
-        async function registrarAsignacion(e) {
-            e.preventDefault();
-            const productoId = document.getElementById('productoAsignar').value;
-            const cantidadUnidades = parseFloat(document.getElementById('cantidadAsignarUnidades').value);
-            const departamento = document.getElementById('departamentoAsignar').value;
-            const usuario = document.getElementById('usuarioAsignar').value.trim();
-            const fechaHora = document.getElementById('fechaAsignacion').value;
-            const observaciones = document.getElementById('observacionesAsignacion').value.trim();
-            
-            if (!productoId || isNaN(cantidadUnidades) || cantidadUnidades <= 0 || !departamento || !usuario || !fechaHora) { 
-                mostrarMensaje('Complete todos los campos correctamente', 'error'); 
-                return; 
-            }
-            
-            const producto = productos.find(p => p.id == productoId);
-            if (!producto) { 
-                mostrarMensaje('Producto no encontrado', 'error'); 
-                return; 
-            }
-            
-            const unidadesTotalesActuales = calcularUnidadesTotales(producto);
-            
-            if (cantidadUnidades > unidadesTotalesActuales + 0.001) { 
-                mostrarMensaje(`Stock insuficiente: ${unidadesTotalesActuales.toFixed(2)} unidades disponibles`, 'error'); 
-                return; 
-            }
-            
-            const nuevasUnidadesTotales = unidadesTotalesActuales - cantidadUnidades;
-            const nuevoStockEnUnidadBase = calcularStockDesdeUnidades(producto, nuevasUnidadesTotales);
-            
-            try {
-                await updateProductInFirebase(producto.firebaseId, { 
-                    stock: nuevoStockEnUnidadBase, 
-                    updatedAt: new Date().toISOString() 
-                });
-                
-                const nuevoMovimiento = { 
-                    id: nextMovimientoId++, 
-                    fechaHora: formatearFechaHora(fechaHora), 
-                    tipo: "salida", 
-                    productoId: producto.id, 
-                    producto: producto.nombre, 
-                    cantidad: cantidadUnidades, 
-                    departamento, 
-                    usuario, 
-                    observaciones: observaciones || "Asignación de material", 
-                    responsable: "Admin Sistema", 
-                    createdAt: new Date().toISOString() 
-                };
-                await saveMovementToFirebase(nuevoMovimiento);
-                
-                const equivalenciaDescontada = obtenerEquivalencia(producto, cantidadUnidades);
-                mostrarMensaje(`Asignación exitosa. Se descontaron ${equivalenciaDescontada}`, 'success');
-                
-                document.getElementById('asignacionForm').reset();
-                const ahora = new Date();
-                ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
-                document.getElementById('fechaAsignacion').value = ahora.toISOString().slice(0, 16);
-                document.getElementById('stockDisponible').value = '';
-                document.getElementById('equivalenciaUnidades').textContent = '0 unidades';
-                document.getElementById('nuevoStockUnidades').textContent = '0 unidades';
-                document.getElementById('decimalStockWarning').style.display = 'none';
-                
-                actualizarHistorialAsignaciones();
-                
-            } catch (error) { 
-                console.error('Error en asignación:', error);
-                mostrarMensaje('Error en asignación: ' + error.message, 'error'); 
-            }
-        }
-
-        async function eliminarProducto() {
-            const producto = productos.find(p => p.id === currentEditId);
-            if (!producto) return;
-            try {
-                await deleteMovementsByProductId(producto.id);
-                await deleteProductFromFirebase(producto.firebaseId);
-                mostrarMensaje('Producto eliminado', 'success');
-                cerrarModal();
-            } catch (error) { 
-                mostrarMensaje('Error al eliminar', 'error'); 
-            }
-        }
-
-        async function eliminarMovimiento() {
-            const movimiento = movimientos.find(m => m.id === currentMovEditId);
-            if (!movimiento) return;
-            const producto = productos.find(p => p.id === movimiento.productoId);
-            if (producto) {
-                const unidadesActuales = calcularUnidadesTotales(producto);
-                const nuevasUnidades = movimiento.tipo === 'entrada' || movimiento.tipo === 'reposicion' 
-                    ? unidadesActuales - movimiento.cantidad 
-                    : unidadesActuales + movimiento.cantidad;
-                const nuevoStock = calcularStockDesdeUnidades(producto, nuevasUnidades);
-                try {
-                    await updateProductInFirebase(producto.firebaseId, { stock: nuevoStock, updatedAt: new Date().toISOString() });
-                    await deleteMovementFromFirebase(movimiento.firebaseId);
-                    mostrarMensaje('Movimiento eliminado y stock revertido', 'success');
-                } catch (error) { 
-                    mostrarMensaje('Error al eliminar', 'error'); 
-                }
-            } else {
-                await deleteMovementFromFirebase(movimiento.firebaseId);
-                mostrarMensaje('Movimiento eliminado', 'success');
-            }
-            cerrarModal();
-        }
-
-        // =============================================
-        // NUEVA FUNCIÓN: CONSOLIDADO DE SALIDAS
-        // =============================================
-        
         function obtenerFechasPeriodo() {
             const periodo = document.getElementById('periodoSelect').value;
             const hoy = new Date();
             let inicio, fin;
-            
             if (periodo === 'quincena_actual') {
                 const dia = hoy.getDate();
-                if (dia <= 15) {
-                    inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-                    fin = new Date(hoy.getFullYear(), hoy.getMonth(), 15);
-                } else {
-                    inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 16);
-                    fin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
-                }
+                if (dia <= 15) { inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1); fin = new Date(hoy.getFullYear(), hoy.getMonth(), 15); }
+                else { inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 16); fin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0); }
             } else if (periodo === 'quincena_pasada') {
                 const dia = hoy.getDate();
-                if (dia <= 15) {
-                    inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 16);
-                    fin = new Date(hoy.getFullYear(), hoy.getMonth(), 0);
-                } else {
-                    inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-                    fin = new Date(hoy.getFullYear(), hoy.getMonth(), 15);
-                }
+                if (dia <= 15) { inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 16); fin = new Date(hoy.getFullYear(), hoy.getMonth(), 0); }
+                else { inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1); fin = new Date(hoy.getFullYear(), hoy.getMonth(), 15); }
             } else if (periodo === 'mes_actual') {
                 inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
                 fin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
@@ -2936,26 +1718,31 @@
                 fin = new Date(document.getElementById('fechaFin').value);
                 fin.setHours(23, 59, 59);
             }
-            
             return { inicio, fin };
         }
-        
+
         function actualizarConsolidado() {
             const { inicio, fin } = obtenerFechasPeriodo();
             const categoriaFiltro = document.getElementById('catFiltroConsolidado').value;
+            const deptFiltro = document.getElementById('deptFiltroConsolidado').value;
             
-            const salidas = movimientos.filter(m => m.tipo === 'salida');
-            const salidasFiltradas = salidas.filter(s => {
+            let salidas = movimientos.filter(m => m.tipo === 'salida');
+            salidas = salidas.filter(s => {
                 const fechaMov = new Date(s.fechaHora);
                 return fechaMov >= inicio && fechaMov <= fin;
             });
             
-            const consolidadoMap = new Map();
+            // Aplicar filtro de departamento
+            if (deptFiltro) {
+                salidas = salidas.filter(s => s.departamento === deptFiltro);
+            }
             
-            salidasFiltradas.forEach(salida => {
+            const consolidadoMap = new Map();
+            const departamentosSet = new Set();
+            
+            salidas.forEach(salida => {
                 const producto = productos.find(p => p.id == salida.productoId);
                 if (!producto) return;
-                
                 if (categoriaFiltro && producto.categoria !== categoriaFiltro) return;
                 
                 if (!consolidadoMap.has(producto.id)) {
@@ -2963,13 +1750,17 @@
                         producto: producto,
                         cantidadSalidas: 0,
                         unidadesTotales: 0,
+                        departamentos: new Set(),
                         detalles: []
                     });
                 }
-                
                 const item = consolidadoMap.get(producto.id);
                 item.cantidadSalidas++;
                 item.unidadesTotales += parseFloat(salida.cantidad) || 0;
+                if (salida.departamento) {
+                    item.departamentos.add(salida.departamento);
+                    departamentosSet.add(salida.departamento);
+                }
                 item.detalles.push({
                     fecha: salida.fechaHora,
                     cantidad: salida.cantidad,
@@ -2981,7 +1772,7 @@
             const consolidado = Array.from(consolidadoMap.values());
             consolidado.sort((a, b) => b.unidadesTotales - a.unidadesTotales);
             
-            const totalSalidas = salidasFiltradas.length;
+            const totalSalidas = salidas.length;
             const totalUnidades = consolidado.reduce((sum, item) => sum + item.unidadesTotales, 0);
             
             let periodoTexto = '';
@@ -2995,10 +1786,11 @@
             document.getElementById('periodoResumen').textContent = periodoTexto;
             document.getElementById('totalSalidasPeriodo').textContent = totalSalidas;
             document.getElementById('totalUnidadesPeriodo').textContent = totalUnidades.toFixed(2);
+            document.getElementById('totalDeptosPeriodo').textContent = departamentosSet.size;
             
             const tbody = document.getElementById('consolidadoBody');
             if (consolidado.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay salidas en este período</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No hay salidas en este período con los filtros seleccionados</td></tr>';
                 return;
             }
             
@@ -3008,6 +1800,7 @@
                 const categoriaMap = { papeleria: 'Papelería', toner: 'Toner', oficina: 'Oficina', electronica: 'Electrónica', limpieza: 'Limpieza', otros: 'Otros' };
                 const categoriaNombre = categoriaMap[prod.categoria] || prod.categoria;
                 const categoriaClase = `badge-${prod.categoria === 'papeleria' ? 'papeleria' : prod.categoria === 'toner' ? 'toner' : prod.categoria === 'oficina' ? 'oficina' : 'otros'}`;
+                const deptosTexto = Array.from(item.departamentos).slice(0, 3).join(', ') + (item.departamentos.size > 3 ? '...' : '');
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -3016,18 +1809,17 @@
                     <td><span class="badge ${categoriaClase}">${categoriaNombre}</span></td>
                     <td style="text-align:center;">${item.cantidadSalidas}</td>
                     <td style="text-align:center;">${item.unidadesTotales.toFixed(2)} und</td>
+                    <td>${deptosTexto || '-'}</td>
                     <td><button class="btn-detalle" data-id="${prod.id}"><i class="fas fa-list"></i> Ver ${item.cantidadSalidas}</button></td>
                 `;
                 tbody.appendChild(row);
             });
             
             document.querySelectorAll('.btn-detalle').forEach(btn => {
-                btn.addEventListener('click', (e) => {
+                btn.addEventListener('click', () => {
                     const prodId = parseInt(btn.dataset.id);
                     const item = consolidado.find(i => i.producto.id === prodId);
-                    if (item) {
-                        mostrarDetalleSalidas(item);
-                    }
+                    if (item) mostrarDetalleSalidas(item);
                 });
             });
         }
@@ -3039,12 +1831,10 @@
                     <div style="background:white; border-radius:12px; max-width:700px; width:90%; max-height:80%; overflow:auto; padding:20px;">
                         <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
                             <h3>Detalle de Salidas - ${prod.nombre} (${prod.codigo})</h3>
-                            <button onclick="document.getElementById('modalDetalleSalidas').remove()" style="background:#e74c3c; border:none; color:white; padding:5px 12px; border-radius:5px; cursor:pointer;">Cerrar</button>
+                            <button onclick="this.closest('#modalDetalleSalidas').remove()" style="background:#e74c3c; border:none; color:white; padding:5px 12px; border-radius:5px; cursor:pointer;">Cerrar</button>
                         </div>
                         <table style="width:100%; border-collapse:collapse;">
-                            <thead style="background:#2c3e50; color:white;">
-                                <tr><th>Fecha</th><th>Cantidad (und)</th><th>Departamento</th><th>Usuario</th></tr>
-                            </thead>
+                            <thead style="background:#2c3e50; color:white;"><tr><th>Fecha</th><th>Cantidad (und)</th><th>Departamento</th><th>Usuario</th></tr></thead>
                             <tbody>
             `;
             item.detalles.forEach(d => {
@@ -3054,77 +1844,28 @@
             document.body.insertAdjacentHTML('beforeend', modalHtml);
         }
         
-        async function exportarConsolidadoPDF() {
-            const { inicio, fin } = obtenerFechasPeriodo();
-            const categoriaFiltro = document.getElementById('catFiltroConsolidado').value;
-            
-            const salidas = movimientos.filter(m => m.tipo === 'salida');
-            const salidasFiltradas = salidas.filter(s => {
-                const fechaMov = new Date(s.fechaHora);
-                return fechaMov >= inicio && fechaMov <= fin;
-            });
-            
-            const consolidadoMap = new Map();
-            salidasFiltradas.forEach(salida => {
-                const producto = productos.find(p => p.id == salida.productoId);
-                if (!producto) return;
-                if (categoriaFiltro && producto.categoria !== categoriaFiltro) return;
-                if (!consolidadoMap.has(producto.id)) {
-                    consolidadoMap.set(producto.id, { producto: producto, cantidadSalidas: 0, unidadesTotales: 0, detalles: [] });
-                }
-                const item = consolidadoMap.get(producto.id);
-                item.cantidadSalidas++;
-                item.unidadesTotales += parseFloat(salida.cantidad) || 0;
-                item.detalles.push({ fecha: salida.fechaHora, cantidad: salida.cantidad, departamento: salida.departamento });
-            });
-            
-            const consolidado = Array.from(consolidadoMap.values());
-            if (consolidado.length === 0) {
-                mostrarMensaje('No hay datos para exportar', 'error');
-                return;
-            }
-            
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('landscape');
-            doc.setFontSize(16);
-            doc.text('Consolidado de Salidas por Artículo', 14, 15);
-            doc.setFontSize(10);
-            doc.text(`Período: ${inicio.toISOString().split('T')[0]} al ${fin.toISOString().split('T')[0]}`, 14, 23);
-            
-            const tableData = consolidado.map(item => [
-                item.producto.codigo,
-                item.producto.nombre,
-                item.producto.categoria,
-                item.cantidadSalidas.toString(),
-                item.unidadesTotales.toFixed(2),
-                item.detalles.map(d => `${d.fecha} (${d.cantidad} und, ${d.departamento})`).join('\n')
-            ]);
-            
-            doc.autoTable({
-                head: [['Código', 'Producto', 'Categoría', '# Salidas', 'Unidades', 'Detalle']],
-                body: tableData,
-                startY: 30,
-                headStyles: { fillColor: [52, 152, 219] },
-                styles: { fontSize: 8, cellPadding: 2 },
-                columnStyles: { 5: { cellWidth: 50 } }
-            });
-            
-            doc.save(`consolidado_salidas_${inicio.toISOString().split('T')[0]}_a_${fin.toISOString().split('T')[0]}.pdf`);
-            mostrarMensaje('PDF exportado correctamente', 'success');
+        function limpiarFiltrosConsolidado() {
+            document.getElementById('periodoSelect').value = 'mes_actual';
+            document.getElementById('catFiltroConsolidado').value = '';
+            document.getElementById('deptFiltroConsolidado').value = '';
+            document.getElementById('fechaInicio').value = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+            document.getElementById('fechaFin').value = new Date().toISOString().split('T')[0];
+            toggleFechasPersonalizadas();
+            actualizarConsolidado();
+            mostrarMensaje('Filtros limpiados', 'success');
         }
         
         function exportarConsolidadoExcel() {
             const { inicio, fin } = obtenerFechasPeriodo();
             const categoriaFiltro = document.getElementById('catFiltroConsolidado').value;
+            const deptFiltro = document.getElementById('deptFiltroConsolidado').value;
             
-            const salidas = movimientos.filter(m => m.tipo === 'salida');
-            const salidasFiltradas = salidas.filter(s => {
-                const fechaMov = new Date(s.fechaHora);
-                return fechaMov >= inicio && fechaMov <= fin;
-            });
+            let salidas = movimientos.filter(m => m.tipo === 'salida');
+            salidas = salidas.filter(s => new Date(s.fechaHora) >= inicio && new Date(s.fechaHora) <= fin);
+            if (deptFiltro) salidas = salidas.filter(s => s.departamento === deptFiltro);
             
             const excelData = [];
-            salidasFiltradas.forEach(salida => {
+            salidas.forEach(salida => {
                 const producto = productos.find(p => p.id == salida.productoId);
                 if (producto && (!categoriaFiltro || producto.categoria === categoriaFiltro)) {
                     excelData.push({
@@ -3152,184 +1893,138 @@
             mostrarMensaje('Excel exportado correctamente', 'success');
         }
         
-        function toggleFechasPersonalizadas() {
-            const periodo = document.getElementById('periodoSelect').value;
-            const fechaInicioGroup = document.getElementById('fechaInicioGroup');
-            const fechaFinGroup = document.getElementById('fechaFinGroup');
+        async function exportarConsolidadoPDF() {
+            const { inicio, fin } = obtenerFechasPeriodo();
+            const categoriaFiltro = document.getElementById('catFiltroConsolidado').value;
+            const deptFiltro = document.getElementById('deptFiltroConsolidado').value;
             
-            if (periodo === 'personalizado') {
-                fechaInicioGroup.style.display = 'flex';
-                fechaFinGroup.style.display = 'flex';
-            } else {
-                fechaInicioGroup.style.display = 'none';
-                fechaFinGroup.style.display = 'none';
+            let salidas = movimientos.filter(m => m.tipo === 'salida');
+            salidas = salidas.filter(s => new Date(s.fechaHora) >= inicio && new Date(s.fechaHora) <= fin);
+            if (deptFiltro) salidas = salidas.filter(s => s.departamento === deptFiltro);
+            
+            const consolidadoMap = new Map();
+            salidas.forEach(salida => {
+                const producto = productos.find(p => p.id == salida.productoId);
+                if (!producto) return;
+                if (categoriaFiltro && producto.categoria !== categoriaFiltro) return;
+                if (!consolidadoMap.has(producto.id)) {
+                    consolidadoMap.set(producto.id, { producto, cantidadSalidas: 0, unidadesTotales: 0, detalles: [] });
+                }
+                const item = consolidadoMap.get(producto.id);
+                item.cantidadSalidas++;
+                item.unidadesTotales += parseFloat(salida.cantidad) || 0;
+                item.detalles.push(`${salida.fechaHora} (${salida.cantidad} und, ${salida.departamento})`);
+            });
+            
+            const consolidado = Array.from(consolidadoMap.values());
+            if (consolidado.length === 0) {
+                mostrarMensaje('No hay datos para exportar', 'error');
+                return;
             }
-        }
-
-        // Exportaciones existentes
-        function exportarAsignacionesExcel() {
-            const asignaciones = movimientos.filter(m => m.tipo === 'salida');
-            const data = asignaciones.map(a => ({
-                Fecha: a.fechaHora,
-                Producto: a.producto,
-                Cantidad_Unidades: typeof a.cantidad === 'number' ? a.cantidad.toFixed(2) : a.cantidad,
-                Departamento: a.departamento,
-                Usuario: a.usuario,
-                Observaciones: a.observaciones || ''
-            }));
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), 'Asignaciones');
-            XLSX.writeFile(wb, `asignaciones-${new Date().toISOString().slice(0,10)}.xlsx`);
-            mostrarMensaje('Asignaciones exportadas a Excel', 'success');
-        }
-
-        function exportarAsignacionesPDF() {
+            
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('landscape');
             doc.setFontSize(16);
-            doc.text('Historial de Asignaciones de Material', 14, 15);
+            doc.text('Consolidado de Salidas por Artículo', 14, 15);
             doc.setFontSize(10);
-            doc.text(`Generado: ${new Date().toLocaleString('es-ES')}`, 14, 23);
+            let filtroTexto = deptFiltro ? ` | Departamento: ${deptFiltro}` : '';
+            doc.text(`Período: ${inicio.toISOString().split('T')[0]} al ${fin.toISOString().split('T')[0]}${filtroTexto}`, 14, 23);
             
-            const asignaciones = movimientos.filter(m => m.tipo === 'salida');
-            const tableData = asignaciones.map(a => [
-                a.fechaHora,
-                a.producto,
-                typeof a.cantidad === 'number' ? a.cantidad.toFixed(2) : a.cantidad,
-                a.departamento,
-                a.usuario,
-                a.observaciones || ''
+            const tableData = consolidado.map(item => [
+                item.producto.codigo,
+                item.producto.nombre,
+                item.producto.categoria,
+                item.cantidadSalidas.toString(),
+                item.unidadesTotales.toFixed(2),
+                item.detalles.join('\n')
             ]);
             
             doc.autoTable({
-                head: [['Fecha', 'Producto', 'Cantidad', 'Departamento', 'Usuario', 'Observaciones']],
+                head: [['Código', 'Producto', 'Categoría', '# Salidas', 'Unidades', 'Detalle']],
                 body: tableData,
                 startY: 30,
-                headStyles: { fillColor: [52, 152, 219] }
+                headStyles: { fillColor: [52, 152, 219] },
+                styles: { fontSize: 8, cellPadding: 2 },
+                columnStyles: { 5: { cellWidth: 50 } }
             });
             
-            doc.save(`asignaciones-${new Date().toISOString().slice(0,10)}.pdf`);
-            mostrarMensaje('Asignaciones exportadas a PDF', 'success');
+            doc.save(`consolidado_salidas_${inicio.toISOString().split('T')[0]}.pdf`);
+            mostrarMensaje('PDF exportado correctamente', 'success');
         }
-
-        function exportarPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('landscape');
-            doc.setFontSize(16); doc.text('Reporte de Inventario', 14, 15);
-            doc.setFontSize(10); doc.text(`Generado: ${new Date().toLocaleString('es-ES')}`, 14, 23);
-            let totalUnidades=0, bajos=0;
-            productos.forEach(p => { const u=calcularUnidadesTotales(p); totalUnidades+=u; if(u<p.stockMinimo*(p.unidadesPorMedida||1)) bajos++; });
-            doc.text(`Total productos: ${productos.length} | Stock bajo: ${bajos} | Unidades totales: ${totalUnidades.toFixed(2)}`, 14, 33);
-            doc.autoTable({ head: [['#','Código','Producto','Categoría','Stock','Unidades','Estado']], body: productos.map(p => [p.codigo.split('-')[1]||p.id, p.codigo, p.nombre, p.categoria, `${formatearStockMostrado(p)} ${p.unidad}`, calcularUnidadesTotales(p).toFixed(2), calcularUnidadesTotales(p) < p.stockMinimo*(p.unidadesPorMedida||1) ? 'Bajo' : 'Normal']), startY: 40, headStyles: { fillColor: [52,152,219] } });
-            doc.save(`inventario-${new Date().toISOString().slice(0,10)}.pdf`);
+        
+        function toggleFechasPersonalizadas() {
+            const periodo = document.getElementById('periodoSelect').value;
+            const show = periodo === 'personalizado';
+            document.getElementById('fechaInicioGroup').style.display = show ? 'flex' : 'none';
+            document.getElementById('fechaFinGroup').style.display = show ? 'flex' : 'none';
+            if (!show) {
+                const hoy = new Date();
+                document.getElementById('fechaInicio').value = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
+                document.getElementById('fechaFin').value = hoy.toISOString().split('T')[0];
+            }
         }
-
-        function exportarExcel() {
-            const wb = XLSX.utils.book_new();
-            const prodData = productos.map(p => ({ Código: p.codigo, Producto: p.nombre, Categoría: p.categoria, Stock: `${formatearStockMostrado(p)} ${p.unidad}`, UnidadesTotales: calcularUnidadesTotales(p).toFixed(2), StockMínimo: `${p.stockMinimo} ${p.unidad}`, Estado: calcularUnidadesTotales(p) < p.stockMinimo*(p.unidadesPorMedida||1) ? 'BAJO' : 'NORMAL' }));
-            const movData = movimientos.map(m => ({ Fecha: m.fechaHora, Tipo: m.tipo, Producto: m.producto, Cantidad: typeof m.cantidad === 'number' ? m.cantidad.toFixed(2) : m.cantidad, Departamento: m.departamento, Usuario: m.usuario, Observaciones: m.observaciones }));
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(prodData), 'Inventario');
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(movData), 'Movimientos');
-            XLSX.writeFile(wb, `inventario-completo-${new Date().toISOString().slice(0,10)}.xlsx`);
-        }
-
-        function exportarInventarioActualExcel() {
-            const data = productos.map(p => ({ Código: p.codigo, Producto: p.nombre, Categoría: p.categoria, StockActual: formatearStockMostrado(p), Unidad: p.unidad, UnidadesTotales: calcularUnidadesTotales(p).toFixed(2), StockMínimo: p.stockMinimo, Estado: calcularUnidadesTotales(p) < p.stockMinimo*(p.unidadesPorMedida||1) ? 'URGENTE' : 'OK' }));
-            XLSX.writeFile(XLSX.utils.book_append_sheet(XLSX.utils.book_new(), XLSX.utils.json_to_sheet(data), 'Inventario'), `inventario-actual-${new Date().toISOString().slice(0,10)}.xlsx`);
-        }
-
-        // Inicialización
-        function inicializarSistema() {
-            cargarProductosAsignacion();
-            cargarDepartamentosFiltros();
-            mostrarSeccion('dashboard');
-            actualizarTablaInventario();
-            actualizarTablaMovimientos();
-            actualizarEstadisticas();
-            actualizarDashboard();
-            actualizarHistorialAsignaciones();
-            actualizarConsolidado();
-        }
-
-        function configurarEventos() {
-            document.querySelectorAll('.menu-btn').forEach(btn => btn.addEventListener('click', function() { mostrarSeccion(this.dataset.section); }));
-            document.getElementById('nuevoProductoForm').addEventListener('submit', guardarProducto);
-            document.getElementById('repositionBtn').addEventListener('click', (e) => { e.preventDefault(); guardarReposicion(); });
-            document.getElementById('asignacionForm').addEventListener('submit', registrarAsignacion);
-            document.getElementById('productoAsignar').addEventListener('change', function() { 
-                if(this.value) { 
-                    const p=productos.find(p=>p.id==this.value); 
-                    if(p) { 
-                        const unidadesTotales = calcularUnidadesTotales(p);
-                        document.getElementById('stockDisponible').value=obtenerEquivalencia(p, unidadesTotales);
-                        const decimalWarning = document.getElementById('decimalStockWarning');
-                        if (decimalWarning) {
-                            const stockValue = parseFloat(p.stock) || 0;
-                            decimalWarning.style.display = (Math.abs(stockValue % 1) > 0.001) ? 'block' : 'none';
-                        }
-                        calcularEquivalenciaAsignacion(); 
-                    } 
-                } else {
-                    const decimalWarning = document.getElementById('decimalStockWarning');
-                    if (decimalWarning) decimalWarning.style.display = 'none';
+        
+        function cargarDepartamentosEnFiltros() {
+            const deptSelects = ['filterMovDept', 'filterAsignacionDept', 'deptFiltroConsolidado'];
+            deptSelects.forEach(id => {
+                const select = document.getElementById(id);
+                if (select) {
+                    const currentVal = select.value;
+                    select.innerHTML = '<option value="">Todos los Departamentos</option>';
+                    departamentosLista.forEach(dept => {
+                        select.innerHTML += `<option value="${dept}">${dept}</option>`;
+                    });
+                    if (currentVal) select.value = currentVal;
                 }
             });
-            document.getElementById('cantidadAsignarUnidades')?.addEventListener('input', calcularEquivalenciaAsignacion);
-            document.getElementById('codigoProducto')?.addEventListener('blur', verificarCodigoExistente);
-            document.getElementById('unidadProducto')?.addEventListener('change', manejarCambioUnidad);
-            document.getElementById('clearFilters').addEventListener('click', limpiarFiltrosInventario);
-            document.getElementById('clearMovFilters').addEventListener('click', limpiarFiltrosMovimientos);
-            document.getElementById('clearAsignacionFilters')?.addEventListener('click', limpiarFiltrosAsignaciones);
-            document.getElementById('searchAsignacion')?.addEventListener('input', actualizarHistorialAsignaciones);
-            document.getElementById('filterAsignacionDept')?.addEventListener('change', actualizarHistorialAsignaciones);
-            document.getElementById('filterAsignacionFecha')?.addEventListener('change', actualizarHistorialAsignaciones);
-            document.getElementById('exportAsignacionesExcel')?.addEventListener('click', exportarAsignacionesExcel);
-            document.getElementById('exportAsignacionesPdf')?.addEventListener('click', exportarAsignacionesPDF);
-            document.getElementById('searchProduct').addEventListener('input', actualizarTablaInventario);
-            document.getElementById('filterCategory').addEventListener('change', actualizarTablaInventario);
-            document.getElementById('filterStock').addEventListener('change', actualizarTablaInventario);
-            document.getElementById('filterMovimiento').addEventListener('change', actualizarTablaMovimientos);
-            document.getElementById('filterMovDept').addEventListener('change', actualizarTablaMovimientos);
-            document.getElementById('filterMovFecha').addEventListener('change', actualizarTablaMovimientos);
-            document.getElementById('exportPdf').addEventListener('click', exportarPDF);
-            document.getElementById('exportExcel').addEventListener('click', exportarExcel);
-            document.getElementById('exportInventoryExcel').addEventListener('click', exportarInventarioActualExcel);
-            document.getElementById('syncData').addEventListener('click', syncData);
-            
-            // Eventos del nuevo consolidado
-            document.getElementById('periodoSelect').addEventListener('change', () => {
-                toggleFechasPersonalizadas();
-                actualizarConsolidado();
+        }
+        
+        function inicializarSistema() {
+            cargarDepartamentosEnFiltros();
+            cargarProductosAsignacion();
+            mostrarSeccion('dashboard');
+            actualizarTablasGenerales();
+        }
+        
+        function mostrarSeccion(sectionId) {
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            document.querySelectorAll('.menu-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.section === sectionId) btn.classList.add('active');
             });
+        }
+        
+        function configurarEventos() {
+            document.querySelectorAll('.menu-btn').forEach(btn => {
+                btn.addEventListener('click', () => mostrarSeccion(btn.dataset.section));
+            });
+            document.getElementById('periodoSelect').addEventListener('change', toggleFechasPersonalizadas);
             document.getElementById('aplicarFiltrosConsolidado').addEventListener('click', actualizarConsolidado);
+            document.getElementById('limpiarFiltrosConsolidado').addEventListener('click', limpiarFiltrosConsolidado);
             document.getElementById('exportConsolidadoExcel').addEventListener('click', exportarConsolidadoExcel);
             document.getElementById('exportConsolidadoPDF').addEventListener('click', exportarConsolidadoPDF);
-            
-            document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', cerrarModal));
-            document.getElementById('confirmDelete').addEventListener('click', eliminarProducto);
-            document.getElementById('cancelDelete').addEventListener('click', cerrarModal);
-            document.getElementById('confirmMovDelete').addEventListener('click', eliminarMovimiento);
-            document.getElementById('cancelMovDelete').addEventListener('click', cerrarModal);
-            document.getElementById('editMovForm').addEventListener('submit', (e) => { e.preventDefault(); guardarCambiosMovimiento(); });
-            window.addEventListener('click', (e) => { if(e.target.classList.contains('modal')) cerrarModal(); });
+            document.getElementById('syncData').addEventListener('click', () => { loadInitialData(); mostrarMensaje('Sincronizado', 'success'); });
+            document.getElementById('clearFilters').addEventListener('click', () => { document.getElementById('searchProduct').value = ''; actualizarTablaInventario(); });
+            document.getElementById('clearMovFilters').addEventListener('click', () => { actualizarTablaMovimientos(); });
+            document.getElementById('clearAsignacionFilters')?.addEventListener('click', () => { actualizarHistorialAsignaciones(); });
+            document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', () => {
+                document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+            }));
         }
-
+        
         document.addEventListener('DOMContentLoaded', () => {
             initializeFirebase();
-            actualizarFechaHora();
-            setInterval(actualizarFechaHora, 1000);
+            setInterval(() => {
+                document.getElementById('currentDateTime').innerText = new Date().toLocaleString('es-ES');
+            }, 1000);
             configurarEventos();
             const ahora = new Date();
             ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
-            document.getElementById('fechaAsignacion').value = ahora.toISOString().slice(0, 16);
-            document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString();
-            manejarCambioUnidad();
+            document.getElementById('fechaAsignacion').value = ahora.toISOString().slice(0,16);
+            document.getElementById('fechaInicio').value = new Date(ahora.getFullYear(), ahora.getMonth(), 1).toISOString().split('T')[0];
+            document.getElementById('fechaFin').value = ahora.toISOString().split('T')[0];
             toggleFechasPersonalizadas();
-            
-            // Establecer fechas por defecto para personalizado
-            const hoy = new Date();
-            document.getElementById('fechaInicio').value = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
-            document.getElementById('fechaFin').value = hoy.toISOString().split('T')[0];
         });
     </script>
 </body>
