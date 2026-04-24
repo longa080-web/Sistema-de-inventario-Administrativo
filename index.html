@@ -1092,6 +1092,38 @@
             border-radius: 12px;
             margin-left: 8px;
         }
+
+        /* Estilos para la nueva sección Consolidado por Departamento */
+        .consolidado-filters {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .consolidado-depto-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .consolidado-depto-table th {
+            background-color: #2c3e50;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        .consolidado-depto-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        .export-buttons-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .total-row {
+            background-color: #e8f4fd;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -1128,6 +1160,10 @@
                     </button>
                     <button class="menu-btn" data-section="consolidado">
                         <i class="fas fa-chart-bar"></i> Consolidado Salidas
+                    </button>
+                    <!-- NUEVO BOTÓN -->
+                    <button class="menu-btn" data-section="consolidado-depto">
+                        <i class="fas fa-building"></i> Consolidado por Depto
                     </button>
                     <button class="menu-btn" data-section="reorden">
                         <i class="fas fa-cart-plus"></i> Reorden Automático
@@ -1235,7 +1271,7 @@
                                 </tr>
                             </thead>
                             <tbody id="inventarioTableBody">
-                                <tr><td colspan="9" style="text-align: center; padding: 20px;">Cargando datos de Firebase...</td></tr>
+                                <tr><td colspan="9" style="text-align: center; padding: 20px;">Cargando datos de Firebase...</d></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1456,7 +1492,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="asignacionesHistoryBody">
-                                    <tr><td colspan="6" style="text-align:center;">Cargando historial...</td></tr>
+                                    <tr><td colspan="6" style="text-align:center;">Cargando historial...</d></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -1495,13 +1531,13 @@
                                 </tr>
                             </thead>
                             <tbody id="movimientosTableBody">
-                                <tr><td colspan="9" style="text-align: center; padding: 20px;">Cargando datos de Firebase...</td></tr>
+                                <tr><td colspan="9" style="text-align: center; padding: 20px;">Cargando datos de Firebase...</d></tr>
                             </tbody>
                         </table>
                     </div>
                 </section>
 
-                <!-- SECCIÓN CONSOLIDADO DE SALIDAS -->
+                <!-- SECCIÓN CONSOLIDADO DE SALIDAS (ORIGINAL) -->
                 <section id="consolidado" class="content-section">
                     <h2><i class="fas fa-chart-bar"></i> Consolidado de Salidas por Artículo</h2>
                     
@@ -1577,7 +1613,7 @@
                                 </tr>
                             </thead>
                             <tbody id="consolidadoTableBody">
-                                <tr><td colspan="7" style="text-align: center; padding: 20px;">Seleccione filtros y presione "Filtrar"</td></tr>
+                                <tr><td colspan="7" style="text-align: center; padding: 20px;">Seleccione filtros y presione "Filtrar"</d></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1586,6 +1622,95 @@
                         <button id="exportConsolidadoPdf" class="btn-success" style="padding: 10px 20px;">
                             <i class="fas fa-file-pdf"></i> Exportar Consolidado a PDF
                         </button>
+                    </div>
+                </section>
+
+                <!-- NUEVA SECCIÓN: CONSOLIDADO POR DEPARTAMENTO (SUMATORIA CON FILTROS) -->
+                <section id="consolidado-depto" class="content-section">
+                    <h2><i class="fas fa-building"></i> Consolidado por Departamento <span class="predictive-badge"><i class="fas fa-calculator"></i> Sumatoria Total</span></h2>
+                    <p style="margin-bottom: 15px; color: #666;">Resumen de TODAS las salidas agrupadas por producto y departamento. Muestra el TOTAL consumido por cada área.</p>
+                    
+                    <!-- Filtros -->
+                    <div class="consolidado-filters">
+                        <div class="form-row" style="width: 100%;">
+                            <div class="form-group">
+                                <label><i class="fas fa-calendar-alt"></i> Período</label>
+                                <select id="consDeptoPeriodo">
+                                    <option value="todo">📅 Todo el historial</option>
+                                    <option value="mes" selected>📆 Mes actual</option>
+                                    <option value="mesAnterior">📆 Mes anterior</option>
+                                    <option value="quincena1">📅 Primera quincena (mes actual)</option>
+                                    <option value="quincena2">📅 Segunda quincena (mes actual)</option>
+                                    <option value="rango">📅 Rango personalizado</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="consDeptoFechaInicioGroup" style="display: none;">
+                                <label>Fecha inicio</label>
+                                <input type="date" id="consDeptoFechaInicio">
+                            </div>
+                            <div class="form-group" id="consDeptoFechaFinGroup" style="display: none;">
+                                <label>Fecha fin</label>
+                                <input type="date" id="consDeptoFechaFin">
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-building"></i> Departamento</label>
+                                <select id="consDeptoFiltro">
+                                    <option value="">📋 Todos los departamentos</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-box"></i> Producto</label>
+                                <input type="text" id="consDeptoProducto" placeholder="Buscar producto...">
+                            </div>
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <button id="aplicarFiltrosDepto" class="btn-primary" style="padding: 8px 20px;"><i class="fas fa-search"></i> Filtrar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resumen -->
+                    <div class="reorden-summary" style="margin-bottom: 20px;">
+                        <div class="reorden-card">
+                            <i class="fas fa-building" style="color: #3498db;"></i>
+                            <h3 id="resDeptosCount">0</h3>
+                            <p>Departamentos</p>
+                        </div>
+                        <div class="reorden-card">
+                            <i class="fas fa-boxes" style="color: #27ae60;"></i>
+                            <h3 id="resProductosCount">0</h3>
+                            <p>Productos</p>
+                        </div>
+                        <div class="reorden-card">
+                            <i class="fas fa-calculator" style="color: #f39c12;"></i>
+                            <h3 id="resTotalUnidades">0</h3>
+                            <p>Unidades totales</p>
+                        </div>
+                    </div>
+
+                    <!-- Botones de exportación -->
+                    <div class="export-buttons-group">
+                        <button id="exportDeptoConsolidadoExcel" class="btn-success"><i class="fas fa-file-excel"></i> Exportar a Excel</button>
+                        <button id="exportDeptoConsolidadoPdf" class="btn-primary"><i class="fas fa-file-pdf"></i> Exportar a PDF</button>
+                    </div>
+
+                    <!-- Tabla de resultados -->
+                    <div class="table-container">
+                        <table class="consolidado-depto-table" id="consolidadoDeptoTable">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Código</th>
+                                    <th>Departamento</th>
+                                    <th>Total Unidades</th>
+                                    <th>Equivalencia</th>
+                                </tr>
+                            </thead>
+                            <tbody id="consolidadoDeptoBody">
+                                <tr><td colspan="5" style="text-align:center">Seleccione filtros y presione "Filtrar"</d></tr>
+                            </tbody>
+                            <tfoot id="consolidadoDeptoFoot"></tfoot>
+                        </table>
                     </div>
                 </section>
 
@@ -1646,7 +1771,7 @@
                                 </tr>
                             </thead>
                             <tbody id="reordenTableBody">
-                                <tr><td colspan="8" style="text-align: center; padding: 20px;">Calculando recomendaciones...</td></tr>
+                                <tr><td colspan="8" style="text-align: center; padding: 20px;">Calculando recomendaciones...</d></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1773,7 +1898,6 @@
         // FUNCIONES DE BÚSQUEDA PREDICTIVA
         // =============================================
         
-        // Obtener productos que EMPIEZAN con el texto (no solo que contienen)
         function filtrarProductosPorInicio(texto, productosLista) {
             if (!texto || texto.trim() === '') return productosLista;
             const termino = texto.toLowerCase().trim();
@@ -1783,7 +1907,6 @@
             );
         }
         
-        // Mostrar sugerencias mientras escribe
         function mostrarSugerencias(inputElement, suggestionsBoxId, productosLista) {
             const texto = inputElement.value;
             const suggestionsBox = document.getElementById(suggestionsBoxId);
@@ -1800,26 +1923,23 @@
                 return;
             }
             
-            // Limitar a 10 sugerencias
             const sugerencias = productosFiltrados.slice(0, 10);
             
             suggestionsBox.innerHTML = '';
             sugerencias.forEach(p => {
                 const item = document.createElement('div');
                 item.className = 'suggestion-item';
-                // Resaltar la parte que coincide
                 const nombreLower = p.nombre.toLowerCase();
                 const termino = texto.toLowerCase();
                 const index = nombreLower.indexOf(termino);
                 let nombreResaltado = p.nombre;
-                if (index === 0) { // Solo resaltar si empieza con el término
+                if (index === 0) {
                     nombreResaltado = `<strong>${p.nombre.substring(0, termino.length)}</strong>${p.nombre.substring(termino.length)}`;
                 }
                 item.innerHTML = `<i class="fas fa-box"></i> ${nombreResaltado} <small style="color:#666;">(${p.codigo})</small>`;
                 item.onclick = () => {
                     inputElement.value = p.nombre;
                     suggestionsBox.style.display = 'none';
-                    // Disparar el evento de búsqueda
                     actualizarTablaInventario();
                 };
                 suggestionsBox.appendChild(item);
@@ -1828,7 +1948,6 @@
             suggestionsBox.style.display = 'block';
         }
 
-        // Cerrar sugerencias al hacer clic fuera
         document.addEventListener('click', function(e) {
             if (!e.target.closest('.search-wrapper')) {
                 const suggestionsBox = document.getElementById('productSuggestions');
@@ -1921,6 +2040,10 @@
                         verificarStockBajo();
                         actualizarHistorialAsignaciones();
                         actualizarReorden();
+                        // Actualizar la nueva sección si está visible
+                        if (document.getElementById('consolidado-depto').classList.contains('active')) {
+                            actualizarConsolidadoDepartamento();
+                        }
                     },
                     (error) => console.error("Error listener productos:", error)
                 );
@@ -1940,6 +2063,9 @@
                         actualizarDashboard();
                         actualizarHistorialAsignaciones();
                         actualizarReorden();
+                        if (document.getElementById('consolidado-depto').classList.contains('active')) {
+                            actualizarConsolidadoDepartamento();
+                        }
                     },
                     (error) => console.error("Error listener movimientos:", error)
                 );
@@ -2106,7 +2232,7 @@
         }
 
         // =============================================
-        // FUNCIONES DEL SISTEMA
+        // FUNCIONES DEL SISTEMA (ORIGINALES)
         // =============================================
 
         function mostrarSeccion(sectionId) {
@@ -2120,6 +2246,12 @@
                 btn.classList.remove('active');
                 if (btn.getAttribute('data-section') === sectionId) btn.classList.add('active');
             });
+            
+            // Si se selecciona la nueva sección, actualizar los datos
+            if (sectionId === 'consolidado-depto') {
+                cargarDepartamentosEnSelectDepto();
+                actualizarConsolidadoDepartamento();
+            }
         }
 
         function actualizarFechaHora() {
@@ -2286,7 +2418,7 @@
             asignaciones.sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora));
             
             if (asignaciones.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay asignaciones registradas</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay asignaciones registradas</d></tr>';
                 return;
             }
             
@@ -2294,18 +2426,17 @@
             asignaciones.forEach(asig => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${asig.fechaHora}</td>
-                    <td>${asig.producto || '-'}</td>
-                    <td>${typeof asig.cantidad === 'number' ? asig.cantidad.toFixed(2) : asig.cantidad || 0}</td>
-                    <td>${asig.departamento || '-'}</td>
-                    <td>${asig.usuario || '-'}</td>
-                    <td>${asig.observaciones || '-'}</td>
+                    <td>${asig.fechaHora}</d>
+                    <td>${asig.producto || '-'}</d>
+                    <td>${typeof asig.cantidad === 'number' ? asig.cantidad.toFixed(2) : asig.cantidad || 0}</d>
+                    <td>${asig.departamento || '-'}</d>
+                    <td>${asig.usuario || '-'}</d>
+                    <td>${asig.observaciones || '-'}</d>
                 `;
                 tbody.appendChild(row);
             });
         }
 
-        // VERSIÓN CORREGIDA: Búsqueda por COMIENZO DE PALABRA (startsWith)
         function actualizarTablaInventario() {
             const tableBody = document.getElementById('inventarioTableBody');
             if (!tableBody) return;
@@ -2315,7 +2446,6 @@
             const filterStock = document.getElementById('filterStock')?.value || '';
             
             let productosFiltrados = productos.filter(producto => {
-                // BÚSQUEDA PREDICTIVA: solo productos que EMPIEZAN con el texto
                 let searchMatch = true;
                 if (searchProduct !== '') {
                     searchMatch = producto.nombre.toLowerCase().startsWith(searchProduct) || 
@@ -2331,7 +2461,6 @@
                 return searchMatch && categoryMatch && stockMatch;
             });
             
-            // Mostrar contador de resultados
             const resultCountSpan = document.getElementById('searchResultCount');
             if (resultCountSpan) {
                 if (searchProduct) {
@@ -2345,7 +2474,7 @@
             tableBody.innerHTML = '';
             
             if (productosFiltrados.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;">No hay productos que empiecen con ese término<br><small>Prueba con otra letra o palabra</small></td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;">No hay productos que empiecen con ese término<br><small>Prueba con otra letra o palabra</small></d></tr>';
                 return;
             }
             
@@ -2384,21 +2513,21 @@
                 }
                 
                 row.innerHTML = `
-                    <td><strong>${codigoNum}</strong></td>
-                    <td><div>${producto.nombre}</div><div class="unit-info">Código: ${producto.codigo}</div></td>
-                    <td><span class="badge ${categoriaClase}">${categoriaNombre}</span></td>
-                    <td><div class="stock-details"><span class="stock-total">${infoUnidades}</span><span class="unit-info">${unidadesTotales.toFixed(2)} unidades totales</span></div></td>
-                    <td>${unidadesTotales.toFixed(2)} unidades</td>
-                    <td>${producto.unidad}</td>
-                    <td>${stockMinimoTexto}</td>
-                    <td class="${estadoClase}">${stockIndicator} ${estadoTexto}</td>
+                    <td><strong>${codigoNum}</strong></d>
+                    <td><div>${producto.nombre}</div><div class="unit-info">Código: ${producto.codigo}</div></d>
+                    <td><span class="badge ${categoriaClase}">${categoriaNombre}</span></d>
+                    <td><div class="stock-details"><span class="stock-total">${infoUnidades}</span><span class="unit-info">${unidadesTotales.toFixed(2)} unidades totales</span></div></d>
+                    <td>${unidadesTotales.toFixed(2)} unidades</d>
+                    <td>${producto.unidad}</d>
+                    <td>${stockMinimoTexto}</d>
+                    <td class="${estadoClase}">${stockIndicator} ${estadoTexto}</d>
                     <td><div class="action-buttons">
                         <button class="btn-action btn-edit" data-id="${producto.id}"><i class="fas fa-edit"></i> Editar</button>
                         <button class="btn-action btn-assign" data-id="${producto.id}"><i class="fas fa-hand-holding"></i> Asignar</button>
                         <button class="btn-action btn-adjust" data-id="${producto.id}"><i class="fas fa-adjust"></i> Ajustar</button>
                         <button class="btn-action btn-reposition" data-id="${producto.id}"><i class="fas fa-boxes"></i> Reponer</button>
                         <button class="btn-action btn-delete" data-id="${producto.id}"><i class="fas fa-trash"></i> Eliminar</button>
-                    </div></td>
+                    </div></d>
                 `;
                 tableBody.appendChild(row);
             });
@@ -2451,7 +2580,7 @@
             tableBody.innerHTML = '';
             
             if (movimientosFiltrados.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;">No hay movimientos</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;">No hay movimientos</d></tr>';
                 return;
             }
             
@@ -2461,18 +2590,18 @@
                 const tipo = tipoConfig[movimiento.tipo] || { texto: movimiento.tipo, color: '#666' };
                 
                 row.innerHTML = `
-                    <td>${movimiento.fechaHora}</td>
-                    <td><span style="color: ${tipo.color}; font-weight:600;">${tipo.texto}</span></td>
-                    <td>${movimiento.producto}</td>
-                    <td>${typeof movimiento.cantidad === 'number' ? movimiento.cantidad.toFixed(2) : movimiento.cantidad} unidades</td>
-                    <td>${movimiento.departamento}</td>
-                    <td>${movimiento.usuario}</td>
-                    <td>${movimiento.observaciones || '-'}</td>
-                    <td>${movimiento.responsable}</td>
+                    <td>${movimiento.fechaHora}</d>
+                    <td><span style="color: ${tipo.color}; font-weight:600;">${tipo.texto}</span></d>
+                    <td>${movimiento.producto}</d>
+                    <td>${typeof movimiento.cantidad === 'number' ? movimiento.cantidad.toFixed(2) : movimiento.cantidad} unidades</d>
+                    <td>${movimiento.departamento}</d>
+                    <td>${movimiento.usuario}</d>
+                    <td>${movimiento.observaciones || '-'}</d>
+                    <td>${movimiento.responsable}</d>
                     <td><div class="action-buttons">
                         <button class="btn-action btn-edit-mov" data-id="${movimiento.id}"><i class="fas fa-edit"></i> Editar</button>
                         <button class="btn-action btn-delete-mov" data-id="${movimiento.id}"><i class="fas fa-trash"></i> Eliminar</button>
-                    </div></td>
+                    </div></d>
                 `;
                 tableBody.appendChild(row);
             });
@@ -3093,7 +3222,7 @@
         }
 
         // =============================================
-        // CONSOLIDADO DE SALIDAS
+        // CONSOLIDADO DE SALIDAS (ORIGINAL)
         // =============================================
         function cargarConsolidado() {
             const periodo = document.getElementById('consPeriodo').value;
@@ -3168,7 +3297,7 @@
             
             const tbody = document.getElementById('consolidadoTableBody');
             if (salidas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No hay salidas en el período seleccionado</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No hay salidas en el período seleccionado</d></tr>';
                 return;
             }
             
@@ -3178,13 +3307,13 @@
                 const equivalencia = productoEncontrado ? obtenerEquivalencia(productoEncontrado, s.cantidad) : `${s.cantidad} unidades`;
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${s.fechaHora || '-'}</td>
-                    <td>${s.departamento || '-'}</td>
-                    <td>${s.usuario || '-'}</td>
-                    <td>${s.producto || '-'}</td>
-                    <td>${typeof s.cantidad === 'number' ? s.cantidad.toFixed(2) : s.cantidad || 0}</td>
-                    <td>${equivalencia}</td>
-                    <td>${s.observaciones || '-'}</td>
+                    <td>${s.fechaHora || '-'}</d>
+                    <td>${s.departamento || '-'}</d>
+                    <td>${s.usuario || '-'}</d>
+                    <td>${s.producto || '-'}</d>
+                    <td>${typeof s.cantidad === 'number' ? s.cantidad.toFixed(2) : s.cantidad || 0}</d>
+                    <td>${equivalencia}</d>
+                    <td>${s.observaciones || '-'}</d>
                 `;
                 tbody.appendChild(row);
             });
@@ -3298,6 +3427,282 @@
         }
 
         // =============================================
+        // NUEVA FUNCIÓN: CONSOLIDADO POR DEPARTAMENTO (SUMATORIA CON FILTROS)
+        // =============================================
+        
+        function cargarDepartamentosEnSelectDepto() {
+            const select = document.getElementById('consDeptoFiltro');
+            if (!select) return;
+            select.innerHTML = '<option value="">📋 Todos los departamentos</option>';
+            departamentos.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept;
+                option.textContent = dept;
+                select.appendChild(option);
+            });
+        }
+        
+        function obtenerRangoFechasDepto() {
+            const periodo = document.getElementById('consDeptoPeriodo').value;
+            const fechaInicioCustom = document.getElementById('consDeptoFechaInicio').value;
+            const fechaFinCustom = document.getElementById('consDeptoFechaFin').value;
+            const hoy = new Date();
+            let inicio = null;
+            let fin = null;
+            
+            switch(periodo) {
+                case 'mes':
+                    inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+                    fin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+                    break;
+                case 'mesAnterior':
+                    inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
+                    fin = new Date(hoy.getFullYear(), hoy.getMonth(), 0);
+                    break;
+                case 'quincena1':
+                    inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+                    fin = new Date(hoy.getFullYear(), hoy.getMonth(), 15);
+                    break;
+                case 'quincena2':
+                    inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 16);
+                    fin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+                    break;
+                case 'rango':
+                    if (fechaInicioCustom && fechaFinCustom) {
+                        inicio = new Date(fechaInicioCustom);
+                        fin = new Date(fechaFinCustom);
+                        fin.setHours(23, 59, 59);
+                    }
+                    break;
+                case 'todo':
+                default:
+                    inicio = null;
+                    fin = null;
+                    break;
+            }
+            return { inicio, fin };
+        }
+        
+        function actualizarConsolidadoDepartamento() {
+            const tbody = document.getElementById('consolidadoDeptoBody');
+            const tfoot = document.getElementById('consolidadoDeptoFoot');
+            if (!tbody) return;
+            
+            const { inicio, fin } = obtenerRangoFechasDepto();
+            const deptoFiltro = document.getElementById('consDeptoFiltro').value;
+            const productoFiltro = document.getElementById('consDeptoProducto').value.toLowerCase();
+            
+            let salidas = movimientos.filter(m => m.tipo === 'salida');
+            
+            // Filtrar por fechas
+            if (inicio && fin) {
+                salidas = salidas.filter(s => {
+                    const fechaMov = new Date(s.fechaHora);
+                    return fechaMov >= inicio && fechaMov <= fin;
+                });
+            }
+            
+            // Filtrar por departamento
+            if (deptoFiltro) {
+                salidas = salidas.filter(s => s.departamento === deptoFiltro);
+            }
+            
+            if (salidas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">No hay asignaciones en el período seleccionado</d></tr>';
+                if(tfoot) tfoot.innerHTML = '';
+                document.getElementById('resDeptosCount').textContent = '0';
+                document.getElementById('resProductosCount').textContent = '0';
+                document.getElementById('resTotalUnidades').textContent = '0';
+                return;
+            }
+            
+            // Agrupar por producto + departamento
+            const consolidado = {};
+            const productosUnicos = new Set();
+            const deptosUnicos = new Set();
+            
+            salidas.forEach(s => {
+                const producto = productos.find(p => p.id === s.productoId);
+                if (!producto) return;
+                
+                // Filtrar por nombre de producto
+                if (productoFiltro && !producto.nombre.toLowerCase().includes(productoFiltro)) return;
+                
+                const key = `${s.productoId}|${s.departamento}`;
+                const cantidad = parseFloat(s.cantidad) || 0;
+                
+                if (!consolidado[key]) {
+                    consolidado[key] = {
+                        productoNombre: producto.nombre,
+                        productoCodigo: producto.codigo,
+                        productoUnidad: producto.unidad,
+                        unidadesPorMedida: producto.unidadesPorMedida || 1,
+                        unidadesPorBulto: producto.unidadesPorBulto || 1,
+                        departamento: s.departamento,
+                        totalUnidades: 0
+                    };
+                }
+                consolidado[key].totalUnidades += cantidad;
+                productosUnicos.add(producto.nombre);
+                deptosUnicos.add(s.departamento);
+            });
+            
+            const lista = Object.values(consolidado);
+            lista.sort((a,b) => a.productoNombre.localeCompare(b.productoNombre));
+            
+            if (lista.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">No hay datos con los filtros seleccionados</d></tr>';
+                if(tfoot) tfoot.innerHTML = '';
+                document.getElementById('resDeptosCount').textContent = '0';
+                document.getElementById('resProductosCount').textContent = '0';
+                document.getElementById('resTotalUnidades').textContent = '0';
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            let totalGeneral = 0;
+            lista.forEach(item => {
+                const total = item.totalUnidades;
+                totalGeneral += total;
+                let equivalencia = '';
+                if (item.productoUnidad === 'BULTO') {
+                    equivalencia = `${(total / item.unidadesPorBulto).toFixed(2)} bultos (${total.toFixed(2)} und)`;
+                } else {
+                    equivalencia = `${(total / item.unidadesPorMedida).toFixed(2)} ${item.productoUnidad} (${total.toFixed(2)} und)`;
+                }
+                const row = document.createElement('tr');
+                row.innerHTML = `<td><strong>${item.productoNombre}</strong></d><td>${item.productoCodigo}</d><td>${item.departamento}</d><td style="text-align:right;font-weight:bold">${total.toFixed(2)}</d><td>${equivalencia}</d>`;
+                tbody.appendChild(row);
+            });
+            
+            document.getElementById('resDeptosCount').textContent = deptosUnicos.size;
+            document.getElementById('resProductosCount').textContent = productosUnicos.size;
+            document.getElementById('resTotalUnidades').textContent = totalGeneral.toFixed(2);
+            
+            if (tfoot) {
+                tfoot.innerHTML = `<tr style="background-color:#e8f4fd;font-weight:bold"><td colspan="3" style="text-align:right">TOTAL GENERAL:</d><td style="text-align:right;font-size:1.1rem">${totalGeneral.toFixed(2)}</d><td>unidades</d></tr>`;
+            }
+        }
+        
+        function exportarDeptoConsolidadoExcel() {
+            const { inicio, fin } = obtenerRangoFechasDepto();
+            const deptoFiltro = document.getElementById('consDeptoFiltro').value;
+            const productoFiltro = document.getElementById('consDeptoProducto').value.toLowerCase();
+            
+            let salidas = movimientos.filter(m => m.tipo === 'salida');
+            
+            if (inicio && fin) {
+                salidas = salidas.filter(s => {
+                    const fechaMov = new Date(s.fechaHora);
+                    return fechaMov >= inicio && fechaMov <= fin;
+                });
+            }
+            if (deptoFiltro) salidas = salidas.filter(s => s.departamento === deptoFiltro);
+            
+            const consolidado = {};
+            salidas.forEach(s => {
+                const p = productos.find(pd => pd.id === s.productoId);
+                if (!p) return;
+                if (productoFiltro && !p.nombre.toLowerCase().includes(productoFiltro)) return;
+                const key = `${s.productoId}|${s.departamento}`;
+                if (!consolidado[key]) consolidado[key] = { Producto: p.nombre, Codigo: p.codigo, Departamento: s.departamento, Total_Unidades: 0 };
+                consolidado[key].Total_Unidades += parseFloat(s.cantidad) || 0;
+            });
+            
+            const data = Object.values(consolidado);
+            if (data.length === 0) { mostrarMensaje('No hay datos para exportar', 'warning'); return; }
+            
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), 'Consolidado por Depto');
+            
+            let nombreArchivo = `consolidado-departamento`;
+            const periodo = document.getElementById('consDeptoPeriodo').value;
+            if (periodo === 'mes') nombreArchivo += `-${new Date().toLocaleString('es-ES', { month: 'long', year: 'numeric' })}`;
+            else if (periodo === 'mesAnterior') nombreArchivo += `-mes-anterior`;
+            else if (periodo === 'quincena1') nombreArchivo += `-primera-quincena`;
+            else if (periodo === 'quincena2') nombreArchivo += `-segunda-quincena`;
+            else if (periodo === 'rango') nombreArchivo += `-${document.getElementById('consDeptoFechaInicio').value}_a_${document.getElementById('consDeptoFechaFin').value}`;
+            else nombreArchivo += `-completo`;
+            
+            XLSX.writeFile(wb, `${nombreArchivo}.xlsx`);
+            mostrarMensaje('Exportado a Excel con los filtros aplicados', 'success');
+        }
+        
+        function exportarDeptoConsolidadoPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape');
+            
+            doc.setFontSize(16);
+            doc.text('Consolidado de Consumo por Departamento', 14, 15);
+            doc.setFontSize(10);
+            doc.text(`Generado: ${new Date().toLocaleString('es-ES')}`, 14, 23);
+            
+            // Texto de filtros aplicados
+            const periodo = document.getElementById('consDeptoPeriodo').value;
+            let filtrosTexto = `Período: `;
+            switch(periodo) {
+                case 'mes': filtrosTexto += `Mes actual (${new Date().toLocaleString('es-ES', { month: 'long', year: 'numeric' })})`; break;
+                case 'mesAnterior': filtrosTexto += `Mes anterior`; break;
+                case 'quincena1': filtrosTexto += `Primera quincena del mes actual`; break;
+                case 'quincena2': filtrosTexto += `Segunda quincena del mes actual`; break;
+                case 'rango': filtrosTexto += `${document.getElementById('consDeptoFechaInicio').value} al ${document.getElementById('consDeptoFechaFin').value}`; break;
+                default: filtrosTexto += `Todo el historial`;
+            }
+            const deptoFiltro = document.getElementById('consDeptoFiltro').value;
+            if (deptoFiltro) filtrosTexto += ` | Departamento: ${deptoFiltro}`;
+            const productoFiltro = document.getElementById('consDeptoProducto').value;
+            if (productoFiltro) filtrosTexto += ` | Producto contiene: "${productoFiltro}"`;
+            doc.text(filtrosTexto, 14, 31);
+            
+            const { inicio, fin } = obtenerRangoFechasDepto();
+            
+            let salidas = movimientos.filter(m => m.tipo === 'salida');
+            if (inicio && fin) salidas = salidas.filter(s => { const fm = new Date(s.fechaHora); return fm >= inicio && fm <= fin; });
+            if (deptoFiltro) salidas = salidas.filter(s => s.departamento === deptoFiltro);
+            
+            const consolidado = {};
+            salidas.forEach(s => {
+                const p = productos.find(pd => pd.id === s.productoId);
+                if (!p) return;
+                if (productoFiltro && !p.nombre.toLowerCase().includes(productoFiltro.toLowerCase())) return;
+                const key = `${s.productoId}|${s.departamento}`;
+                if (!consolidado[key]) consolidado[key] = { producto: p.nombre, codigo: p.codigo, depto: s.departamento, total: 0, udsPorMedida: p.unidadesPorMedida || 1, unidad: p.unidad, udsPorBulto: p.unidadesPorBulto || 1 };
+                consolidado[key].total += parseFloat(s.cantidad) || 0;
+            });
+            
+            const tableData = Object.values(consolidado).map(i => {
+                let equivalencia = '';
+                if (i.unidad === 'BULTO') {
+                    equivalencia = `${(i.total / i.udsPorBulto).toFixed(2)} bultos`;
+                } else {
+                    equivalencia = `${(i.total / i.udsPorMedida).toFixed(2)} ${i.unidad}`;
+                }
+                return [i.producto, i.codigo, i.depto, i.total.toFixed(2), equivalencia];
+            });
+            const totalGeneral = Object.values(consolidado).reduce((s,i) => s + i.total, 0);
+            
+            if (tableData.length === 0) {
+                doc.text('No hay datos para los filtros seleccionados', 14, 45);
+            } else {
+                doc.autoTable({
+                    head: [['Producto', 'Código', 'Departamento', 'Total Unidades', 'Equivalencia']],
+                    body: tableData,
+                    startY: 40,
+                    headStyles: { fillColor: [52,152,219] },
+                    foot: [[{ content: 'TOTAL GENERAL', colSpan: 3, styles: { fontStyle: 'bold' } }, { content: totalGeneral.toFixed(2), styles: { fontStyle: 'bold' } }, { content: 'unidades', styles: { fontStyle: 'bold' } }]]
+                });
+            }
+            
+            let nombreArchivo = `consolidado-departamento`;
+            if (periodo === 'mes') nombreArchivo += `-${new Date().toISOString().slice(0,7)}`;
+            else if (periodo === 'rango') nombreArchivo += `-${document.getElementById('consDeptoFechaInicio').value}_a_${document.getElementById('consDeptoFechaFin').value}`;
+            else nombreArchivo += `-${periodo}`;
+            
+            doc.save(`${nombreArchivo}.pdf`);
+            mostrarMensaje('Exportado a PDF con los filtros aplicados', 'success');
+        }
+
+        // =============================================
         // REORDEN AUTOMÁTICO
         // =============================================
         function actualizarReorden() {
@@ -3379,7 +3784,7 @@
             
             const tbody = document.getElementById('reordenTableBody');
             if (productosReorden.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No hay productos que requieran reorden en este momento</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No hay productos que requieran reorden en este momento</d></tr>';
                 return;
             }
             
@@ -3390,14 +3795,14 @@
                 const diasClass = p.diasHastaAgotar <= 3 ? 'days-critical' : p.diasHastaAgotar <= 7 ? 'days-high' : p.diasHastaAgotar <= 15 ? 'days-medium' : 'days-low';
                 
                 row.innerHTML = `
-                    <td><strong>${p.nombre}</strong><br><small>${p.codigo}</small></td>
-                    <td>${p.categoria}</td>
-                    <td>${formatearStockMostrado(p)} ${p.unidad}<br><small>${p.unidadesTotales.toFixed(2)} und</small></td>
-                    <td>${p.stockMinimo} ${p.unidad}</td>
-                    <td>${p.consumoDiario.toFixed(2)} und/día</td>
-                    <td><span class="days-badge ${diasClass}">${diasTexto} días</span></td>
-                    <td><span class="suggested-qty">${p.cantidadSugerida.toFixed(2)} ${p.unidad}</span><br><small>(${p.cantidadSugeridaUnidades.toFixed(0)} und)</small></td>
-                    <td class="${p.colorPrioridad}"><strong>${p.prioridad.toUpperCase()}</strong></td>
+                    <td><strong>${p.nombre}</strong><br><small>${p.codigo}</small></d>
+                    <td>${p.categoria}</d>
+                    <td>${formatearStockMostrado(p)} ${p.unidad}<br><small>${p.unidadesTotales.toFixed(2)} und</small></d>
+                    <td>${p.stockMinimo} ${p.unidad}</d>
+                    <td>${p.consumoDiario.toFixed(2)} und/día</d>
+                    <td><span class="days-badge ${diasClass}">${diasTexto} días</span></d>
+                    <td><span class="suggested-qty">${p.cantidadSugerida.toFixed(2)} ${p.unidad}</span><br><small>(${p.cantidadSugeridaUnidades.toFixed(0)} und)</small></d>
+                    <td class="${p.colorPrioridad}"><strong>${p.prioridad.toUpperCase()}</strong></d>
                 `;
                 tbody.appendChild(row);
             });
@@ -3443,7 +3848,7 @@
             mostrarMensaje('Reporte de reorden exportado a PDF', 'success');
         }
 
-        // Exportaciones
+        // Exportaciones generales
         function exportarAsignacionesExcel() {
             const asignaciones = movimientos.filter(m => m.tipo === 'salida');
             const data = asignaciones.map(a => ({
@@ -3519,6 +3924,7 @@
         function inicializarSistema() {
             cargarProductosAsignacion();
             cargarDepartamentosFiltros();
+            cargarDepartamentosEnSelectDepto();
             mostrarSeccion('dashboard');
             actualizarTablaInventario();
             actualizarTablaMovimientos();
@@ -3563,7 +3969,6 @@
             document.getElementById('exportAsignacionesExcel')?.addEventListener('click', exportarAsignacionesExcel);
             document.getElementById('exportAsignacionesPdf')?.addEventListener('click', exportarAsignacionesPDF);
             
-            // BÚSQUEDA PREDICTIVA EN TIEMPO REAL
             const searchInput = document.getElementById('searchProduct');
             if (searchInput) {
                 searchInput.addEventListener('input', function() {
@@ -3595,7 +4000,7 @@
             document.getElementById('editMovForm').addEventListener('submit', (e) => { e.preventDefault(); guardarCambiosMovimiento(); });
             window.addEventListener('click', (e) => { if(e.target.classList.contains('modal')) cerrarModal(); });
             
-            // Eventos Consolidado
+            // Eventos Consolidado de Salidas (original)
             document.getElementById('consPeriodo').addEventListener('change', function() {
                 const rangoGroup1 = document.getElementById('consFechaInicioGroup');
                 const rangoGroup2 = document.getElementById('consFechaFinGroup');
@@ -3609,6 +4014,16 @@
             });
             document.getElementById('aplicarFiltrosCons')?.addEventListener('click', cargarConsolidado);
             document.getElementById('exportConsolidadoPdf')?.addEventListener('click', exportarConsolidadoPDF);
+            
+            // Eventos nueva sección Consolidado por Departamento
+            document.getElementById('consDeptoPeriodo').addEventListener('change', function() {
+                const showRango = this.value === 'rango';
+                document.getElementById('consDeptoFechaInicioGroup').style.display = showRango ? 'block' : 'none';
+                document.getElementById('consDeptoFechaFinGroup').style.display = showRango ? 'block' : 'none';
+            });
+            document.getElementById('aplicarFiltrosDepto')?.addEventListener('click', actualizarConsolidadoDepartamento);
+            document.getElementById('exportDeptoConsolidadoExcel')?.addEventListener('click', exportarDeptoConsolidadoExcel);
+            document.getElementById('exportDeptoConsolidadoPdf')?.addEventListener('click', exportarDeptoConsolidadoPDF);
             
             // Eventos Reorden
             document.getElementById('actualizarReorden')?.addEventListener('click', actualizarReorden);
