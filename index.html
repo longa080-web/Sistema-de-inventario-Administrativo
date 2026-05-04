@@ -1124,6 +1124,114 @@
             background-color: #e8f4fd;
             font-weight: bold;
         }
+
+        /* Estilos para la nueva sección de Últimas Actividades */
+        .activity-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .activity-card h3 {
+            color: #2c3e50;
+            border-left: 4px solid #3498db;
+            padding-left: 12px;
+            margin-bottom: 15px;
+        }
+        .last-activity-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: normal;
+        }
+        .recent-activity {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .normal-activity {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .old-activity {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .sin-actividad {
+            background-color: #e9ecef;
+            color: #6c757d;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .info-stat {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .info-stat i {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+        .info-stat .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+        .info-stat .stat-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+        .info-stat.secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .info-stat.tertiary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .table-last-activities {
+            min-width: 700px;
+        }
+        .table-last-activities th {
+            background-color: #2c3e50;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        .status-reciente {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-normal {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-desatendido {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .status-sin-actividad {
+            background-color: #e9ecef;
+            color: #6c757d;
+        }
+        .producto-link {
+            cursor: pointer;
+            color: #3498db;
+            font-weight: 500;
+        }
+        .producto-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -1161,12 +1269,15 @@
                     <button class="menu-btn" data-section="consolidado">
                         <i class="fas fa-chart-bar"></i> Consolidado Salidas
                     </button>
-                    <!-- NUEVO BOTÓN -->
                     <button class="menu-btn" data-section="consolidado-depto">
                         <i class="fas fa-building"></i> Consolidado por Depto
                     </button>
                     <button class="menu-btn" data-section="reorden">
                         <i class="fas fa-cart-plus"></i> Reorden Automático
+                    </button>
+                    <!-- NUEVO BOTÓN: Últimas Actividades -->
+                    <button class="menu-btn" data-section="ultimas-actividades">
+                        <i class="fas fa-clock"></i> Últimas Actividades
                     </button>
                     <div class="menu-divider"></div>
                     <button class="menu-btn export-btn" id="exportPdf">
@@ -1537,7 +1648,6 @@
                     </div>
                 </section>
 
-                <!-- SECCIÓN CONSOLIDADO DE SALIDAS (ORIGINAL) -->
                 <section id="consolidado" class="content-section">
                     <h2><i class="fas fa-chart-bar"></i> Consolidado de Salidas por Artículo</h2>
                     
@@ -1625,12 +1735,10 @@
                     </div>
                 </section>
 
-                <!-- NUEVA SECCIÓN: CONSOLIDADO POR DEPARTAMENTO (SUMATORIA CON FILTROS) -->
                 <section id="consolidado-depto" class="content-section">
                     <h2><i class="fas fa-building"></i> Consolidado por Departamento <span class="predictive-badge"><i class="fas fa-calculator"></i> Sumatoria Total</span></h2>
                     <p style="margin-bottom: 15px; color: #666;">Resumen de TODAS las salidas agrupadas por producto y departamento. Muestra el TOTAL consumido por cada área.</p>
                     
-                    <!-- Filtros -->
                     <div class="consolidado-filters">
                         <div class="form-row" style="width: 100%;">
                             <div class="form-group">
@@ -1669,7 +1777,6 @@
                         </div>
                     </div>
 
-                    <!-- Resumen -->
                     <div class="reorden-summary" style="margin-bottom: 20px;">
                         <div class="reorden-card">
                             <i class="fas fa-building" style="color: #3498db;"></i>
@@ -1688,13 +1795,11 @@
                         </div>
                     </div>
 
-                    <!-- Botones de exportación -->
                     <div class="export-buttons-group">
                         <button id="exportDeptoConsolidadoExcel" class="btn-success"><i class="fas fa-file-excel"></i> Exportar a Excel</button>
                         <button id="exportDeptoConsolidadoPdf" class="btn-primary"><i class="fas fa-file-pdf"></i> Exportar a PDF</button>
                     </div>
 
-                    <!-- Tabla de resultados -->
                     <div class="table-container">
                         <table class="consolidado-depto-table" id="consolidadoDeptoTable">
                             <thead>
@@ -1714,7 +1819,6 @@
                     </div>
                 </section>
 
-                <!-- SECCIÓN REORDEN AUTOMÁTICO -->
                 <section id="reorden" class="content-section">
                     <h2><i class="fas fa-cart-plus"></i> Sistema de Reorden Automático</h2>
                     <p style="margin-bottom: 15px; color: #666;">Productos que necesitan reposición con cantidades sugeridas basadas en consumo histórico.</p>
@@ -1771,15 +1875,106 @@
                                 </tr>
                             </thead>
                             <tbody id="reordenTableBody">
-                                <tr><td colspan="8" style="text-align: center; padding: 20px;">Calculando recomendaciones...</d></tr>
+                                <tr><td colspan="8" style="text-align: center; padding: 20px;">Calculando recomendaciones...</d><tr>
                             </tbody>
                         </table>
+                    </div>
+                </section>
+
+                <!-- NUEVA SECCIÓN: ÚLTIMAS ACTIVIDADES -->
+                <section id="ultimas-actividades" class="content-section">
+                    <h2><i class="fas fa-clock"></i> Control de Últimas Actividades</h2>
+                    <p style="margin-bottom: 15px; color: #666;">Visualice la última reposición y última asignación de cada producto para controlar la frecuencia de uso y planificar compras.</p>
+                    
+                    <!-- Tarjetas de resumen global -->
+                    <div class="stats-grid">
+                        <div class="info-stat">
+                            <i class="fas fa-sync-alt"></i>
+                            <div class="stat-label">Última Reposición General</div>
+                            <div class="stat-value" id="ultimaReposicionGlobal">--</div>
+                        </div>
+                        <div class="info-stat secondary">
+                            <i class="fas fa-hand-holding"></i>
+                            <div class="stat-label">Última Asignación General</div>
+                            <div class="stat-value" id="ultimaAsignacionGlobal">--</div>
+                        </div>
+                        <div class="info-stat tertiary">
+                            <i class="fas fa-chart-line"></i>
+                            <div class="stat-label">Días desde última reposición</div>
+                            <div class="stat-value" id="diasUltimaReposicion">--</div>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de Últimas Reposiciones por Producto -->
+                    <div class="activity-card">
+                        <h3><i class="fas fa-boxes"></i> Últimas Reposiciones por Producto</h3>
+                        <div class="table-container">
+                            <table class="table-last-activities" id="ultimasReposicionesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Código</th>
+                                        <th>Última Reposición</th>
+                                        <th>Cantidad (Und)</th>
+                                        <th>Días desde</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ultimasReposicionesBody">
+                                    <tr><td colspan="6" style="text-align:center">Cargando datos...</d></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de Últimas Asignaciones por Producto -->
+                    <div class="activity-card">
+                        <h3><i class="fas fa-hand-holding"></i> Últimas Asignaciones por Producto</h3>
+                        <div class="table-container">
+                            <table class="table-last-activities" id="ultimasAsignacionesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Código</th>
+                                        <th>Última Asignación</th>
+                                        <th>Departamento</th>
+                                        <th>Usuario</th>
+                                        <th>Cantidad (Und)</th>
+                                        <th>Días desde</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ultimasAsignacionesBody">
+                                    <tr><td colspan="7" style="text-align:center">Cargando datos...</d></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Productos sin actividad -->
+                    <div class="activity-card">
+                        <h3><i class="fas fa-ban"></i> Productos Sin Actividad Registrada</h3>
+                        <div class="table-container">
+                            <table class="table-last-activities" id="productosSinActividadTable">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Código</th>
+                                        <th>Categoría</th>
+                                        <th>Stock Actual</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productosSinActividadBody">
+                                    <tr><td colspan="5" style="text-align:center">Cargando datos...</d></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
             </div>
         </div>
 
-        <!-- Modales (igual que antes) -->
+        <!-- Modales -->
         <div id="editModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Editar Producto</h3><span class="close-modal">&times;</span></div><div class="modal-body"></div></div></div>
         <div id="adjustModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Ajustar Stock</h3><span class="close-modal">&times;</span></div><div class="modal-body"><form id="adjustStockForm"><div class="form-group"><label>Producto</label><input type="text" id="adjustProductName" readonly></div><div class="form-group"><label>Stock Actual (Unidades)</label><input type="text" id="adjustCurrentStock" readonly></div><div class="form-group"><label>Tipo de Ajuste</label><select id="adjustType"><option value="entrada">Entrada (+)</option><option value="salida">Salida (-)</option></select></div><div class="form-group"><label>Cantidad en Unidades</label><input type="number" id="adjustQuantity" min="0" step="any" required><small class="help-text">Puede usar decimales (ej: 0.5, 1.25)</small></div><div class="form-group"><label>Motivo</label><textarea id="adjustReason" rows="2" required></textarea></div><div class="form-buttons"><button type="submit" class="btn btn-primary">Aplicar</button><button type="button" class="btn btn-secondary close-modal">Cancelar</button></div></form></div></div></div>
         <div id="confirmModal" class="modal"><div class="modal-content confirm-modal"><div class="modal-header"><h3>Confirmar Eliminación</h3><span class="close-modal">&times;</span></div><div class="modal-body"><p>¿Está seguro de eliminar este producto? También se eliminarán sus movimientos.</p></div><div class="modal-footer"><button id="confirmDelete" class="btn btn-danger">Eliminar</button><button id="cancelDelete" class="btn btn-secondary">Cancelar</button></div></div></div>
@@ -1894,6 +2089,29 @@
             return `${fecha} ${hora}`;
         }
 
+        function calcularDiasDesde(fechaStr) {
+            if (!fechaStr) return null;
+            const fecha = new Date(fechaStr);
+            const hoy = new Date();
+            const diffTime = hoy - fecha;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays;
+        }
+
+        function obtenerClaseEstadoDias(dias) {
+            if (dias === null) return 'sin-actividad';
+            if (dias <= 7) return 'recent-activity';
+            if (dias <= 30) return 'normal-activity';
+            return 'old-activity';
+        }
+
+        function obtenerTextoEstadoDias(dias) {
+            if (dias === null) return 'Sin actividad';
+            if (dias <= 7) return `Reciente (${dias} días)`;
+            if (dias <= 30) return `Normal (${dias} días)`;
+            return `Desatendido (${dias} días)`;
+        }
+
         // =============================================
         // FUNCIONES DE BÚSQUEDA PREDICTIVA
         // =============================================
@@ -1954,6 +2172,165 @@
                 if (suggestionsBox) suggestionsBox.style.display = 'none';
             }
         });
+
+        // =============================================
+        // FUNCIONES DE ÚLTIMAS ACTIVIDADES (NUEVAS)
+        // =============================================
+        
+        function actualizarUltimasActividades() {
+            // Obtener reposiciones (tipo 'reposicion' y 'entrada')
+            const reposiciones = movimientos.filter(m => m.tipo === 'reposicion' || m.tipo === 'entrada');
+            const asignaciones = movimientos.filter(m => m.tipo === 'salida');
+            
+            // Última reposición general
+            if (reposiciones.length > 0) {
+                const ultimaRepo = reposiciones.sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora))[0];
+                const fechaRepo = ultimaRepo.fechaHora;
+                const dias = calcularDiasDesde(fechaRepo);
+                document.getElementById('ultimaReposicionGlobal').innerHTML = `${fechaRepo.split(' ')[0]}<br><small>${fechaRepo.split(' ')[1] || ''}</small>`;
+                document.getElementById('diasUltimaReposicion').innerHTML = `${dias} días`;
+            } else {
+                document.getElementById('ultimaReposicionGlobal').textContent = 'Sin reposiciones';
+                document.getElementById('diasUltimaReposicion').textContent = '--';
+            }
+            
+            // Última asignación general
+            if (asignaciones.length > 0) {
+                const ultimaAsig = asignaciones.sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora))[0];
+                document.getElementById('ultimaAsignacionGlobal').innerHTML = `${ultimaAsig.fechaHora.split(' ')[0]}<br><small>${ultimaAsig.fechaHora.split(' ')[1] || ''}</small>`;
+            } else {
+                document.getElementById('ultimaAsignacionGlobal').textContent = 'Sin asignaciones';
+            }
+            
+            // Tabla de últimas reposiciones por producto
+            const ultimasReposiciones = {};
+            reposiciones.forEach(rep => {
+                const productoId = rep.productoId;
+                if (!ultimasReposiciones[productoId] || new Date(rep.fechaHora) > new Date(ultimasReposiciones[productoId].fechaHora)) {
+                    ultimasReposiciones[productoId] = {
+                        fechaHora: rep.fechaHora,
+                        cantidad: rep.cantidad,
+                        producto: rep.producto
+                    };
+                }
+            });
+            
+            const tbodyRepos = document.getElementById('ultimasReposicionesBody');
+            tbodyRepos.innerHTML = '';
+            
+            const productosConRepo = new Set(Object.keys(ultimasReposiciones));
+            
+            productos.forEach(producto => {
+                const repo = ultimasReposiciones[producto.id];
+                const row = document.createElement('tr');
+                
+                if (repo) {
+                    const dias = calcularDiasDesde(repo.fechaHora);
+                    const estadoClase = obtenerClaseEstadoDias(dias);
+                    const estadoTexto = obtenerTextoEstadoDias(dias);
+                    
+                    row.innerHTML = `
+                        <td><strong class="producto-link" data-id="${producto.id}">${producto.nombre}</strong></td>
+                        <td>${producto.codigo}</td>
+                        <td>${repo.fechaHora}</td>
+                        <td>${repo.cantidad.toFixed(2)}</td>
+                        <td>${dias} días</td>
+                        <td><span class="last-activity-badge ${estadoClase}">${estadoTexto}</span></td>
+                    `;
+                } else {
+                    row.innerHTML = `
+                        <td><strong class="producto-link" data-id="${producto.id}">${producto.nombre}</strong></td>
+                        <td>${producto.codigo}</td>
+                        <td colspan="4" style="color:#999;">Sin reposiciones registradas</td>
+                    `;
+                }
+                tbodyRepos.appendChild(row);
+            });
+            
+            // Tabla de últimas asignaciones por producto
+            const ultimasAsignaciones = {};
+            asignaciones.forEach(asig => {
+                const productoId = asig.productoId;
+                if (!ultimasAsignaciones[productoId] || new Date(asig.fechaHora) > new Date(ultimasAsignaciones[productoId].fechaHora)) {
+                    ultimasAsignaciones[productoId] = {
+                        fechaHora: asig.fechaHora,
+                        cantidad: asig.cantidad,
+                        producto: asig.producto,
+                        departamento: asig.departamento,
+                        usuario: asig.usuario
+                    };
+                }
+            });
+            
+            const tbodyAsig = document.getElementById('ultimasAsignacionesBody');
+            tbodyAsig.innerHTML = '';
+            
+            productos.forEach(producto => {
+                const asig = ultimasAsignaciones[producto.id];
+                const row = document.createElement('tr');
+                
+                if (asig) {
+                    const dias = calcularDiasDesde(asig.fechaHora);
+                    const estadoClase = obtenerClaseEstadoDias(dias);
+                    
+                    row.innerHTML = `
+                        <td><strong class="producto-link" data-id="${producto.id}">${producto.nombre}</strong></td>
+                        <td>${producto.codigo}</td>
+                        <td>${asig.fechaHora}</td>
+                        <td>${asig.departamento || '-'}</td>
+                        <td>${asig.usuario || '-'}</td>
+                        <td>${asig.cantidad.toFixed(2)}</td>
+                        <td><span class="last-activity-badge ${estadoClase}">${dias} días</span></td>
+                    `;
+                } else {
+                    row.innerHTML = `
+                        <td><strong class="producto-link" data-id="${producto.id}">${producto.nombre}</strong></td>
+                        <td>${producto.codigo}</td>
+                        <td colspan="5" style="color:#999;">Sin asignaciones registradas</td>
+                    `;
+                }
+                tbodyAsig.appendChild(row);
+            });
+            
+            // Productos sin actividad (sin reposiciones Y sin asignaciones)
+            const productosConAsig = new Set(Object.keys(ultimasAsignaciones));
+            const productosSinActividad = productos.filter(p => !productosConRepo.has(p.id) && !productosConAsig.has(p.id));
+            
+            const tbodySinAct = document.getElementById('productosSinActividadBody');
+            tbodySinAct.innerHTML = '';
+            
+            if (productosSinActividad.length === 0) {
+                tbodySinAct.innerHTML = '<tr><td colspan="5" style="text-align:center">¡Excelente! Todos los productos tienen actividad registrada</td></tr>';
+            } else {
+                productosSinActividad.forEach(producto => {
+                    const unidadesTotales = calcularUnidadesTotales(producto);
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><strong class="producto-link" data-id="${producto.id}">${producto.nombre}</strong></td>
+                        <td>${producto.codigo}</td>
+                        <td><span class="badge badge-${producto.categoria === 'papeleria' ? 'papeleria' : producto.categoria === 'toner' ? 'toner' : producto.categoria === 'oficina' ? 'oficina' : 'otros'}">${producto.categoria}</span></td>
+                        <td>${unidadesTotales.toFixed(2)} und</td>
+                        <td><button class="btn-action btn-assign" data-id="${producto.id}" style="background-color:#3498db;"><i class="fas fa-hand-holding"></i> Asignar</button></td>
+                    `;
+                    tbodySinAct.appendChild(row);
+                });
+            }
+            
+            // Agregar eventos a los enlaces de productos
+            document.querySelectorAll('.producto-link').forEach(el => {
+                el.addEventListener('click', () => {
+                    const productoId = parseInt(el.dataset.id);
+                    irAAsignacion(productoId);
+                });
+            });
+            
+            document.querySelectorAll('#productosSinActividadBody .btn-assign').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const productoId = parseInt(btn.dataset.id);
+                    irAAsignacion(productoId);
+                });
+            });
+        }
 
         // =============================================
         // FUNCIONES DE FIREBASE
@@ -2040,10 +2417,10 @@
                         verificarStockBajo();
                         actualizarHistorialAsignaciones();
                         actualizarReorden();
-                        // Actualizar la nueva sección si está visible
                         if (document.getElementById('consolidado-depto').classList.contains('active')) {
                             actualizarConsolidadoDepartamento();
                         }
+                        actualizarUltimasActividades();
                     },
                     (error) => console.error("Error listener productos:", error)
                 );
@@ -2066,6 +2443,7 @@
                         if (document.getElementById('consolidado-depto').classList.contains('active')) {
                             actualizarConsolidadoDepartamento();
                         }
+                        actualizarUltimasActividades();
                     },
                     (error) => console.error("Error listener movimientos:", error)
                 );
@@ -2196,6 +2574,7 @@
                 verificarStockBajo();
                 actualizarHistorialAsignaciones();
                 actualizarReorden();
+                actualizarUltimasActividades();
                 mostrarMensaje('Datos sincronizados correctamente', 'success');
                 updateFirebaseStatus(true);
             } catch (error) {
@@ -2247,10 +2626,13 @@
                 if (btn.getAttribute('data-section') === sectionId) btn.classList.add('active');
             });
             
-            // Si se selecciona la nueva sección, actualizar los datos
             if (sectionId === 'consolidado-depto') {
                 cargarDepartamentosEnSelectDepto();
                 actualizarConsolidadoDepartamento();
+            }
+            
+            if (sectionId === 'ultimas-actividades') {
+                actualizarUltimasActividades();
             }
         }
 
@@ -2474,7 +2856,7 @@
             tableBody.innerHTML = '';
             
             if (productosFiltrados.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;">No hay productos que empiecen con ese término<br><small>Prueba con otra letra o palabra</small></d></tr>';
+                tableBody.innerHTML = '<td><td colspan="9" style="text-align:center;padding:20px;">No hay productos que empiecen con ese término<br><small>Prueba con otra letra o palabra</small></d></tr>';
                 return;
             }
             
@@ -3427,7 +3809,7 @@
         }
 
         // =============================================
-        // NUEVA FUNCIÓN: CONSOLIDADO POR DEPARTAMENTO (SUMATORIA CON FILTROS)
+        // FUNCIÓN: CONSOLIDADO POR DEPARTAMENTO
         // =============================================
         
         function cargarDepartamentosEnSelectDepto() {
@@ -3494,7 +3876,6 @@
             
             let salidas = movimientos.filter(m => m.tipo === 'salida');
             
-            // Filtrar por fechas
             if (inicio && fin) {
                 salidas = salidas.filter(s => {
                     const fechaMov = new Date(s.fechaHora);
@@ -3502,13 +3883,12 @@
                 });
             }
             
-            // Filtrar por departamento
             if (deptoFiltro) {
                 salidas = salidas.filter(s => s.departamento === deptoFiltro);
             }
             
             if (salidas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">No hay asignaciones en el período seleccionado</d></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">No hay asignaciones en el período seleccionado</d></table>';
                 if(tfoot) tfoot.innerHTML = '';
                 document.getElementById('resDeptosCount').textContent = '0';
                 document.getElementById('resProductosCount').textContent = '0';
@@ -3516,7 +3896,6 @@
                 return;
             }
             
-            // Agrupar por producto + departamento
             const consolidado = {};
             const productosUnicos = new Set();
             const deptosUnicos = new Set();
@@ -3525,7 +3904,6 @@
                 const producto = productos.find(p => p.id === s.productoId);
                 if (!producto) return;
                 
-                // Filtrar por nombre de producto
                 if (productoFiltro && !producto.nombre.toLowerCase().includes(productoFiltro)) return;
                 
                 const key = `${s.productoId}|${s.departamento}`;
@@ -3637,7 +4015,6 @@
             doc.setFontSize(10);
             doc.text(`Generado: ${new Date().toLocaleString('es-ES')}`, 14, 23);
             
-            // Texto de filtros aplicados
             const periodo = document.getElementById('consDeptoPeriodo').value;
             let filtrosTexto = `Período: `;
             switch(periodo) {
@@ -3932,6 +4309,7 @@
             actualizarDashboard();
             actualizarHistorialAsignaciones();
             actualizarReorden();
+            actualizarUltimasActividades();
         }
 
         function configurarEventos() {
