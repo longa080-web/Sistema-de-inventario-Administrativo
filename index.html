@@ -287,7 +287,6 @@
             border-color: #3498db;
         }
 
-        /* Estilo para buscador con sugerencias */
         .search-wrapper {
             position: relative;
             flex: 2;
@@ -377,7 +376,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 800px;
+            min-width: 950px;
         }
 
         thead {
@@ -1082,7 +1081,6 @@
         .days-low { background: #27ae60; color: white; }
         .suggested-qty { font-weight: bold; font-size: 1.1rem; }
         
-        /* Indicador de búsqueda predictiva */
         .predictive-badge {
             display: inline-block;
             background-color: #e3f2fd;
@@ -1093,7 +1091,6 @@
             margin-left: 8px;
         }
 
-        /* Estilos para la nueva sección Consolidado por Departamento */
         .consolidado-filters {
             background: #f8f9fa;
             padding: 15px;
@@ -1125,7 +1122,6 @@
             font-weight: bold;
         }
 
-        /* Estilos para la nueva sección de Últimas Actividades */
         .activity-card {
             background: white;
             border-radius: 12px;
@@ -1232,6 +1228,13 @@
         .producto-link:hover {
             text-decoration: underline;
         }
+
+        .fecha-actualizacion {
+            font-size: 0.75rem;
+            color: #2c3e50;
+            white-space: nowrap;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -1275,7 +1278,6 @@
                     <button class="menu-btn" data-section="reorden">
                         <i class="fas fa-cart-plus"></i> Reorden Automático
                     </button>
-                    <!-- NUEVO BOTÓN: Últimas Actividades -->
                     <button class="menu-btn" data-section="ultimas-actividades">
                         <i class="fas fa-clock"></i> Últimas Actividades
                     </button>
@@ -1378,11 +1380,12 @@
                                     <th>Unidad</th>
                                     <th>Stock Mínimo</th>
                                     <th>Estado</th>
+                                    <th>Última Actualización</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="inventarioTableBody">
-                                <tr><td colspan="9" style="text-align: center; padding: 20px;">Cargando datos de Firebase...</d></tr>
+                                <tr><td colspan="10" style="text-align: center; padding: 20px;">Cargando datos de Firebase...</d></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1445,7 +1448,7 @@
                             <div class="form-group">
                                 <label for="unidadesPorMedida">Unidades por Medida *</label>
                                 <input type="number" id="unidadesPorMedida" min="1" step="1" value="1" required>
-                                <small class="unit-conversion" id="unidadExplicacion">Ej: 24 unidades por caja, 100 unidades por paquete</small>
+                                <small class="unit-conversion" id="unidadExplicacion">Ej: 24 unidades por caja</small>
                             </div>
                         </div>
 
@@ -1453,12 +1456,10 @@
                             <div class="form-group">
                                 <label for="stockInicial">Stock a Agregar *</label>
                                 <input type="number" id="stockInicial" min="0" step="any" required>
-                                <small class="unit-conversion" id="stockExplicacion">En la unidad de medida seleccionada (puede usar decimales, ej: 2.5)</small>
                             </div>
                             <div class="form-group">
                                 <label for="stockMinimo">Stock Mínimo (Alerta) *</label>
                                 <input type="number" id="stockMinimo" min="1" step="1" value="5" required>
-                                <small class="unit-conversion" id="stockMinimoExplicacion">En la unidad de medida seleccionada (número entero)</small>
                             </div>
                         </div>
 
@@ -1875,18 +1876,16 @@
                                 </tr>
                             </thead>
                             <tbody id="reordenTableBody">
-                                <tr><td colspan="8" style="text-align: center; padding: 20px;">Calculando recomendaciones...</d><tr>
+                                <tr><td colspan="8" style="text-align: center; padding: 20px;">Calculando recomendaciones...</d></tr>
                             </tbody>
                         </table>
                     </div>
                 </section>
 
-                <!-- NUEVA SECCIÓN: ÚLTIMAS ACTIVIDADES -->
                 <section id="ultimas-actividades" class="content-section">
                     <h2><i class="fas fa-clock"></i> Control de Últimas Actividades</h2>
                     <p style="margin-bottom: 15px; color: #666;">Visualice la última reposición y última asignación de cada producto para controlar la frecuencia de uso y planificar compras.</p>
                     
-                    <!-- Tarjetas de resumen global -->
                     <div class="stats-grid">
                         <div class="info-stat">
                             <i class="fas fa-sync-alt"></i>
@@ -1905,7 +1904,6 @@
                         </div>
                     </div>
 
-                    <!-- Tabla de Últimas Reposiciones por Producto -->
                     <div class="activity-card">
                         <h3><i class="fas fa-boxes"></i> Últimas Reposiciones por Producto</h3>
                         <div class="table-container">
@@ -1927,7 +1925,6 @@
                         </div>
                     </div>
 
-                    <!-- Tabla de Últimas Asignaciones por Producto -->
                     <div class="activity-card">
                         <h3><i class="fas fa-hand-holding"></i> Últimas Asignaciones por Producto</h3>
                         <div class="table-container">
@@ -1950,7 +1947,6 @@
                         </div>
                     </div>
 
-                    <!-- Productos sin actividad -->
                     <div class="activity-card">
                         <h3><i class="fas fa-ban"></i> Productos Sin Actividad Registrada</h3>
                         <div class="table-container">
@@ -2008,6 +2004,28 @@
             "Los Ruices", "El Rosal", "La Naya", "TDH", "Obras", "Comerciales",
             "Obras Corporativo", "MSO", "El Paraiso", "Backbone"
         ];
+
+        // =============================================
+        // NUEVAS FUNCIONES: ÚLTIMA FECHA DE ACTUALIZACIÓN
+        // =============================================
+        
+        function obtenerUltimaFechaActualizacion(productoId) {
+            const movsProducto = movimientos.filter(m => m.productoId === productoId);
+            if (movsProducto.length === 0) return null;
+            const fechas = movsProducto.map(m => new Date(m.fechaHora));
+            const ultimaFecha = new Date(Math.max(...fechas));
+            return ultimaFecha;
+        }
+
+        function formatearFechaCorta(fecha) {
+            if (!fecha) return 'Sin actividad';
+            return fecha.toLocaleDateString('es-ES');
+        }
+
+        function formatearHoraCorta(fecha) {
+            if (!fecha) return '';
+            return fecha.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'});
+        }
 
         // =============================================
         // FUNCIONES AUXILIARES
@@ -2174,15 +2192,13 @@
         });
 
         // =============================================
-        // FUNCIONES DE ÚLTIMAS ACTIVIDADES (NUEVAS)
+        // FUNCIONES DE ÚLTIMAS ACTIVIDADES
         // =============================================
         
         function actualizarUltimasActividades() {
-            // Obtener reposiciones (tipo 'reposicion' y 'entrada')
             const reposiciones = movimientos.filter(m => m.tipo === 'reposicion' || m.tipo === 'entrada');
             const asignaciones = movimientos.filter(m => m.tipo === 'salida');
             
-            // Última reposición general
             if (reposiciones.length > 0) {
                 const ultimaRepo = reposiciones.sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora))[0];
                 const fechaRepo = ultimaRepo.fechaHora;
@@ -2194,7 +2210,6 @@
                 document.getElementById('diasUltimaReposicion').textContent = '--';
             }
             
-            // Última asignación general
             if (asignaciones.length > 0) {
                 const ultimaAsig = asignaciones.sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora))[0];
                 document.getElementById('ultimaAsignacionGlobal').innerHTML = `${ultimaAsig.fechaHora.split(' ')[0]}<br><small>${ultimaAsig.fechaHora.split(' ')[1] || ''}</small>`;
@@ -2202,7 +2217,6 @@
                 document.getElementById('ultimaAsignacionGlobal').textContent = 'Sin asignaciones';
             }
             
-            // Tabla de últimas reposiciones por producto
             const ultimasReposiciones = {};
             reposiciones.forEach(rep => {
                 const productoId = rep.productoId;
@@ -2230,24 +2244,23 @@
                     const estadoTexto = obtenerTextoEstadoDias(dias);
                     
                     row.innerHTML = `
-                        <td><strong class="producto-link" data-id="${producto.id}">${producto.nombre}</strong></td>
-                        <td>${producto.codigo}</td>
-                        <td>${repo.fechaHora}</td>
-                        <td>${repo.cantidad.toFixed(2)}</td>
-                        <td>${dias} días</td>
-                        <td><span class="last-activity-badge ${estadoClase}">${estadoTexto}</span></td>
+                        <td><strong class="producto-link" data-id="${producto.id}">${producto.nombre}</strong></d>
+                        <td>${producto.codigo}</d>
+                        <td>${repo.fechaHora}</d>
+                        <td>${repo.cantidad.toFixed(2)}</d>
+                        <td>${dias} días</d>
+                        <td><span class="last-activity-badge ${estadoClase}">${estadoTexto}</span></d>
                     `;
                 } else {
                     row.innerHTML = `
-                        <td><strong class="producto-link" data-id="${producto.id}">${producto.nombre}</strong></td>
-                        <td>${producto.codigo}</td>
-                        <td colspan="4" style="color:#999;">Sin reposiciones registradas</td>
+                        <td><strong class="producto-link" data-id="${producto.id}">${producto.nombre}</strong></d>
+                        <td>${producto.codigo}</d>
+                        <td colspan="4" style="color:#999;">Sin reposiciones registradas</d>
                     `;
                 }
                 tbodyRepos.appendChild(row);
             });
             
-            // Tabla de últimas asignaciones por producto
             const ultimasAsignaciones = {};
             asignaciones.forEach(asig => {
                 const productoId = asig.productoId;
@@ -2274,27 +2287,25 @@
                     const estadoClase = obtenerClaseEstadoDias(dias);
                     
                     row.innerHTML = `
-                        <td><strong class="producto-link" data-id="${producto.id}">${producto.nombre}</strong></td>
-                        <td>${producto.codigo}</td>
-                        <td>${asig.fechaHora}</td>
-                        <td>${asig.departamento || '-'}</td>
-                        <td>${asig.usuario || '-'}</td>
-                        <td>${asig.cantidad.toFixed(2)}</td>
-                        <td><span class="last-activity-badge ${estadoClase}">${dias} días</span></td>
+                        <td><strong class="producto-link" data-id="${producto.id}">${producto.nombre}</strong></d>
+                        <td>${producto.codigo}</d>
+                        <td>${asig.fechaHora}</d>
+                        <td>${asig.departamento || '-'}</d>
+                        <td>${asig.usuario || '-'}</d>
+                        <td>${asig.cantidad.toFixed(2)}</d>
+                        <td><span class="last-activity-badge ${estadoClase}">${dias} días</span></d>
                     `;
                 } else {
                     row.innerHTML = `
-                        <td><strong class="producto-link" data-id="${producto.id}">${producto.nombre}</strong></td>
-                        <td>${producto.codigo}</td>
-                        <td colspan="5" style="color:#999;">Sin asignaciones registradas</td>
+                        <td><strong class="producto-link" data-id="${producto.id}">${producto.nombre}</strong></d>
+                        <td>${producto.codigo}</d>
+                        <td colspan="5" style="color:#999;">Sin asignaciones registradas</d>
                     `;
                 }
                 tbodyAsig.appendChild(row);
             });
             
-            // Productos sin actividad (sin reposiciones Y sin asignaciones)
-            const productosConAsig = new Set(Object.keys(ultimasAsignaciones));
-            const productosSinActividad = productos.filter(p => !productosConRepo.has(p.id) && !productosConAsig.has(p.id));
+            const productosSinActividad = productos.filter(p => !productosConRepo.has(p.id) && !ultimasAsignaciones[p.id]);
             
             const tbodySinAct = document.getElementById('productosSinActividadBody');
             tbodySinAct.innerHTML = '';
@@ -2306,17 +2317,16 @@
                     const unidadesTotales = calcularUnidadesTotales(producto);
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td><strong class="producto-link" data-id="${producto.id}">${producto.nombre}</strong></td>
-                        <td>${producto.codigo}</td>
-                        <td><span class="badge badge-${producto.categoria === 'papeleria' ? 'papeleria' : producto.categoria === 'toner' ? 'toner' : producto.categoria === 'oficina' ? 'oficina' : 'otros'}">${producto.categoria}</span></td>
-                        <td>${unidadesTotales.toFixed(2)} und</td>
-                        <td><button class="btn-action btn-assign" data-id="${producto.id}" style="background-color:#3498db;"><i class="fas fa-hand-holding"></i> Asignar</button></td>
+                        <td><strong class="producto-link" data-id="${producto.id}">${producto.nombre}</strong></d>
+                        <td>${producto.codigo}</d>
+                        <td><span class="badge badge-${producto.categoria === 'papeleria' ? 'papeleria' : producto.categoria === 'toner' ? 'toner' : producto.categoria === 'oficina' ? 'oficina' : 'otros'}">${producto.categoria}</span></d>
+                        <td>${unidadesTotales.toFixed(2)} und</d>
+                        <td><button class="btn-action btn-assign" data-id="${producto.id}" style="background-color:#3498db;"><i class="fas fa-hand-holding"></i> Asignar</button></d>
                     `;
                     tbodySinAct.appendChild(row);
                 });
             }
             
-            // Agregar eventos a los enlaces de productos
             document.querySelectorAll('.producto-link').forEach(el => {
                 el.addEventListener('click', () => {
                     const productoId = parseInt(el.dataset.id);
@@ -2611,7 +2621,7 @@
         }
 
         // =============================================
-        // FUNCIONES DEL SISTEMA (ORIGINALES)
+        // FUNCIONES DEL SISTEMA
         // =============================================
 
         function mostrarSeccion(sectionId) {
@@ -2648,33 +2658,23 @@
             const bultoConfigGroup = document.getElementById('bultoConfigGroup');
             const unidadesPorMedidaGroup = document.getElementById('unidadesPorMedidaGroup');
             const unidadExplicacion = document.getElementById('unidadExplicacion');
-            const stockExplicacion = document.getElementById('stockExplicacion');
-            const stockMinimoExplicacion = document.getElementById('stockMinimoExplicacion');
             
             if (unidad === 'BULTO') {
                 bultoConfigGroup.style.display = 'flex';
                 unidadesPorMedidaGroup.style.display = 'none';
                 unidadExplicacion.textContent = 'Ej: 48 unidades por bulto (papel rosal), 20 unidades por bulto (servilletas)';
-                stockExplicacion.textContent = 'En bultos (puede usar decimales, ej: 2.5 bultos)';
-                stockMinimoExplicacion.textContent = 'En bultos (cantidad mínima de bultos) - Número entero';
             } else if (unidad === 'CAJAS') {
                 bultoConfigGroup.style.display = 'none';
                 unidadesPorMedidaGroup.style.display = 'flex';
                 unidadExplicacion.textContent = 'Ej: 24 unidades por caja, 50 unidades por caja';
-                stockExplicacion.textContent = 'En cajas (puede usar decimales, ej: 2.5 cajas)';
-                stockMinimoExplicacion.textContent = 'En cajas (cantidad mínima de cajas) - Número entero';
             } else if (unidad === 'PAQ') {
                 bultoConfigGroup.style.display = 'none';
                 unidadesPorMedidaGroup.style.display = 'flex';
                 unidadExplicacion.textContent = 'Ej: 100 unidades por paquete, 50 hojas por paquete';
-                stockExplicacion.textContent = 'En paquetes (puede usar decimales, ej: 2.5 paquetes)';
-                stockMinimoExplicacion.textContent = 'En paquetes (cantidad mínima de paquetes) - Número entero';
             } else {
                 bultoConfigGroup.style.display = 'none';
                 unidadesPorMedidaGroup.style.display = 'flex';
                 unidadExplicacion.textContent = 'Ej: 1 unidad = 1 artículo';
-                stockExplicacion.textContent = 'En la unidad de medida seleccionada - Número entero';
-                stockMinimoExplicacion.textContent = 'En la unidad de medida seleccionada - Número entero';
             }
         }
 
@@ -2819,6 +2819,7 @@
             });
         }
 
+        // FUNCIÓN PRINCIPAL: actualizarTablaInventario MODIFICADA para mostrar última fecha
         function actualizarTablaInventario() {
             const tableBody = document.getElementById('inventarioTableBody');
             if (!tableBody) return;
@@ -2856,7 +2857,7 @@
             tableBody.innerHTML = '';
             
             if (productosFiltrados.length === 0) {
-                tableBody.innerHTML = '<td><td colspan="9" style="text-align:center;padding:20px;">No hay productos que empiecen con ese término<br><small>Prueba con otra letra o palabra</small></d></tr>';
+                tableBody.innerHTML = '<td><td colspan="10" style="text-align:center;padding:20px;">No hay productos que empiecen con ese término<br><small>Prueba con otra letra o palabra</small></d></tr>';
                 return;
             }
             
@@ -2867,6 +2868,12 @@
                 const stockMinimoUnidades = producto.stockMinimo * (producto.unidadesPorMedida || 1);
                 const stockMinimoTexto = obtenerEquivalencia(producto, stockMinimoUnidades);
                 const stockMostrado = formatearStockMostrado(producto);
+                
+                // OBTENER LA ÚLTIMA FECHA DE ACTUALIZACIÓN
+                const ultimaFecha = obtenerUltimaFechaActualizacion(producto.id);
+                const fechaTexto = formatearFechaCorta(ultimaFecha);
+                const horaTexto = formatearHoraCorta(ultimaFecha);
+                const fechaCompleta = ultimaFecha ? `${fechaTexto} ${horaTexto}` : 'Sin actividad';
                 
                 let estadoClase = '', estadoTexto = '', stockIndicator = '';
                 if (unidadesTotales < stockMinimoUnidades) {
@@ -2895,14 +2902,15 @@
                 }
                 
                 row.innerHTML = `
-                    <td><strong>${codigoNum}</strong></d>
-                    <td><div>${producto.nombre}</div><div class="unit-info">Código: ${producto.codigo}</div></d>
-                    <td><span class="badge ${categoriaClase}">${categoriaNombre}</span></d>
-                    <td><div class="stock-details"><span class="stock-total">${infoUnidades}</span><span class="unit-info">${unidadesTotales.toFixed(2)} unidades totales</span></div></d>
+                    <td><strong>${codigoNum}</strong></td>
+                    <td><div>${producto.nombre}</div><div class="unit-info">Código: ${producto.codigo}</div></td>
+                    <td><span class="badge ${categoriaClase}">${categoriaNombre}</span></td>
+                    <td><div class="stock-details"><span class="stock-total">${infoUnidades}</span><span class="unit-info">${unidadesTotales.toFixed(2)} unidades totales</span></div></td>
                     <td>${unidadesTotales.toFixed(2)} unidades</d>
                     <td>${producto.unidad}</d>
                     <td>${stockMinimoTexto}</d>
                     <td class="${estadoClase}">${stockIndicator} ${estadoTexto}</d>
+                    <td class="fecha-actualizacion"><i class="fas fa-calendar-alt" style="font-size:0.7rem; margin-right:4px;"></i>${fechaCompleta}</d>
                     <td><div class="action-buttons">
                         <button class="btn-action btn-edit" data-id="${producto.id}"><i class="fas fa-edit"></i> Editar</button>
                         <button class="btn-action btn-assign" data-id="${producto.id}"><i class="fas fa-hand-holding"></i> Asignar</button>
@@ -3604,7 +3612,7 @@
         }
 
         // =============================================
-        // CONSOLIDADO DE SALIDAS (ORIGINAL)
+        // CONSOLIDADO DE SALIDAS
         // =============================================
         function cargarConsolidado() {
             const periodo = document.getElementById('consPeriodo').value;
@@ -3888,7 +3896,7 @@
             }
             
             if (salidas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">No hay asignaciones en el período seleccionado</d></table>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">No hay asignaciones en el período seleccionado</d></td>';
                 if(tfoot) tfoot.innerHTML = '';
                 document.getElementById('resDeptosCount').textContent = '0';
                 document.getElementById('resProductosCount').textContent = '0';
@@ -4279,13 +4287,13 @@
             let totalUnidades=0, bajos=0;
             productos.forEach(p => { const u=calcularUnidadesTotales(p); totalUnidades+=u; if(u<p.stockMinimo*(p.unidadesPorMedida||1)) bajos++; });
             doc.text(`Total productos: ${productos.length} | Stock bajo: ${bajos} | Unidades totales: ${totalUnidades.toFixed(2)}`, 14, 33);
-            doc.autoTable({ head: [['#','Código','Producto','Categoría','Stock','Unidades','Estado']], body: productos.map(p => [p.codigo.split('-')[1]||p.id, p.codigo, p.nombre, p.categoria, `${formatearStockMostrado(p)} ${p.unidad}`, calcularUnidadesTotales(p).toFixed(2), calcularUnidadesTotales(p) < p.stockMinimo*(p.unidadesPorMedida||1) ? 'Bajo' : 'Normal']), startY: 40, headStyles: { fillColor: [52,152,219] } });
+            doc.autoTable({ head: [['#','Código','Producto','Categoría','Stock','Unidades','Estado','Última Actualización']], body: productos.map(p => [p.codigo.split('-')[1]||p.id, p.codigo, p.nombre, p.categoria, `${formatearStockMostrado(p)} ${p.unidad}`, calcularUnidadesTotales(p).toFixed(2), calcularUnidadesTotales(p) < p.stockMinimo*(p.unidadesPorMedida||1) ? 'Bajo' : 'Normal', obtenerUltimaFechaActualizacion(p.id) ? formatearFechaCorta(obtenerUltimaFechaActualizacion(p.id)) : 'Sin actividad']), startY: 40, headStyles: { fillColor: [52,152,219] } });
             doc.save(`inventario-${new Date().toISOString().slice(0,10)}.pdf`);
         }
 
         function exportarExcel() {
             const wb = XLSX.utils.book_new();
-            const prodData = productos.map(p => ({ Código: p.codigo, Producto: p.nombre, Categoría: p.categoria, Stock: `${formatearStockMostrado(p)} ${p.unidad}`, UnidadesTotales: calcularUnidadesTotales(p).toFixed(2), StockMínimo: `${p.stockMinimo} ${p.unidad}`, Estado: calcularUnidadesTotales(p) < p.stockMinimo*(p.unidadesPorMedida||1) ? 'BAJO' : 'NORMAL' }));
+            const prodData = productos.map(p => ({ Código: p.codigo, Producto: p.nombre, Categoría: p.categoria, Stock: `${formatearStockMostrado(p)} ${p.unidad}`, UnidadesTotales: calcularUnidadesTotales(p).toFixed(2), StockMínimo: `${p.stockMinimo} ${p.unidad}`, Estado: calcularUnidadesTotales(p) < p.stockMinimo*(p.unidadesPorMedida||1) ? 'BAJO' : 'NORMAL', ÚltimaActualización: obtenerUltimaFechaActualizacion(p.id) ? formatearFechaCorta(obtenerUltimaFechaActualizacion(p.id)) : 'Sin actividad' }));
             const movData = movimientos.map(m => ({ Fecha: m.fechaHora, Tipo: m.tipo, Producto: m.producto, Cantidad: typeof m.cantidad === 'number' ? m.cantidad.toFixed(2) : m.cantidad, Departamento: m.departamento, Usuario: m.usuario, Observaciones: m.observaciones }));
             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(prodData), 'Inventario');
             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(movData), 'Movimientos');
@@ -4293,7 +4301,7 @@
         }
 
         function exportarInventarioActualExcel() {
-            const data = productos.map(p => ({ Código: p.codigo, Producto: p.nombre, Categoría: p.categoria, StockActual: formatearStockMostrado(p), Unidad: p.unidad, UnidadesTotales: calcularUnidadesTotales(p).toFixed(2), StockMínimo: p.stockMinimo, Estado: calcularUnidadesTotales(p) < p.stockMinimo*(p.unidadesPorMedida||1) ? 'URGENTE' : 'OK' }));
+            const data = productos.map(p => ({ Código: p.codigo, Producto: p.nombre, Categoría: p.categoria, StockActual: formatearStockMostrado(p), Unidad: p.unidad, UnidadesTotales: calcularUnidadesTotales(p).toFixed(2), StockMínimo: p.stockMinimo, Estado: calcularUnidadesTotales(p) < p.stockMinimo*(p.unidadesPorMedida||1) ? 'URGENTE' : 'OK', ÚltimaActualización: obtenerUltimaFechaActualizacion(p.id) ? formatearFechaCorta(obtenerUltimaFechaActualizacion(p.id)) : 'Sin actividad' }));
             XLSX.writeFile(XLSX.utils.book_append_sheet(XLSX.utils.book_new(), XLSX.utils.json_to_sheet(data), 'Inventario'), `inventario-actual-${new Date().toISOString().slice(0,10)}.xlsx`);
         }
 
@@ -4378,7 +4386,6 @@
             document.getElementById('editMovForm').addEventListener('submit', (e) => { e.preventDefault(); guardarCambiosMovimiento(); });
             window.addEventListener('click', (e) => { if(e.target.classList.contains('modal')) cerrarModal(); });
             
-            // Eventos Consolidado de Salidas (original)
             document.getElementById('consPeriodo').addEventListener('change', function() {
                 const rangoGroup1 = document.getElementById('consFechaInicioGroup');
                 const rangoGroup2 = document.getElementById('consFechaFinGroup');
@@ -4393,7 +4400,6 @@
             document.getElementById('aplicarFiltrosCons')?.addEventListener('click', cargarConsolidado);
             document.getElementById('exportConsolidadoPdf')?.addEventListener('click', exportarConsolidadoPDF);
             
-            // Eventos nueva sección Consolidado por Departamento
             document.getElementById('consDeptoPeriodo').addEventListener('change', function() {
                 const showRango = this.value === 'rango';
                 document.getElementById('consDeptoFechaInicioGroup').style.display = showRango ? 'block' : 'none';
@@ -4403,7 +4409,6 @@
             document.getElementById('exportDeptoConsolidadoExcel')?.addEventListener('click', exportarDeptoConsolidadoExcel);
             document.getElementById('exportDeptoConsolidadoPdf')?.addEventListener('click', exportarDeptoConsolidadoPDF);
             
-            // Eventos Reorden
             document.getElementById('actualizarReorden')?.addEventListener('click', actualizarReorden);
             document.getElementById('exportReordenPdf')?.addEventListener('click', exportarReordenPDF);
             document.getElementById('reordenDiasAnalisis')?.addEventListener('change', actualizarReorden);
