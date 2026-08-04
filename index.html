@@ -164,6 +164,33 @@
         .stock-col.before { color: #f39c12; }
         .stock-col.after { color: #27ae60; }
         .demo-banner { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px 15px; margin-bottom: 15px; border-radius: 5px; font-size: 0.85rem; }
+        .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+        .date-range-group { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+        .date-range-group input { width: 130px; }
+        .reorden-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 15px 0; }
+        .reorden-card { background: white; padding: 12px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .reorden-card h3 { margin: 5px 0; font-size: 1.4rem; }
+        .reorden-card p { font-size: 0.8rem; color: #666; }
+        .reorden-card.critical { border-left: 4px solid #e74c3c; }
+        .reorden-card.warning { border-left: 4px solid #f39c12; }
+        .days-critical { color: #e74c3c; font-weight: bold; }
+        .days-high { color: #f39c12; font-weight: bold; }
+        .days-medium { color: #3498db; }
+        .days-low { color: #27ae60; }
+        .priority-critical { background-color: #e74c3c20; color: #e74c3c; font-weight: bold; }
+        .priority-high { background-color: #f39c1220; color: #f39c12; font-weight: bold; }
+        .priority-medium { background-color: #3498db20; color: #3498db; }
+        .priority-low { background-color: #27ae6020; color: #27ae60; }
+        .suggested-qty { font-weight: bold; color: #2c3e50; }
+        .days-badge { padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; }
+        .consolidado-filters { background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
+        .decimal-warning { background: #fff3cd; padding: 8px 15px; border-radius: 5px; margin-bottom: 15px; border-left: 4px solid #ffc107; }
+        .badge-papeleria { background: #3498db; color: white; }
+        .badge-oficina { background: #2c3e50; color: white; }
+        .badge-toner { background: #9b59b6; color: white; }
+        .badge-electronica { background: #27ae60; color: white; }
+        .badge-limpieza { background: #1abc9c; color: white; }
+        .badge-otros { background: #95a5a6; color: white; }
     </style>
 </head>
 <body>
@@ -224,7 +251,7 @@
                     <select id="filterStock"><option value="">Todo el Stock</option><option value="low">Stock Bajo</option><option value="normal">Stock Normal</option><option value="alto">Stock Alto</option></select>
                     <button id="clearFilters"><i class="fas fa-times"></i> Limpiar filtros</button>
                 </div>
-                <div class="table-container"><table id="inventarioTable"><thead><tr><th>#</th><th>Producto</th><th>Categoría</th><th>Stock</th><th>Unidades Totales</th><th>Unidad</th><th>Stock Mínimo</th><th>Estado</th><th>Última Actualización</th><th>Acciones</th></tr></thead><tbody id="inventarioTableBody"><tr><td colspan="10" style="text-align:center;padding:20px;">Cargando datos...</d></tr></tbody></table></div>
+                <div class="table-container"><table id="inventarioTable"><thead><tr><th>#</th><th>Producto</th><th>Categoría</th><th>Stock</th><th>Unidades Totales</th><th>Unidad</th><th>Stock Mínimo</th><th>Estado</th><th>Última Actualización</th><th>Acciones</th></tr></thead><tbody id="inventarioTableBody"><tr><td colspan="10" style="text-align:center;padding:20px;">Cargando datos...</td></tr></tbody></table></div>
             </section>
 
             <!-- Nuevo Producto Section -->
@@ -290,11 +317,11 @@
                         </div>
                     </div>
                     <div class="form-buttons">
-                        <button id="aplicarFiltrosSolicitudes" class="btn-primary"><i class="fas fa-search"></i> Aplicar Filtros</button>
-                        <button id="limpiarFiltrosSolicitudes" class="btn-secondary"><i class="fas fa-times"></i> Limpiar</button>
-                        <button id="exportSolicitudesExcel" class="btn-success"><i class="fas fa-file-excel"></i> Exportar a Excel</button>
-                        <button id="exportSolicitudesPDF" class="btn-primary"><i class="fas fa-file-pdf"></i> Exportar a PDF</button>
-                        <button id="exportSolicitudesPDFPorDepto" class="btn-primary" style="background-color:#9b59b6;"><i class="fas fa-file-pdf"></i> PDF por Depto y Mes</button>
+                        <button id="aplicarFiltrosSolicitudes" class="btn btn-primary"><i class="fas fa-search"></i> Aplicar Filtros</button>
+                        <button id="limpiarFiltrosSolicitudes" class="btn btn-secondary"><i class="fas fa-times"></i> Limpiar</button>
+                        <button id="exportSolicitudesExcel" class="btn btn-success"><i class="fas fa-file-excel"></i> Exportar a Excel</button>
+                        <button id="exportSolicitudesPDF" class="btn btn-primary"><i class="fas fa-file-pdf"></i> Exportar a PDF</button>
+                        <button id="exportSolicitudesPDFPorDepto" class="btn btn-primary" style="background-color:#9b59b6;"><i class="fas fa-file-pdf"></i> PDF por Depto y Mes</button>
                     </div>
                 </div>
                 
@@ -330,7 +357,7 @@
                             </tr>
                         </thead>
                         <tbody id="solicitudesTableBody">
-                            <tr><td colspan="10" style="text-align:center;">Cargando solicitudes...</d></tr>
+                            <tr><td colspan="10" style="text-align:center;">Cargando solicitudes...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -348,36 +375,36 @@
                         <span>a</span>
                         <input type="date" id="filterMovFechaFin" placeholder="Fecha Fin">
                     </div>
-                    <button id="clearMovFilters" class="btn-secondary btn-sm"><i class="fas fa-times"></i> Limpiar</button>
-                    <button id="exportMovimientosExcel" class="btn-success btn-sm"><i class="fas fa-file-excel"></i> Exportar Excel</button>
-                    <button id="exportMovimientosPdf" class="btn-primary btn-sm"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+                    <button id="clearMovFilters" class="btn btn-secondary btn-sm"><i class="fas fa-times"></i> Limpiar</button>
+                    <button id="exportMovimientosExcel" class="btn btn-success btn-sm"><i class="fas fa-file-excel"></i> Exportar Excel</button>
+                    <button id="exportMovimientosPdf" class="btn btn-primary btn-sm"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
                 </div>
-                <div class="table-container"><table id="movimientosTable"><thead><tr><th>Fecha y Hora</th><th>Tipo</th><th>Producto</th><th>Cantidad (Unidades)</th><th>Departamento</th><th>Usuario</th><th>Observaciones</th><th>Responsable</th><th>Acciones</th></tr></thead><tbody id="movimientosTableBody"><tr><td colspan="9" style="text-align:center;padding:20px;">Cargando datos...</d></tr></tbody></table></div>
+                <div class="table-container"><table id="movimientosTable"><thead><tr><th>Fecha y Hora</th><th>Tipo</th><th>Producto</th><th>Cantidad (Unidades)</th><th>Departamento</th><th>Usuario</th><th>Observaciones</th><th>Responsable</th><th>Acciones</th></tr></thead><tbody id="movimientosTableBody"><tr><td colspan="9" style="text-align:center;padding:20px;">Cargando datos...</td></tr></tbody></table></div>
             </section>
 
             <!-- Consolidado Section -->
             <section id="consolidado" class="content-section">
                 <h2><i class="fas fa-chart-bar"></i> Consolidado de Salidas por Artículo</h2>
-                <div class="consolidado-filters"><div class="form-row"><div class="form-group"><label>Período</label><select id="consPeriodo"><option value="mes">Mes Actual</option><option value="quincena1">Primera Quincena</option><option value="quincena2">Segunda Quincena</option><option value="rango">Rango Personalizado</option></select></div><div class="form-group" id="consFechaInicioGroup" style="display:none;"><label>Fecha Inicio</label><input type="date" id="consFechaInicio"></div><div class="form-group" id="consFechaFinGroup" style="display:none;"><label>Fecha Fin</label><input type="date" id="consFechaFin"></div><div class="form-group"><label>Departamento</label><select id="consDepto"><option value="">Todos</option></select></div><div class="form-group"><label>Producto</label><input type="text" id="consProducto" placeholder="Buscar producto..."></div><div class="form-group"><label>Usuario</label><input type="text" id="consUsuario" placeholder="Buscar usuario..."></div><div class="form-group"><label>&nbsp;</label><button id="aplicarFiltrosCons" class="btn-primary"><i class="fas fa-search"></i> Filtrar</button></div></div></div>
+                <div class="consolidado-filters"><div class="form-row"><div class="form-group"><label>Período</label><select id="consPeriodo"><option value="mes">Mes Actual</option><option value="quincena1">Primera Quincena</option><option value="quincena2">Segunda Quincena</option><option value="rango">Rango Personalizado</option></select></div><div class="form-group" id="consFechaInicioGroup" style="display:none;"><label>Fecha Inicio</label><input type="date" id="consFechaInicio"></div><div class="form-group" id="consFechaFinGroup" style="display:none;"><label>Fecha Fin</label><input type="date" id="consFechaFin"></div><div class="form-group"><label>Departamento</label><select id="consDepto"><option value="">Todos</option></select></div><div class="form-group"><label>Producto</label><input type="text" id="consProducto" placeholder="Buscar producto..."></div><div class="form-group"><label>Usuario</label><input type="text" id="consUsuario" placeholder="Buscar usuario..."></div><div class="form-group"><label>&nbsp;</label><button id="aplicarFiltrosCons" class="btn btn-primary"><i class="fas fa-search"></i> Filtrar</button></div></div></div>
                 <div class="reorden-summary"><div class="reorden-card"><i class="fas fa-clipboard-list"></i><h3 id="consTotalRegistros">0</h3><p>Registros encontrados</p></div><div class="reorden-card"><i class="fas fa-boxes"></i><h3 id="consTotalUnidades">0</h3><p>Unidades asignadas</p></div><div class="reorden-card"><i class="fas fa-trophy"></i><h3 id="consTopProducto">-</h3><p>Producto más solicitado</p></div></div>
-                <div class="table-container"><table id="consolidadoTable"><thead><tr><th>Fecha</th><th>Departamento</th><th>Usuario Solicita</th><th>Producto</th><th>Cantidad</th><th>Equivalencia</th><th>Observaciones</th></tr></thead><tbody id="consolidadoTableBody"><tr><td colspan="7" style="text-align:center;">Seleccione filtros y presione "Filtrar"</d><tr></tbody></table></div>
+                <div class="table-container"><table id="consolidadoTable"><thead><tr><th>Fecha</th><th>Departamento</th><th>Usuario Solicita</th><th>Producto</th><th>Cantidad</th><th>Equivalencia</th><th>Observaciones</th></tr></thead><tbody id="consolidadoTableBody"><tr><td colspan="7" style="text-align:center;">Seleccione filtros y presione "Filtrar"</td></tr></tbody></table></div>
             </section>
 
             <!-- Consolidado por Depto Section -->
             <section id="consolidado-depto" class="content-section">
                 <h2><i class="fas fa-building"></i> Consolidado por Departamento</h2>
-                <div class="consolidado-filters"><div class="form-row"><div class="form-group"><label>Período</label><select id="consDeptoPeriodo"><option value="todo">Todo el historial</option><option value="mes" selected>Mes actual</option><option value="mesAnterior">Mes anterior</option><option value="quincena1">Primera quincena</option><option value="quincena2">Segunda quincena</option><option value="rango">Rango personalizado</option></select></div><div class="form-group" id="consDeptoFechaInicioGroup" style="display:none;"><label>Fecha inicio</label><input type="date" id="consDeptoFechaInicio"></div><div class="form-group" id="consDeptoFechaFinGroup" style="display:none;"><label>Fecha fin</label><input type="date" id="consDeptoFechaFin"></div><div class="form-group"><label>Departamento</label><select id="consDeptoFiltro"><option value="">Todos los departamentos</option></select></div><div class="form-group"><label>Producto</label><input type="text" id="consDeptoProducto" placeholder="Buscar producto..."></div><div class="form-group"><label>&nbsp;</label><button id="aplicarFiltrosDepto" class="btn-primary"><i class="fas fa-search"></i> Filtrar</button></div></div></div>
+                <div class="consolidado-filters"><div class="form-row"><div class="form-group"><label>Período</label><select id="consDeptoPeriodo"><option value="todo">Todo el historial</option><option value="mes" selected>Mes actual</option><option value="mesAnterior">Mes anterior</option><option value="quincena1">Primera quincena</option><option value="quincena2">Segunda quincena</option><option value="rango">Rango personalizado</option></select></div><div class="form-group" id="consDeptoFechaInicioGroup" style="display:none;"><label>Fecha inicio</label><input type="date" id="consDeptoFechaInicio"></div><div class="form-group" id="consDeptoFechaFinGroup" style="display:none;"><label>Fecha fin</label><input type="date" id="consDeptoFechaFin"></div><div class="form-group"><label>Departamento</label><select id="consDeptoFiltro"><option value="">Todos los departamentos</option></select></div><div class="form-group"><label>Producto</label><input type="text" id="consDeptoProducto" placeholder="Buscar producto..."></div><div class="form-group"><label>&nbsp;</label><button id="aplicarFiltrosDepto" class="btn btn-primary"><i class="fas fa-search"></i> Filtrar</button></div></div></div>
                 <div class="reorden-summary"><div class="reorden-card"><i class="fas fa-building"></i><h3 id="resDeptosCount">0</h3><p>Departamentos</p></div><div class="reorden-card"><i class="fas fa-boxes"></i><h3 id="resProductosCount">0</h3><p>Productos</p></div><div class="reorden-card"><i class="fas fa-calculator"></i><h3 id="resTotalUnidades">0</h3><p>Unidades totales</p></div></div>
-                <div class="export-buttons-group"><button id="exportDeptoConsolidadoExcel" class="btn-success"><i class="fas fa-file-excel"></i> Exportar a Excel</button><button id="exportDeptoConsolidadoPdf" class="btn-primary"><i class="fas fa-file-pdf"></i> Exportar a PDF</button></div>
-                <div class="table-container"><table class="consolidado-depto-table" id="consolidadoDeptoTable"><thead><tr><th>Producto</th><th>Código</th><th>Departamento</th><th>Total Unidades</th><th>Equivalencia</th></tr></thead><tbody id="consolidadoDeptoBody"><tr><td colspan="5" style="text-align:center">Seleccione filtros</d></tr></tbody><tfoot id="consolidadoDeptoFoot"></tfoot></table></div>
+                <div class="export-buttons-group"><button id="exportDeptoConsolidadoExcel" class="btn btn-success"><i class="fas fa-file-excel"></i> Exportar a Excel</button><button id="exportDeptoConsolidadoPdf" class="btn btn-primary"><i class="fas fa-file-pdf"></i> Exportar a PDF</button></div>
+                <div class="table-container"><table class="consolidado-depto-table" id="consolidadoDeptoTable"><thead><tr><th>Producto</th><th>Código</th><th>Departamento</th><th>Total Unidades</th><th>Equivalencia</th></tr></thead><tbody id="consolidadoDeptoBody"><tr><td colspan="5" style="text-align:center">Seleccione filtros</td></tr></tbody><tfoot id="consolidadoDeptoFoot"></tfoot></table></div>
             </section>
 
             <!-- Reorden Section -->
             <section id="reorden" class="content-section">
                 <h2><i class="fas fa-cart-plus"></i> Sistema de Reorden Automático</h2>
-                <div class="filters"><select id="reordenDiasAnalisis"><option value="15">Últimos 15 días</option><option value="30" selected>Últimos 30 días</option><option value="60">Últimos 60 días</option></select><select id="reordenCategoria"><option value="">Todas las categorías</option><option value="papeleria">Papelería</option><option value="oficina">Oficina</option><option value="toner">Toner</option><option value="electronica">Electrónica</option><option value="limpieza">Limpieza</option><option value="otros">Otros</option></select><button id="actualizarReorden" class="btn-primary"><i class="fas fa-sync-alt"></i> Actualizar</button><button id="exportReordenPdf" class="btn-success"><i class="fas fa-file-pdf"></i> Exportar Reorden</button></div>
+                <div class="filters"><select id="reordenDiasAnalisis"><option value="15">Últimos 15 días</option><option value="30" selected>Últimos 30 días</option><option value="60">Últimos 60 días</option></select><select id="reordenCategoria"><option value="">Todas las categorías</option><option value="papeleria">Papelería</option><option value="oficina">Oficina</option><option value="toner">Toner</option><option value="electronica">Electrónica</option><option value="limpieza">Limpieza</option><option value="otros">Otros</option></select><button id="actualizarReorden" class="btn btn-primary"><i class="fas fa-sync-alt"></i> Actualizar</button><button id="exportReordenPdf" class="btn btn-success"><i class="fas fa-file-pdf"></i> Exportar Reorden</button></div>
                 <div class="reorden-summary"><div class="reorden-card critical"><i class="fas fa-exclamation-triangle"></i><h3 id="reordenCriticalCount">0</h3><p>Críticos (≤3 días)</p></div><div class="reorden-card warning"><i class="fas fa-clock"></i><h3 id="reordenHighCount">0</h3><p>Alta Prioridad (≤7 días)</p></div><div class="reorden-card"><i class="fas fa-chart-line"></i><h3 id="reordenTotalUnidades">0</h3><p>Unidades sugeridas</p></div></div>
-                <div class="table-container"><table id="reordenTable"><thead><tr><th>Producto</th><th>Categoría</th><th>Stock Actual</th><th>Stock Mínimo</th><th>Consumo Diario</th><th>Días hasta agotarse</th><th>Cantidad Sugerida</th><th>Prioridad</th></tr></thead><tbody id="reordenTableBody"><tr><td colspan="8" style="text-align:center;">Calculando...</d></tr></tbody></table></div>
+                <div class="table-container"><table id="reordenTable"><thead><tr><th>Producto</th><th>Categoría</th><th>Stock Actual</th><th>Stock Mínimo</th><th>Consumo Diario</th><th>Días hasta agotarse</th><th>Cantidad Sugerida</th><th>Prioridad</th></tr></thead><tbody id="reordenTableBody"><tr><td colspan="8" style="text-align:center;">Calculando...</td></tr></tbody></table></div>
             </section>
         </div>
     </div>
@@ -386,7 +413,61 @@
     <div id="editModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Editar Producto</h3><span class="close-modal">&times;</span></div><div class="modal-body"></div></div></div>
     <div id="adjustModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Ajustar Stock</h3><span class="close-modal">&times;</span></div><div class="modal-body"><form id="adjustStockForm"><div class="form-group"><label>Producto</label><input type="text" id="adjustProductName" readonly></div><div class="form-group"><label>Stock Actual</label><input type="text" id="adjustCurrentStock" readonly></div><div class="form-group"><label>Tipo de Ajuste</label><select id="adjustType"><option value="entrada">Entrada (+)</option><option value="salida">Salida (-)</option></select></div><div class="form-group"><label>Cantidad en Unidades</label><input type="number" id="adjustQuantity" min="0" step="any" required><small>Puede usar decimales</small></div><div class="form-group"><label>Motivo</label><textarea id="adjustReason" rows="2" required></textarea></div><div class="form-buttons"><button type="submit" class="btn btn-primary">Aplicar</button><button type="button" class="btn btn-secondary close-modal">Cancelar</button></div></form></div></div></div>
     <div id="confirmModal" class="modal"><div class="modal-content confirm-modal"><div class="modal-header"><h3>Confirmar Eliminación</h3><span class="close-modal">&times;</span></div><div class="modal-body"><p>¿Está seguro de eliminar este producto?</p></div><div class="modal-footer"><button id="confirmDelete" class="btn btn-danger">Eliminar</button><button id="cancelDelete" class="btn btn-secondary">Cancelar</button></div></div></div>
-    <div id="confirmMovModal" class="modal"><div class="modal-content confirm-modal"><div class="modal-header"><h3>Confirmar Eliminación</h3><span class="close-modal">&times;</span></div><div class="modal-body"><p id="confirmMovMessage"></p></div><div class="modal-footer"><button id="confirmMovDelete" class="btn btn-danger">Eliminar</button><button id="cancelMovDelete" class="btn btn-secondary">Cancelar</button></div></div></div>
+    <div id="confirmMovModal" class="modal"><div class="modal-content confirm-modal"><div class="modal-header"><h3>Confirmar Eliminación</h3><span class="close-modal">&times;</span></div><div class="modal-body"><p id="confirmMovMessage">¿Está seguro de eliminar este movimiento?</p></div><div class="modal-footer"><button id="confirmMovDelete" class="btn btn-danger">Eliminar</button><button id="cancelMovDelete" class="btn btn-secondary">Cancelar</button></div></div></div>
+    
+    <!-- Modal para editar movimientos - AGREGADO -->
+    <div id="editMovModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Editar Movimiento</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="editMovForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Producto</label>
+                            <input type="text" id="editMovProducto" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo de Movimiento</label>
+                            <input type="text" id="editMovTipo" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Cantidad en Unidades *</label>
+                            <input type="number" id="editMovCantidad" min="0" step="any" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha y Hora</label>
+                            <input type="datetime-local" id="editMovFechaHora">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Departamento</label>
+                            <input type="text" id="editMovDepartamento" placeholder="Departamento">
+                        </div>
+                        <div class="form-group">
+                            <label>Usuario</label>
+                            <input type="text" id="editMovUsuario" placeholder="Usuario">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Observaciones</label>
+                            <textarea id="editMovObservaciones" rows="2" placeholder="Observaciones"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-buttons">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Guardar Cambios</button>
+                        <button type="button" class="btn btn-secondary close-modal"><i class="fas fa-times"></i> Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     
     <div class="firebase-status" id="firebaseStatus" style="display:none;"><span class="status-dot"></span><span>Conectado a Firebase</span></div>
     <div class="loading-overlay" id="loadingOverlay"><div class="loading-spinner"></div></div>
@@ -486,7 +567,6 @@ function formatearFechaHora(fechaHoraStr = null) {
 
 // Función para calcular stock histórico
 function calcularStockHistorico(movimientosProducto, movimientoActual) {
-    // Ordenar movimientos por fecha
     const ordenados = [...movimientosProducto].sort((a, b) => new Date(a.fechaHora) - new Date(b.fechaHora));
     
     let stockAcumulado = 0;
@@ -512,7 +592,6 @@ function cargarDatosDemoSolicitudes() {
         return;
     }
     
-    // Crear movimientos de ejemplo
     const fechas = [
         '2026-06-01 09:30:00', '2026-06-02 14:15:00', '2026-06-03 11:00:00',
         '2026-06-04 10:45:00', '2026-06-05 16:20:00', '2026-06-06 08:30:00',
@@ -533,7 +612,6 @@ function cargarDatosDemoSolicitudes() {
         const cantidad = Math.floor(Math.random() * 50) + 1;
         const utActual = calcularUnidadesTotales(producto);
         
-        // Solo crear si hay suficiente stock
         if (utActual >= cantidad) {
             const fecha = fechas[Math.floor(Math.random() * fechas.length)];
             const depto = departamentosDemo[Math.floor(Math.random() * departamentosDemo.length)];
@@ -557,7 +635,6 @@ function cargarDatosDemoSolicitudes() {
         }
     }
     
-    // Guardar movimientos en Firebase
     let guardados = 0;
     nuevosMovimientos.forEach(async (mov) => {
         const result = await saveMovementToFirebase(mov);
@@ -718,6 +795,19 @@ async function deleteProductFromFirebase(firebaseId) {
     }
 }
 
+// FUNCIÓN AGREGADA: Eliminar movimiento de Firebase
+async function deleteMovementFromFirebase(firebaseId) {
+    try {
+        const { deleteDoc, doc } = window.firebaseFunctions;
+        const db = window.firebaseDB;
+        await deleteDoc(doc(db, "movimientos", firebaseId));
+        return true;
+    } catch (error) {
+        console.error("Error eliminando movimiento:", error);
+        return false;
+    }
+}
+
 async function saveMovementToFirebase(movimiento) {
     try {
         const { addDoc, collection } = window.firebaseFunctions;
@@ -783,7 +873,6 @@ function mostrarSeccion(sectionId) {
     if (sectionId === 'solicitudes') {
         cargarFiltrosSolicitudes();
         actualizarSolicitudes();
-        // Mostrar banner de demo si no hay solicitudes
         const solicitudesSalida = movimientos.filter(m => m.tipo === 'salida');
         const demoBanner = document.getElementById('demoBanner');
         if (demoBanner) {
@@ -906,7 +995,7 @@ function cargarDepartamentosFiltros() {
     });
 }
 
-// Función actualizada para mostrar solicitudes
+// Función para mostrar solicitudes
 function actualizarSolicitudes() {
     const deptoFilter = document.getElementById('solicitudesDeptoFilter')?.value || '';
     const mesFilter = document.getElementById('solicitudesMesFilter')?.value || '';
@@ -915,7 +1004,6 @@ function actualizarSolicitudes() {
     
     let solicitudes = movimientos.filter(m => m.tipo === 'salida');
     
-    // Aplicar filtros
     if (deptoFilter) solicitudes = solicitudes.filter(s => s.departamento === deptoFilter);
     if (productoFilter) solicitudes = solicitudes.filter(s => s.producto?.toLowerCase().includes(productoFilter));
     if (mesFilter || anioFilter) {
@@ -930,14 +1018,12 @@ function actualizarSolicitudes() {
         });
     }
     
-    // Ordenar por fecha (más reciente primero)
     solicitudes.sort((a,b) => {
         if (!a.fechaHora) return 1;
         if (!b.fechaHora) return -1;
         return new Date(b.fechaHora) - new Date(a.fechaHora);
     });
     
-    // Actualizar estadísticas
     document.getElementById('totalSolicitudesCount').textContent = solicitudes.length;
     const totalUnidades = solicitudes.reduce((sum, s) => sum + (parseFloat(s.cantidad) || 0), 0);
     document.getElementById('totalUnidadesSolicitudes').textContent = totalUnidades.toFixed(2);
@@ -954,11 +1040,9 @@ function actualizarSolicitudes() {
     solicitudes.forEach(s => {
         const producto = productos.find(p => p.id === s.productoId);
         
-        // Usar stockAntes/stockDespues guardados o calcular históricamente
         let stockAntes = s.stockAntes || 0;
         let stockDespues = s.stockDespues || 0;
         
-        // Si no tiene valores guardados, calcular con movimientos del mismo producto
         if (stockAntes === 0 && producto) {
             const movsProducto = movimientos.filter(m => m.productoId === s.productoId);
             const { antes, despues } = calcularStockHistorico(movsProducto, s);
@@ -968,21 +1052,20 @@ function actualizarSolicitudes() {
         
         const row = tbody.insertRow();
         row.innerHTML = `
-            <td>${s.fechaHora || '-'}</d>
-            <td><strong>${s.departamento || '-'}</strong></d>
-            <td>${s.usuario || '-'}</d>
-            <td>${s.producto || '-'}</d>
-            <td>${producto ? producto.codigo : '-'}</d>
-            <td style="font-weight:bold;color:#3498db;">${(parseFloat(s.cantidad) || 0).toFixed(2)}</d>
-            <td>${obtenerEquivalencia(producto, parseFloat(s.cantidad) || 0)}</d>
-            <td class="stock-col before">${stockAntes.toFixed(2)} und</d>
-            <td class="stock-col after">${stockDespues.toFixed(2)} und</d>
-            <td><small>${s.observaciones || '-'}</small></d>
+            <td>${s.fechaHora || '-'}</td>
+            <td><strong>${s.departamento || '-'}</strong></td>
+            <td>${s.usuario || '-'}</td>
+            <td>${s.producto || '-'}</td>
+            <td>${producto ? producto.codigo : '-'}</td>
+            <td style="font-weight:bold;color:#3498db;">${(parseFloat(s.cantidad) || 0).toFixed(2)}</td>
+            <td>${obtenerEquivalencia(producto, parseFloat(s.cantidad) || 0)}</td>
+            <td class="stock-col before">${stockAntes.toFixed(2)} und</td>
+            <td class="stock-col after">${stockDespues.toFixed(2)} und</td>
+            <td><small>${s.observaciones || '-'}</small></td>
         `;
     });
 }
 
-// Cargar filtros de meses y años
 function cargarFiltrosSolicitudes() {
     const deptoSelect = document.getElementById('solicitudesDeptoFilter');
     const mesSelect = document.getElementById('solicitudesMesFilter');
@@ -990,13 +1073,11 @@ function cargarFiltrosSolicitudes() {
     
     if (!deptoSelect) return;
     
-    // Departamentos
     deptoSelect.innerHTML = '<option value="">Todos los departamentos</option>';
     departamentos.forEach(d => {
         deptoSelect.appendChild(Object.assign(document.createElement('option'), {value:d, textContent:d}));
     });
     
-    // Meses
     mesSelect.innerHTML = '<option value="">Todos los meses</option>';
     const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
     meses.forEach((m, idx) => {
@@ -1004,7 +1085,6 @@ function cargarFiltrosSolicitudes() {
         mesSelect.appendChild(Object.assign(document.createElement('option'), {value:mesNum, textContent:m}));
     });
     
-    // Años
     anioSelect.innerHTML = '<option value="">Todos los años</option>';
     const anios = new Set();
     movimientos.forEach(m => {
@@ -1020,7 +1100,6 @@ function cargarFiltrosSolicitudes() {
     });
 }
 
-// Exportar solicitudes a Excel
 function exportarSolicitudesExcel() {
     const deptoFilter = document.getElementById('solicitudesDeptoFilter')?.value || '';
     const mesFilter = document.getElementById('solicitudesMesFilter')?.value || '';
@@ -1091,7 +1170,6 @@ function exportarSolicitudesExcel() {
     mostrarMensaje(`Exportadas ${solicitudes.length} solicitudes a Excel`, 'success');
 }
 
-// Exportar solicitudes a PDF general
 function exportarSolicitudesPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('landscape');
@@ -1183,7 +1261,6 @@ function exportarSolicitudesPDF() {
     mostrarMensaje(`Exportadas ${solicitudes.length} solicitudes a PDF`, 'success');
 }
 
-// Exportar solicitudes a PDF por departamento y mes
 function exportarSolicitudesPDFPorDeptoMes() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('landscape');
@@ -1304,7 +1381,7 @@ function actualizarTablaInventario() {
     pf.sort((a,b) => a.categoria === b.categoria ? a.nombre.localeCompare(b.nombre) : a.categoria.localeCompare(b.categoria));
     tb.innerHTML = '';
     if (pf.length === 0) {
-        tb.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:20px;">No hay productos</d></tr>';
+        tb.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:20px;">No hay productos</td></tr>';
         return;
     }
     
@@ -1328,7 +1405,7 @@ function actualizarTablaInventario() {
         else iu = `${sm} ${p.unidad} (${p.unidadesPorMedida||1} und/${p.unidad==='CAJAS'?'caja':p.unidad==='PAQ'?'paquete':p.unidad})`;
         
         const row = tb.insertRow();
-        row.innerHTML = `<td><strong>${cn}</strong></d><td><div>${p.nombre}</div><div class="unit-info">Código: ${p.codigo}</div></d><td><span class="badge ${cc}">${cnb}</span></d><td><div>${iu}</div><div class="unit-info">${ut.toFixed(2)} und totales</div></d><td>${ut.toFixed(2)} und</d><td>${p.unidad}</d><td>${smt}</d><td class="${ec}">${si} ${et}</d><td>-</d><td><div class="action-buttons"><button class="btn-action btn-edit" data-id="${p.id}"><i class="fas fa-edit"></i> Editar</button><button class="btn-action btn-assign" data-id="${p.id}"><i class="fas fa-hand-holding"></i> Asignar</button><button class="btn-action btn-adjust" data-id="${p.id}"><i class="fas fa-adjust"></i> Ajustar</button><button class="btn-action btn-reposition" data-id="${p.id}"><i class="fas fa-boxes"></i> Reponer</button><button class="btn-action btn-delete" data-id="${p.id}"><i class="fas fa-trash"></i> Eliminar</button></div></d>`;
+        row.innerHTML = `<td><strong>${cn}</strong></td><td><div>${p.nombre}</div><div class="unit-info">Código: ${p.codigo}</div></td><td><span class="badge ${cc}">${cnb}</span></td><td><div>${iu}</div><div class="unit-info">${ut.toFixed(2)} und totales</div></td><td>${ut.toFixed(2)} und</td><td>${p.unidad}</td><td>${smt}</td><td class="${ec}">${si} ${et}</td><td>-</td><td><div class="action-buttons"><button class="btn-action btn-edit" data-id="${p.id}"><i class="fas fa-edit"></i> Editar</button><button class="btn-action btn-assign" data-id="${p.id}"><i class="fas fa-hand-holding"></i> Asignar</button><button class="btn-action btn-adjust" data-id="${p.id}"><i class="fas fa-adjust"></i> Ajustar</button><button class="btn-action btn-reposition" data-id="${p.id}"><i class="fas fa-boxes"></i> Reponer</button><button class="btn-action btn-delete" data-id="${p.id}"><i class="fas fa-trash"></i> Eliminar</button></div></td>`;
     });
     
     document.querySelectorAll('.btn-edit').forEach(b => b.addEventListener('click', () => editarProducto(parseInt(b.dataset.id))));
@@ -1385,17 +1462,22 @@ function actualizarTablaMovimientos() {
     });
     tb.innerHTML = '';
     if (mf.length === 0) {
-        tb.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;">No hay movimientos con los filtros seleccionados</d></tr>';
+        tb.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;">No hay movimientos con los filtros seleccionados</td></tr>';
         return;
     }
     const tc = {entrada:{texto:'Entrada',color:'#27ae60'},salida:{texto:'Salida',color:'#e74c3c'},ajuste:{texto:'Ajuste',color:'#f39c12'},reposicion:{texto:'Reposición',color:'#9b59b6'}};
     mf.forEach(m => {
         const t = tc[m.tipo] || {texto:m.tipo,color:'#666'};
         const row = tb.insertRow();
-        row.innerHTML = `<td>${m.fechaHora || '-'}</d><td><span style="color:${t.color};font-weight:600;">${t.texto}</span></d><td>${m.producto}</d><td>${typeof m.cantidad==='number'?m.cantidad.toFixed(2):m.cantidad} und</d><td>${m.departamento||'-'}</d><td>${m.usuario||'-'}</d><td>${m.observaciones||'-'}</d><td>${m.responsable||'Admin'}</d><td><div class="action-buttons"><button class="btn-action btn-edit-mov" data-id="${m.id}"><i class="fas fa-edit"></i> Editar</button><button class="btn-action btn-delete-mov" data-id="${m.id}"><i class="fas fa-trash"></i> Eliminar</button></div></d>`;
+        row.innerHTML = `<td>${m.fechaHora || '-'}</td><td><span style="color:${t.color};font-weight:600;">${t.texto}</span></td><td>${m.producto}</td><td>${typeof m.cantidad==='number'?m.cantidad.toFixed(2):m.cantidad} und</td><td>${m.departamento||'-'}</td><td>${m.usuario||'-'}</td><td>${m.observaciones||'-'}</td><td>${m.responsable||'Admin'}</td><td><div class="action-buttons"><button class="btn-action btn-edit-mov" data-id="${m.id}"><i class="fas fa-edit"></i> Editar</button><button class="btn-action btn-delete-mov" data-id="${m.id}"><i class="fas fa-trash"></i> Eliminar</button></div></td>`;
     });
-    document.querySelectorAll('.btn-edit-mov').forEach(b => b.addEventListener('click', () => editarMovimiento(parseInt(b.dataset.id))));
-    document.querySelectorAll('.btn-delete-mov').forEach(b => b.addEventListener('click', () => confirmarEliminacionMovimiento(parseInt(b.dataset.id))));
+    // Asignar eventos a los botones de movimientos
+    document.querySelectorAll('.btn-edit-mov').forEach(b => b.addEventListener('click', function() {
+        editarMovimiento(parseInt(this.dataset.id));
+    }));
+    document.querySelectorAll('.btn-delete-mov').forEach(b => b.addEventListener('click', function() {
+        confirmarEliminacionMovimiento(parseInt(this.dataset.id));
+    }));
 }
 
 function exportarMovimientosExcel() {
@@ -1695,6 +1777,7 @@ function cerrarModal() {
     ['editModal','confirmModal','adjustModal','editMovModal','confirmMovModal'].forEach(id => { const m = document.getElementById(id); if (m) m.style.display = 'none'; });
     currentEditId = currentAdjustId = currentMovEditId = null;
 }
+
 function limpiarFiltrosInventario() { document.getElementById('searchProduct').value = ''; document.getElementById('filterCategory').value = ''; document.getElementById('filterStock').value = ''; actualizarTablaInventario(); }
 function limpiarFiltrosMovimientos() { 
     document.getElementById('filterMovimiento').value = ''; 
@@ -1712,46 +1795,77 @@ function limpiarFiltrosSolicitudes() {
     actualizarSolicitudes();
 }
 
-async function editarMovimiento(id) {
+// FUNCIÓN CORREGIDA: editarMovimiento
+function editarMovimiento(id) {
     const mov = movimientos.find(m => m.id === id);
-    if (!mov) return;
+    if (!mov) {
+        mostrarMensaje('Movimiento no encontrado', 'error');
+        return;
+    }
     currentMovEditId = id;
+    
+    // Llenar el formulario del modal
     document.getElementById('editMovProducto').value = mov.producto || '';
-    const tipoTexto = mov.tipo === 'entrada' ? 'Entrada (+)' : mov.tipo === 'salida' ? 'Salida (-)' : mov.tipo === 'reposicion' ? 'Reposición' : mov.tipo === 'ajuste' ? 'Ajuste' : mov.tipo;
+    const tipoTexto = mov.tipo === 'entrada' ? 'Entrada (+)' : 
+                     mov.tipo === 'salida' ? 'Salida (-)' : 
+                     mov.tipo === 'reposicion' ? 'Reposición' : 
+                     mov.tipo === 'ajuste' ? 'Ajuste' : mov.tipo;
     document.getElementById('editMovTipo').value = tipoTexto;
-    document.getElementById('editMovCantidad').value = typeof mov.cantidad === 'number' ? mov.cantidad.toFixed(2) : mov.cantidad;
+    document.getElementById('editMovCantidad').value = typeof mov.cantidad === 'number' ? mov.cantidad.toFixed(2) : mov.cantidad || 0;
     document.getElementById('editMovDepartamento').value = mov.departamento || '';
     document.getElementById('editMovUsuario').value = mov.usuario || '';
     document.getElementById('editMovObservaciones').value = mov.observaciones || '';
+    
     if (mov.fechaHora) {
         const fd = mov.fechaHora.split(' ')[0];
         const ft = mov.fechaHora.split(' ')[1];
-        if (fd && ft) document.getElementById('editMovFechaHora').value = `${fd}T${ft.substring(0,5)}`;
+        if (fd && ft) {
+            document.getElementById('editMovFechaHora').value = `${fd}T${ft.substring(0,5)}`;
+        }
     }
+    
     document.getElementById('editMovModal').style.display = 'flex';
+    
+    // Configurar submit del formulario
     document.getElementById('editMovForm').onsubmit = async (e) => {
         e.preventDefault();
-        await guardarCambiosMovimientoConStock();
+        await guardarCambiosMovimiento();
     };
 }
 
-async function guardarCambiosMovimientoConStock() {
+// FUNCIÓN CORREGIDA: guardarCambiosMovimiento
+async function guardarCambiosMovimiento() {
     const mov = movimientos.find(m => m.id === currentMovEditId);
-    if (!mov) return;
+    if (!mov) {
+        mostrarMensaje('Movimiento no encontrado', 'error');
+        return;
+    }
+    
     const nuevaCantidad = parseFloat(document.getElementById('editMovCantidad').value);
     const departamento = document.getElementById('editMovDepartamento').value.trim();
     const usuario = document.getElementById('editMovUsuario').value.trim();
     const observaciones = document.getElementById('editMovObservaciones').value.trim();
     let fechaHora = document.getElementById('editMovFechaHora').value;
-    if (fechaHora) fechaHora = fechaHora.replace('T', ' ');
-    if (isNaN(nuevaCantidad) || nuevaCantidad < 0) { mostrarMensaje('Cantidad inválida', 'error'); return; }
+    
+    if (isNaN(nuevaCantidad) || nuevaCantidad < 0) {
+        mostrarMensaje('Cantidad inválida', 'error');
+        return;
+    }
+    
+    if (fechaHora) {
+        fechaHora = fechaHora.replace('T', ' ');
+    } else {
+        fechaHora = formatearFechaHora();
+    }
     
     const producto = productos.find(p => p.id === mov.productoId);
+    
     if (producto) {
-        const diferencia = nuevaCantidad - mov.cantidad;
+        const diferencia = nuevaCantidad - (parseFloat(mov.cantidad) || 0);
         if (Math.abs(diferencia) > 0.001) {
             const unidadesActuales = calcularUnidadesTotales(producto);
             let nuevasUnidades = unidadesActuales;
+            
             if (mov.tipo === 'entrada' || mov.tipo === 'reposicion') {
                 nuevasUnidades = unidadesActuales + diferencia;
             } else if (mov.tipo === 'salida') {
@@ -1759,21 +1873,37 @@ async function guardarCambiosMovimientoConStock() {
             } else if (mov.tipo === 'ajuste') {
                 nuevasUnidades = unidadesActuales + diferencia;
             }
-            if (nuevasUnidades < -0.001) { mostrarMensaje('La cantidad resultante dejaría stock negativo', 'error'); return; }
+            
+            if (nuevasUnidades < -0.001) {
+                mostrarMensaje('La cantidad resultante dejaría stock negativo', 'error');
+                return;
+            }
+            
             const nuevoStock = calcularStockDesdeUnidades(producto, nuevasUnidades);
-            await updateProductInFirebase(producto.firebaseId, { stock: nuevoStock, updatedAt: new Date().toISOString() });
+            await updateProductInFirebase(producto.firebaseId, { 
+                stock: nuevoStock, 
+                updatedAt: new Date().toISOString() 
+            });
         }
     }
+    
     try {
-        const updates = { cantidad: nuevaCantidad, updatedAt: new Date().toISOString() };
+        const updates = { 
+            cantidad: nuevaCantidad,
+            fechaHora: fechaHora,
+            updatedAt: new Date().toISOString()
+        };
         if (departamento) updates.departamento = departamento;
         if (usuario) updates.usuario = usuario;
         if (observaciones) updates.observaciones = observaciones;
-        if (fechaHora) updates.fechaHora = fechaHora;
+        
         await updateMovementInFirebase(mov.firebaseId, updates);
         mostrarMensaje('Movimiento actualizado correctamente', 'success');
         cerrarModal();
-    } catch(e) { mostrarMensaje('Error al actualizar movimiento', 'error'); }
+    } catch(e) {
+        console.error('Error al actualizar movimiento:', e);
+        mostrarMensaje('Error al actualizar movimiento', 'error');
+    }
 }
 
 async function guardarProducto(e) {
@@ -1891,20 +2021,48 @@ async function eliminarProducto() {
     } catch(e) { mostrarMensaje('Error al eliminar', 'error'); }
 }
 
+// FUNCIÓN CORREGIDA: eliminarMovimiento
 async function eliminarMovimiento() {
     const mov = movimientos.find(m => m.id === currentMovEditId);
-    if (!mov) return;
+    if (!mov) {
+        mostrarMensaje('Movimiento no encontrado', 'error');
+        cerrarModal();
+        return;
+    }
+    
     const p = productos.find(p => p.id === mov.productoId);
     if (p) {
         const ua = calcularUnidadesTotales(p);
-        const nu = mov.tipo === 'entrada' || mov.tipo === 'reposicion' ? ua - mov.cantidad : ua + mov.cantidad;
-        if (nu < -0.001) { mostrarMensaje('No se puede eliminar: dejaría stock negativo', 'error'); return; }
+        let nu;
+        if (mov.tipo === 'entrada' || mov.tipo === 'reposicion') {
+            nu = ua - (parseFloat(mov.cantidad) || 0);
+        } else if (mov.tipo === 'salida') {
+            nu = ua + (parseFloat(mov.cantidad) || 0);
+        } else if (mov.tipo === 'ajuste') {
+            nu = ua - (parseFloat(mov.cantidad) || 0);
+        } else {
+            nu = ua;
+        }
+        
+        if (nu < -0.001) { 
+            mostrarMensaje('No se puede eliminar: dejaría stock negativo', 'error'); 
+            return; 
+        }
         const ns = calcularStockDesdeUnidades(p, nu);
-        await updateProductInFirebase(p.firebaseId, { stock: ns, updatedAt: new Date().toISOString() });
+        await updateProductInFirebase(p.firebaseId, { 
+            stock: ns, 
+            updatedAt: new Date().toISOString() 
+        });
     }
-    await deleteMovementFromFirebase(mov.firebaseId);
-    mostrarMensaje('Movimiento eliminado', 'success');
-    cerrarModal();
+    
+    try {
+        await deleteMovementFromFirebase(mov.firebaseId);
+        mostrarMensaje('Movimiento eliminado', 'success');
+        cerrarModal();
+    } catch(e) {
+        console.error('Error al eliminar movimiento:', e);
+        mostrarMensaje('Error al eliminar movimiento', 'error');
+    }
 }
 
 // Consolidado de Salidas
@@ -1939,13 +2097,13 @@ function cargarConsolidado() {
     for (const [prod, cant] of Object.entries(pc)) if (cant > tc) { tc = cant; tp = prod; }
     document.getElementById('consTopProducto').textContent = tp !== '-' ? tp.substring(0, 20) + '...' : '-';
     const tbody = document.getElementById('consolidadoTableBody');
-    if (salidas.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No hay salidas</d></tr>'; return; }
+    if (salidas.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No hay salidas</td></tr>'; return; }
     tbody.innerHTML = '';
     salidas.forEach(s => {
         const pe = productos.find(p => p.id === s.productoId);
         const eq = pe ? obtenerEquivalencia(pe, s.cantidad) : `${s.cantidad} unidades`;
         const row = tbody.insertRow();
-        row.innerHTML = `<td>${s.fechaHora||'-'}</d><td>${s.departamento||'-'}</d><td>${s.usuario||'-'}</d><td>${s.producto||'-'}</d><td>${typeof s.cantidad==='number'?s.cantidad.toFixed(2):s.cantidad||0}</d><td>${eq}</d><td>${s.observaciones||'-'}</d>`;
+        row.innerHTML = `<td>${s.fechaHora||'-'}</td><td>${s.departamento||'-'}</td><td>${s.usuario||'-'}</td><td>${s.producto||'-'}</td><td>${typeof s.cantidad==='number'?s.cantidad.toFixed(2):s.cantidad||0}</td><td>${eq}</td><td>${s.observaciones||'-'}</td>`;
     });
 }
 
@@ -2030,7 +2188,7 @@ function actualizarConsolidadoDepartamento() {
     let salidas = movimientos.filter(m => m.tipo === 'salida');
     if (inicio && fin) salidas = salidas.filter(s => { if (!s.fechaHora) return false; const fm = new Date(s.fechaHora); return fm >= inicio && fm <= fin; });
     if (df) salidas = salidas.filter(s => s.departamento === df);
-    if (salidas.length === 0) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center">No hay asignaciones</d></tr>'; if(tf) tf.innerHTML = ''; document.getElementById('resDeptosCount').textContent = '0'; document.getElementById('resProductosCount').textContent = '0'; document.getElementById('resTotalUnidades').textContent = '0'; return; }
+    if (salidas.length === 0) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center">No hay asignaciones</td></tr>'; if(tf) tf.innerHTML = ''; document.getElementById('resDeptosCount').textContent = '0'; document.getElementById('resProductosCount').textContent = '0'; document.getElementById('resTotalUnidades').textContent = '0'; return; }
     const cons = {}; const pu = new Set(); const du = new Set();
     salidas.forEach(s => {
         const p = productos.find(pd => pd.id === s.productoId);
@@ -2043,13 +2201,13 @@ function actualizarConsolidadoDepartamento() {
         pu.add(p.nombre); du.add(s.departamento);
     });
     const lista = Object.values(cons).sort((a,b) => a.productoNombre.localeCompare(b.productoNombre));
-    if (lista.length === 0) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center">No hay datos</d></tr>'; if(tf) tf.innerHTML = ''; document.getElementById('resDeptosCount').textContent = '0'; document.getElementById('resProductosCount').textContent = '0'; document.getElementById('resTotalUnidades').textContent = '0'; return; }
+    if (lista.length === 0) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center">No hay datos</td></tr>'; if(tf) tf.innerHTML = ''; document.getElementById('resDeptosCount').textContent = '0'; document.getElementById('resProductosCount').textContent = '0'; document.getElementById('resTotalUnidades').textContent = '0'; return; }
     tb.innerHTML = ''; let tg = 0;
-    lista.forEach(it => { const t = it.totalUnidades; tg += t; let eq = ''; if (it.productoUnidad === 'BULTO') eq = `${(t / it.unidadesPorBulto).toFixed(2)} bultos (${t.toFixed(2)} und)`; else eq = `${(t / it.unidadesPorMedida).toFixed(2)} ${it.productoUnidad} (${t.toFixed(2)} und)`; const row = tb.insertRow(); row.innerHTML = `<td><strong>${it.productoNombre}</strong></d><td>${it.productoCodigo}</d><td>${it.departamento}</d><td style="text-align:right;font-weight:bold">${t.toFixed(2)}</d><td>${eq}</d>`; });
+    lista.forEach(it => { const t = it.totalUnidades; tg += t; let eq = ''; if (it.productoUnidad === 'BULTO') eq = `${(t / it.unidadesPorBulto).toFixed(2)} bultos (${t.toFixed(2)} und)`; else eq = `${(t / it.unidadesPorMedida).toFixed(2)} ${it.productoUnidad} (${t.toFixed(2)} und)`; const row = tb.insertRow(); row.innerHTML = `<td><strong>${it.productoNombre}</strong></td><td>${it.productoCodigo}</td><td>${it.departamento}</td><td style="text-align:right;font-weight:bold">${t.toFixed(2)}</td><td>${eq}</td>`; });
     document.getElementById('resDeptosCount').textContent = du.size;
     document.getElementById('resProductosCount').textContent = pu.size;
     document.getElementById('resTotalUnidades').textContent = tg.toFixed(2);
-    if (tf) tf.innerHTML = `<tr style="background-color:#e8f4fd;font-weight:bold"><td colspan="3" style="text-align:right">TOTAL GENERAL:</d><td style="text-align:right;font-size:1.1rem">${tg.toFixed(2)}</d><td>unidades</d></tr>`;
+    if (tf) tf.innerHTML = `<tr style="background-color:#e8f4fd;font-weight:bold"><td colspan="3" style="text-align:right">TOTAL GENERAL:</td><td style="text-align:right;font-size:1.1rem">${tg.toFixed(2)}</td><td>unidades</td></tr>`;
 }
 
 function exportarDeptoConsolidadoExcel() {
@@ -2157,13 +2315,13 @@ function actualizarReorden() {
     document.getElementById('reordenHighCount').textContent = hc;
     document.getElementById('reordenTotalUnidades').textContent = tu.toFixed(0);
     const tbody = document.getElementById('reordenTableBody');
-    if (pr.length === 0) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No hay productos que requieran reorden</d></tr>'; return; }
+    if (pr.length === 0) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No hay productos que requieran reorden</td></tr>'; return; }
     tbody.innerHTML = '';
     pr.forEach(p => {
         const dt = p.dh === Infinity ? '∞' : p.dh.toFixed(1);
         const dc = p.dh <= 3 ? 'days-critical' : p.dh <= 7 ? 'days-high' : p.dh <= 15 ? 'days-medium' : 'days-low';
         const row = tbody.insertRow();
-        row.innerHTML = `<td><strong>${p.nombre}</strong><br><small>${p.codigo}</small></d><td>${p.categoria}</d><td>${formatearStockMostrado(p)} ${p.unidad}<br><small>${p.ut.toFixed(2)} und</small></d><td>${p.stockMinimo} ${p.unidad}</d><td>${p.cd.toFixed(2)} und/día</d><td><span class="days-badge ${dc}">${dt} días</span></d><td><span class="suggested-qty">${p.cs.toFixed(2)} ${p.unidad}</span><br><small>(${p.csu.toFixed(0)} und)</small></d><td class="${p.cpri}"><strong>${p.pri.toUpperCase()}</strong></d>`;
+        row.innerHTML = `<td><strong>${p.nombre}</strong><br><small>${p.codigo}</small></td><td>${p.categoria}</td><td>${formatearStockMostrado(p)} ${p.unidad}<br><small>${p.ut.toFixed(2)} und</small></td><td>${p.stockMinimo} ${p.unidad}</td><td>${p.cd.toFixed(2)} und/día</td><td><span class="days-badge ${dc}">${dt} días</span></td><td><span class="suggested-qty">${p.cs.toFixed(2)} ${p.unidad}</span><br><small>(${p.csu.toFixed(0)} und)</small></td><td class="${p.cpri}"><strong>${p.pri.toUpperCase()}</strong></td>`;
     });
 }
 
